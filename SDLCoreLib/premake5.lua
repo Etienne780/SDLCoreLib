@@ -16,6 +16,7 @@ project "SDLCoreLib"
     includedirs {
         "include",
         "include/%{prj.name}",
+        "%{wks.location}/CoreLib/include",
         "%{wks.location}/vendor/SDL3/include",
         "%{wks.location}/vendor/SDL3_image/include",
         "%{wks.location}/vendor/SDL3_mixer/include",
@@ -34,6 +35,7 @@ project "SDLCoreLib"
     }
 
     links {
+        "CoreLib",
         "SDL3.lib",
         "SDL3_image.lib",
         "SDL3_mixer.lib",
