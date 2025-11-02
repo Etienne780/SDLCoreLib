@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <vector>
+#include <Window.h>
 
 namespace SDLCore {
 
@@ -12,6 +14,8 @@ namespace SDLCore {
 	private:
 		std::string m_name;
 		Version m_version;
+		
+		std::vector<Window> m_windows;
 	};
 
 }
