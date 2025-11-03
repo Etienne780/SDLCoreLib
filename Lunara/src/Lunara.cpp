@@ -5,11 +5,12 @@ Lunara::Lunara()
 }
 
 void Lunara::OnStart() {
-
+	CreateWindow("Lunara", 200, 200);
 }
 
 void Lunara::OnUpdate() {
-	
+	if (GetWindowCount() <= 0)
+		Quit();
 }
 
 void Lunara::OnQuit() {

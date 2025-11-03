@@ -1,3 +1,4 @@
+#include <CoreLib/Log.h>
 #include "Window.h"
 
 namespace SDLCore {
@@ -10,8 +11,29 @@ namespace SDLCore {
 		: m_id(id), m_name(name), m_width(width), m_height(height) {
 	}
 
+	Window::~Window() {
+		SDL_DestroyRenderer(m_sdlRenderer);
+		SDL_DestroyWindow(m_sdlWindow);
+	}
+
 	WindowID Window::GetID() const {
 		return m_id;
+	}
+
+	SDL_WindowID Window::GetSDLID() const {
+		return m_sdlWindow ? SDL_GetWindowID(m_sdlWindow) : SDLCORE_INVALID_ID;
+	}
+
+	std::string Window::GetName() const {
+		return m_name;
+	}
+
+	int Window::GetWidth() const {
+		return m_width;
+	}
+
+	int Window::GetHeight() const {
+		return m_height;
 	}
 
 	std::unique_ptr<Window> Window::CreateInstance(WindowID id) {
@@ -26,6 +48,27 @@ namespace SDLCore {
 		if (m_width < 0) m_width = 0;
 		if (m_height < 0) m_height = 0;
 		m_sdlWindow = SDL_CreateWindow(m_name.c_str(), m_width, m_height, GetWindowFlags());
+
+		if (!m_sdlWindow) {
+			Log::Error("Failed to create window '{}': {}", m_name, SDL_GetError());
+			return;
+		}
+
+		m_sdlRenderer = SDL_CreateRenderer(m_sdlWindow, nullptr);
+		if (!m_sdlRenderer) {
+			Log::Error("Renderer creation failed on window '{}': {}", m_name, SDL_GetError());
+			return;
+		}
+	}
+
+	void Window::Destroy() {
+		if(m_sdlRenderer)
+			SDL_DestroyRenderer(m_sdlRenderer);
+		if(m_sdlWindow)
+			SDL_DestroyWindow(m_sdlWindow);
+
+		m_sdlRenderer = nullptr;
+		m_sdlWindow = nullptr;
 	}
 
 	SDL_WindowFlags Window::GetWindowFlags() {
