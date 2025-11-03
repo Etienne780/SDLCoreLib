@@ -5,7 +5,6 @@
 
 int main() {
 	Lunara lunara;
-
 	SDLCore::SDLResult result = lunara.Start();
 
 	std::string msg = SDLCore::GetError(result);
@@ -13,6 +12,6 @@ int main() {
 		Log::Info(msg);
 	else 
 		Log::Error(msg);
-	
+
 	return 0;
 }
