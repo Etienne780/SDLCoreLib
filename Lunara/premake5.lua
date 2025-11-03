@@ -25,6 +25,10 @@ project "Lunara"
         "CoreLib",
         "SDLCoreLib"
     }
+    
+    IncludeSDLCoreLib()
+    -- copys the SDL DLLs in to the build path of this project
+    CopySDLDLLs()
 
     filter "configurations:Debug"
         defines { "DEBUG" }
