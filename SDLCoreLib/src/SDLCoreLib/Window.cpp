@@ -14,6 +14,14 @@ namespace SDLCore {
 		return m_id;
 	}
 
+	std::unique_ptr<Window> Window::CreateInstance(WindowID id) {
+		return std::unique_ptr<Window>(new Window(id));
+	}
+
+	std::unique_ptr<Window> Window::CreateInstance(WindowID id, const std::string& name, int width, int height) {
+		return std::unique_ptr<Window>(new Window(id, name, width, height));
+	}
+
 	void Window::Create() {
 		if (m_width < 0) m_width = 0;
 		if (m_height < 0) m_height = 0;

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <memory>
 
 #include <SDL3/SDL.h>
 #include "SDLCoreTypes.h"
@@ -11,7 +12,7 @@ namespace SDLCore {
 	friend class Application;
 	public:
 		WindowID GetID() const;
-		
+
 	private:
 		Window(WindowID id);
 		Window(WindowID id, const std::string& name, int width, int height);
@@ -20,6 +21,9 @@ namespace SDLCore {
 		Window(Window&&) = delete;
 		Window& operator=(Window&&) = delete;
 		
+		static std::unique_ptr<Window> CreateInstance(WindowID id);
+		static std::unique_ptr<Window> CreateInstance(WindowID id, const std::string& name, int width, int height);
+
 		/**
 		* @brief creates a window
 		*/
