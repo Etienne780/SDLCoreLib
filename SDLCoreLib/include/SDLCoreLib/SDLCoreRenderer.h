@@ -164,6 +164,20 @@ namespace SDLCore::Renderer {
 	*/
 	void FillRect(const Vector4& transform);
 
+
+	/**
+	* @brief Draws multiple filled rectangles in a single call.
+	* @param transforms Pointer to an array of Vector4, each containing x, y, width, and height for a rectangle.
+	* @param count Number of rectangles in the array.
+	*/
+	void FillRects(const Vector4* transforms, size_t count);
+
+	/**
+	* @brief Draws multiple filled rectangles in a single call.
+	* @param transforms A vector of Vector4, each containing x, y, width, and height for a rectangle.
+	*/
+	void FillRects(std::vector<Vector4>& transforms);
+	
 	/**
 	* @brief Draws an outlined rectangle.
 	* @param x X position in pixels.
@@ -201,6 +215,23 @@ namespace SDLCore::Renderer {
 	* @param transform x, y, w, h in pixels.
 	*/
 	void Rect(const Vector4& transform);
+
+	/**
+	* @brief Draws multiple outlined rectangles in a single call.
+	* @param transforms Pointer to an array of Vector4, each containing x, y, width, and height for a rectangle.
+	* @param count Number of rectangles in the array.
+	*
+	* The stroke width and inner/outer mode are applied to each rectangle.
+	*/
+	void Rects(const Vector4* transforms, size_t count);
+
+	/**
+	* @brief Draws multiple outlined rectangles in a single call.
+	* @param transforms A vector of Vector4, each containing x, y, width, and height for a rectangle.
+	*
+	* The stroke width and inner/outer mode are applied to each rectangle.
+	*/
+	void Rects(const std::vector<Vector4>& transforms);
 
 	#pragma endregion
 
