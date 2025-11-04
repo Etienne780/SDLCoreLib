@@ -59,8 +59,8 @@ namespace SDLCore {
 	}
 
 	void Window::DestroyWindow() {
+		CallOnClose();
 		DestroyRenderer();
-
 		if (m_sdlWindow) {
 			SDL_DestroyWindow(m_sdlWindow.get());
 			m_sdlWindow.reset();
@@ -106,6 +106,11 @@ namespace SDLCore {
 			return nullptr;
 		}
 		return m_sdlRenderer;
+	}
+
+	void Window::CallOnClose() {
+		if (m_onClose)
+			m_onClose();
 	}
 
 	SDL_WindowFlags Window::GetWindowFlags() {
@@ -236,6 +241,11 @@ namespace SDLCore {
 			SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
 		}
 
+		return this;
+	}
+
+	Window* Window::SetOnClose(Callback cb) {
+		m_onClose = std::move(cb);
 		return this;
 	}
 

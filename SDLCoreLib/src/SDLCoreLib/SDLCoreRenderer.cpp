@@ -21,6 +21,11 @@ namespace SDLCore::Renderer {
     }
 
     void SetWindowRenderer(WindowID winID) {
+        if (winID.value == SDLCORE_INVALID_ID) {
+            m_renderer.reset();
+            return;
+        }
+
         auto app = Application::GetInstance();
         auto win = app->GetWindow(winID);
 

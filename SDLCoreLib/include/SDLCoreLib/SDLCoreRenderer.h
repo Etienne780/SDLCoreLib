@@ -14,13 +14,13 @@ namespace SDLCore::Renderer {
 
 	/**
 	* @brief Sets the SDL renderer associated with a given window ID as the current renderer.
-	* @param winID The unique ID of the target window.
+	* @param winID The unique ID of the target window. Default is SDLCORE_INVALID_ID
 	*
 	* Retrieves the window from the Application instance by ID and sets its renderer
 	* as the current global renderer context.
 	* Logs an error if the renderer is invalid.
 	*/
-	void SetWindowRenderer(WindowID winID);
+	void SetWindowRenderer(WindowID winID = WindowID{ SDLCORE_INVALID_ID });
 
 	/**
 	* @brief Clears the current rendering target using the active draw color.

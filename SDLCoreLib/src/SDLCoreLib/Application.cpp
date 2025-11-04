@@ -56,7 +56,7 @@ namespace SDLCore {
         }
         OnQuit();
 
-        Renderer::SetWindowRenderer(nullptr);
+        Renderer::SetWindowRenderer();
         m_windows.clear();
         SDL_Quit();
 
@@ -76,7 +76,7 @@ namespace SDLCore {
 
         for (auto id : m_windowsToClose) {
             auto win = GetWindow(id);
-            if (win) 
+            if (win)
                 win->DestroyWindow();
             RemoveWindow(id);
         }
@@ -159,6 +159,9 @@ namespace SDLCore {
 
 
     Window* Application::GetWindow(WindowID id) {
+        if (id.value == SDLCORE_INVALID_ID)
+            return nullptr;
+
         return Algorithm::Search::GetLinear<Window>(m_windows, [id](Window& win) {
             return win.GetID() == id;
         });

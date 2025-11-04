@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <memory>
+#include <functional>
 
 #include <SDL3/SDL.h>
 #include "SDLCoreTypes.h"
@@ -20,6 +21,8 @@ namespace SDLCore {
 	class Window {
 	friend class Application;
 	public:
+		using Callback = std::function<void()>;
+
 		~Window();
 
 		/**
@@ -153,6 +156,11 @@ namespace SDLCore {
 		*/
 		Window* SetOpacity(float opacity);
 
+		/**
+		* @brief Subcribes to the close event of this window
+		*/
+		Window* SetOnClose(Callback cb);
+
 		// ======= Properties that require window recreation =======
 
 	private:
@@ -184,12 +192,16 @@ namespace SDLCore {
 		bool m_borderless = false;
 		float m_opacity = 1;
 
+		Callback m_onClose = nullptr;
+
 		// ======= Renderer properties =======
 		int m_vsync = true;
 
 		std::shared_ptr<SDL_Window> m_sdlWindow = nullptr;
 		std::shared_ptr<SDL_Renderer> m_sdlRenderer = nullptr;
 
+		void CallOnClose();
+		
 		/**
 		* @brief Gets SDL window flags based on current settings
 		* @return SDL_WindowFlags
