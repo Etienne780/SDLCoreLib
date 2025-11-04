@@ -4,6 +4,7 @@
 
 #include "SDLCoreTypes.h"
 #include "SDLCoreError.h"
+#include "CoreTime.h"
 #include "IDManager.h"
 #include "Version.h"
 #include "Window.h"
@@ -34,9 +35,14 @@ namespace SDLCore {
 
 		/**
 		* @brief Adds a Window
-		* @return The id of the newly created window
+		* 
+		* @param name The name of the window
+		* @param width The width of the window
+		* @param height The height of the window
+		* 
+		* @return Raw pointer of the newly created window
 		*/
-		WindowID AddWindow();
+		Window* AddWindow(std::string name, int width, int height);
 
 		/**
 		* @brief Creates a window
@@ -45,9 +51,9 @@ namespace SDLCore {
 		* @param width The width of the window
 		* @param height The height of the window
 		* 
-		* @return The id of the newly created window
+		* @return Raw pointer of the newly created window
 		*/
-		WindowID CreateWindow(std::string name, int width, int height);
+		Window* CreateWindow(std::string name, int width, int height);
 
 		/**
 		* @brief Removes a Window
@@ -89,7 +95,7 @@ namespace SDLCore {
 		void Init();
 		void ProcessSDLPollEvents();
 		void ProcessSDLPollEventWindow(const std::unique_ptr<Window>& window);
-		void FPSCapDelay(Uint32 frameStartTime);
+		void FPSCapDelay(uint64_t frameStartTime);
 
 		/**
 		* @brief Sets the given value to all windows 

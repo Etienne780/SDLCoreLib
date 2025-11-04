@@ -41,10 +41,11 @@ namespace SDLCore {
             return cancelStart;
         }
 
-        Uint32 frameStart = 0;
+        uint64_t frameStart = 0;
         OnStart();
         while(!m_closeApplication) {
-            frameStart = SDL_GetTicks();
+            frameStart = Time::GetTime();
+            Time::Update();
 
             ProcessSDLPollEvents();
             if (m_closeApplication)
@@ -104,7 +105,7 @@ namespace SDLCore {
         }
     }
 
-    void Application::FPSCapDelay(Uint32 frameStartTime) {
+    void Application::FPSCapDelay(uint64_t frameStartTime) {
         if (m_fpsCap <= 0 || m_vsync != 0)
             return;
 
@@ -116,30 +117,30 @@ namespace SDLCore {
         }
     }
 
-    WindowID Application::AddWindow() {
+    Window* Application::AddWindow(std::string name, int width, int height) {
         WindowID newID = WindowID(m_windowIDManager.GetNewUniqueIdentifier());
         if (newID.value == SDLCORE_INVALID_ID) {
             Log::Error("Application::AddWindow: Cant add window, id is invalid");
-            return WindowID{ SDLCORE_INVALID_ID };
+            return nullptr;
         }
 
-        auto& win = m_windows.emplace_back(Window::CreateInstance(newID));
+        auto& win = m_windows.emplace_back(Window::CreateInstance(newID, name, width, height));
         win->SetVsync(m_vsync);
-        return newID;
+        return win.get();
     }
 
-    WindowID Application::CreateWindow(std::string name, int width, int height) {
+    Window* Application::CreateWindow(std::string name, int width, int height) {
         WindowID newID = WindowID(m_windowIDManager.GetNewUniqueIdentifier());
         if (newID.value == SDLCORE_INVALID_ID) {
             Log::Error("Application::CreateWindow: Cant add window, id is invalid");
-            return WindowID{ SDLCORE_INVALID_ID };
+            return nullptr;
         }
 
         auto& win = m_windows.emplace_back(Window::CreateInstance(newID, name, width, height));
         win->SetVsync(m_vsync);
         win->CreateWindow();
         win->CreateRenderer();
-        return newID;
+        return win.get();
     }
 
     bool Application::RemoveWindow(WindowID id) {
