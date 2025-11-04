@@ -31,6 +31,24 @@ namespace SDLCore {
 		return m_name;
 	}
 
+	int Window::GetHorizontalPos() {
+		if (!m_sdlWindow) {
+			Log::Error("SDLCore::Window::GetHorizontalPos: Cant get horizontal pos, window is null!");
+			return -1;
+		}
+		SDL_GetWindowPosition(m_sdlWindow.get(), &m_positionX, &m_positionY);
+		return m_positionX;
+	}
+
+	int Window::GetVerticalPos() {
+		if (!m_sdlWindow) {
+			Log::Error("SDLCore::Window::GetHorizontalPos: Cant get vertical pos, window is null!");
+			return -1;
+		}
+		SDL_GetWindowPosition(m_sdlWindow.get(), &m_positionX, &m_positionY);
+		return m_positionY;
+	}
+
 	int Window::GetWidth() const {
 		return m_width;
 	}
@@ -124,7 +142,11 @@ namespace SDLCore {
 	}
 
 	void Window::SetWindowProperties() {
+		if (!m_sdlWindow)
+			return;
+
 		SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
+		SDL_SetWindowPosition(m_sdlWindow.get(), m_positionX, m_positionY);
 	}
 
 	bool Window::SetVsync(int value) {
@@ -175,28 +197,54 @@ namespace SDLCore {
 		return this;
 	}
 
-	Window* Window::SetWidth(int width) {
-		if (width <= 0)
-			width = 1;
-		m_width = width;
+	Window* Window::SetPosition(int hor, int ver) {
+		m_positionX = hor;
+		m_positionY = ver;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowSize(m_sdlWindow.get(), m_width, m_height);
+			SDL_SetWindowPosition(m_sdlWindow.get(), m_positionX, m_positionY);
 		}
 
 		return this;
 	}
 
-	Window* Window::SetHeight(int height) {
+	Window* Window::SetPosition(const Vector2& pos) {
+		return SetPosition(static_cast<int>(pos.x), static_cast<int>(pos.y));
+	}
+
+	Window* Window::SetHorizontalPos(int hor) {
+		return SetPosition(hor, m_positionY);
+	}
+
+	Window* Window::SetVerticalPos(int ver) {
+		return SetPosition(m_positionX, ver);
+	}
+
+	Window* Window::SetSize(int width, int height) {
+		if (width <= 0)
+			width = 1;
 		if (height <= 0)
 			height = 1;
+		m_width = width;
 		m_height = height;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowSize(m_sdlWindow.get(), m_width, m_height);
+			SDL_SetWindowPosition(m_sdlWindow.get(), m_width, m_height);
 		}
 
 		return this;
+	}
+
+	Window* Window::SetSize(const Vector2& size) {
+		return SetSize(static_cast<int>(size.x), static_cast<int>(size.y));
+	}
+
+	Window* Window::SetWidth(int width) {
+		return SetSize(width, m_height);
+	}
+
+	Window* Window::SetHeight(int height) {
+		return SetSize(m_width, height);
 	}
 
 	Window* Window::SetResizable(bool value) {

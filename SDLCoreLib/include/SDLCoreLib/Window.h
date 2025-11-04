@@ -2,8 +2,9 @@
 #include <string>
 #include <memory>
 #include <functional>
-
 #include <SDL3/SDL.h>
+#include <CoreLib/Math/Vector2.h>
+
 #include "SDLCoreTypes.h"
 
 namespace SDLCore {
@@ -88,6 +89,18 @@ namespace SDLCore {
 		std::string GetName() const;
 
 		/**
+		* @brief Retrieves the current horizontal position of the window.
+		* @return The X coordinate of the window in screen space, or -1 if the window handle is invalid.
+		*/
+		int GetHorizontalPos();
+
+		/**
+		* @brief Retrieves the current vertical position of the window.
+		* @return The Y coordinate of the window in screen space, or -1 if the window handle is invalid.
+		*/
+		int GetVerticalPos();
+
+		/**
 		* @brief Gets the current width of the window
 		* @return Width in pixels
 		*/
@@ -113,6 +126,50 @@ namespace SDLCore {
 		* @return Pointer to this window (for chaining)
 		*/
 		Window* SetName(const std::string& name);
+
+		/**
+		* @brief Sets the window position using horizontal and vertical coordinates.
+		* @param hor New horizontal position in screen coordinates.
+		* @param ver New vertical position in screen coordinates.
+		* @return Pointer to this window (for chaining).
+		*/
+		Window* SetPosition(int hor, int ver);
+
+		/**
+		* @brief Sets the window position using a 2D vector.
+		* @param pos New position as a Vector2 (x = horizontal, y = vertical).
+		* @return Pointer to this window (for chaining).
+		*/
+		Window* SetPosition(const Vector2& pos);
+
+		/**
+		* @brief Sets only the horizontal position of the window.
+		* @param hor New horizontal position in screen coordinates.
+		* @return Pointer to this window (for chaining).
+		*/
+		Window* SetHorizontalPos(int hor);
+
+		/**
+		* @brief Sets only the vertical position of the window.
+		* @param ver New vertical position in screen coordinates.
+		* @return Pointer to this window (for chaining).
+		*/
+		Window* SetVerticalPos(int ver);
+
+		/**
+		* @brief Sets both the window width and height.
+		* @param width New window width in pixels (minimum 1).
+		* @param height New window height in pixels (minimum 1).
+		* @return Pointer to this window (for chaining).
+		*/
+		Window* SetSize(int width, int height);
+
+		/**
+		* @brief Sets both the window width and height using a 2D vector.
+		* @param size New size as a Vector2 (x = width, y = height), each minimum 1.
+		* @return Pointer to this window (for chaining).
+		*/
+		Window* SetSize(const Vector2& size);
 
 		/**
 		* @brief Sets the window width dynamically
@@ -184,8 +241,10 @@ namespace SDLCore {
 		// ======= Window properties =======
 		WindowID m_id{ SDLCORE_INVALID_ID };
 		std::string m_name = "Untitled";
-		int m_width = 1;
-		int m_height = 1;
+		int m_positionX = 0;	// < dosent get update automaticly
+		int m_positionY = 0;	// < dosent get update automaticly
+		int m_width = 1;		// < dosent get update automaticly
+		int m_height = 1;		// < dosent get update automaticly
 
 		bool m_resizable = true;
 		bool m_alwaysOnTop = false;
