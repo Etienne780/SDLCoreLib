@@ -1,3 +1,4 @@
+#include <cmath>
 #include "Lunara.h"
 
 
@@ -41,10 +42,20 @@ void Lunara::OnUpdate() {
 			RE::Clear();
 
 			RE::SetColor(0, 255, 0);
-			RE::FillRect(100, 100, 50, 50);
+
+			int t = static_cast<int>(sin(SDLCore::Time::GetTimeSec()) * 50);
+			RE::SetInnerStroke(t > 0);
+			RE::SetStrokeWidth(abs(t));
+
+			RE::Rect(50, 100, 100, 50);
+
+			RE::SetColor(255, 255, 0);
+			RE::Line(10, 20, 200, 300);
 
 			RE::Present();
 		}
+
+		Log::Info(SDLCore::Time::GetFrameRate());
 	}
 }
 
