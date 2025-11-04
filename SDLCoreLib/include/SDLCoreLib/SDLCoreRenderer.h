@@ -118,8 +118,16 @@ namespace SDLCore::Renderer {
 
 	#pragma endregion
 
-	void SetStrokeWidth(int width);
+	/**
+	* @brief Sets the stroke width used for drawing outlined rectangles and lines.
+	* @param width Minimum value is 1. Values below 1 will be clamped to 1.
+	*/
+	void SetStrokeWidth(float width);
 
+	/**
+	* @brief Sets whether strokes are drawn inward or outward relative to the shape bounds.
+	* @param value True for inner stroke, false for outer stroke.
+	*/
 	void SetInnerStroke(bool value);
 
 	#pragma region Primitives

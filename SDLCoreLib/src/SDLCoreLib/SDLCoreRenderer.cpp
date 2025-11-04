@@ -8,20 +8,24 @@
 
 namespace SDLCore::Renderer {
 
-	static std::shared_ptr<SDL_Renderer> m_renderer;
+	static std::weak_ptr<SDL_Renderer> m_renderer;
 
-    static int m_strokeWidth = 1;
+    static float m_strokeWidth = 1;
     static bool m_innerStroke = true;
 
     SDL_Renderer* GetActiveRenderer() {
-        return m_renderer.get();
+        auto rendererPtr = m_renderer.lock();
+        if (!rendererPtr)
+            return nullptr;
+        return rendererPtr.get();
     }
 
     static std::shared_ptr<SDL_Renderer> GetActiveRenderer(const char* func) {
-        if (!m_renderer) {
+        auto rendererPtr = m_renderer.lock();
+        if (!rendererPtr) {
             Log::Error("SDLCore::Renderer::{}: Current renderer is null", func);
         }
-        return m_renderer;
+        return rendererPtr;
     }
 
     void SetWindowRenderer(WindowID winID) {
@@ -44,14 +48,14 @@ namespace SDLCore::Renderer {
             return;
         }
 
-        std::shared_ptr<SDL_Renderer> rendererShared = win->GetSDLRenderer();
-        if (!rendererShared) {
+        std::weak_ptr<SDL_Renderer> rendererWeak = win->GetSDLRenderer();
+        if (!rendererWeak.lock()) {
             Log::Error("SDLCore::Renderer::SetWindowRenderer: Renderer of window '{}' is null or destroyed!", win->GetName());
             m_renderer.reset();
             return;
         }
 
-        m_renderer = rendererShared;
+        m_renderer = rendererWeak;
     }
 
     void Clear() {
@@ -148,8 +152,8 @@ namespace SDLCore::Renderer {
 
     #pragma endregion
 
-    void SetStrokeWidth(int width) {
-        if (width <= 0) 
+    void SetStrokeWidth(float width) {
+        if (width <= 1)
             width = 1;
         m_strokeWidth = width;
     }
@@ -224,15 +228,19 @@ namespace SDLCore::Renderer {
             return;
         }
 
-        float s = static_cast<float>(m_strokeWidth);
         std::vector<SDL_FRect> rects(4);
         if (m_innerStroke) {
-            rects[0] = { x, y, w, s };          // top
-            rects[1] = { x, y + h - s, w, s };  // bottom
-            rects[2] = { x, y, s, h };          // left
-            rects[3] = { x + w - s, y, s, h };  // right
+            float sX = (w < m_strokeWidth) ? w : m_strokeWidth;
+            float sY = (h < m_strokeWidth) ? h : m_strokeWidth;
+
+            rects[0] = { x, y, w, sY };          // top
+            rects[1] = { x, y + h - sY, w, sY };  // bottom
+            rects[2] = { x, y, sX, h };          // left
+            rects[3] = { x + w - sX, y, sX, h };  // right
         }
         else {
+           float s = m_strokeWidth;
+
            rects[0] = { x - s, y - s, w + s * 2, s };  // top
            rects[1] = { x - s, y + h, w + s * 2, s };  // bottom
            rects[2] = { x - s, y - s, s, h + s * 2 };  // left
@@ -240,7 +248,7 @@ namespace SDLCore::Renderer {
         }
 
         for (auto& rect : rects) {
-            if (!SDL_RenderRect(renderer.get(), &rect)) {
+            if (!SDL_RenderFillRect(renderer.get(), &rect)) {
                 Log::Error("SDLCore::Renderer::Rect: Failed to draw rect ({}, {}, {}, {}): {}", 
                     rect.x, rect.y, rect.w, rect.h, SDL_GetError());
                 break;
@@ -261,7 +269,7 @@ namespace SDLCore::Renderer {
     }
 
     void Rect(const Vector4& trans) {
-        Rect(trans.x, trans.y, trans.x, trans.y);
+        Rect(trans.x, trans.y, trans.z, trans.w);
     }
 
     void Rects(const Vector4* transforms, size_t count) {
@@ -269,7 +277,7 @@ namespace SDLCore::Renderer {
         if (!renderer || count == 0)
             return;
 
-        float s = static_cast<float>(m_strokeWidth);
+        float s = m_strokeWidth;
         std::vector<SDL_FRect> rects;
         rects.reserve((m_strokeWidth != 1) ? count * 4 : count);
 
@@ -281,10 +289,13 @@ namespace SDLCore::Renderer {
             }
             else {
                 if (m_innerStroke) {
-                    rects.push_back({ t.x, t.y, t.z, s });         ;// top
-                    rects.push_back({ t.x, t.y + t.w - s, t.z, s });// bottom
-                    rects.push_back({ t.x, t.y, s, t.w });         ;// left
-                    rects.push_back({ t.x + t.z - s, t.y, s, t.w });// right
+                    float sX = (t.z < m_strokeWidth) ? t.z : m_strokeWidth;
+                    float sY = (t.w < m_strokeWidth) ? t.w : m_strokeWidth;
+
+                    rects.push_back({ t.x, t.y, t.z, sY });         ;// top
+                    rects.push_back({ t.x, t.y + t.w - sY, t.z, sY });// bottom
+                    rects.push_back({ t.x, t.y, sX, t.w });         ;// left
+                    rects.push_back({ t.x + t.z - sX, t.y, sX, t.w });// right
                 }
                 else {
                     rects.push_back({ t.x - s, t.y - s, t.z + s * 2, s });    // top
