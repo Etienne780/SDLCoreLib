@@ -22,7 +22,7 @@ namespace SDLCore {
 		case IDOrder::DESCENDING: return GetNewUniqueIdentifierDescending();
 		}
 
-		return SDLCore::SDLCORE_INVALID_ID;
+		return SDLCORE_INVALID_ID;
 	}
 
 	void IDManager::FreeUniqueIdentifier(unsigned int id) {
@@ -42,7 +42,7 @@ namespace SDLCore {
 		}
 
 		Log::Warn("IDManager: Cant find any free IDs, free pool is empty!");
-		return SDLCore::SDLCORE_INVALID_ID;
+		return SDLCORE_INVALID_ID;
 	}
 
 	void IDManager::Reset(unsigned int startValue) {
@@ -67,7 +67,7 @@ namespace SDLCore {
 
 	void IDManager::SetIDOrder(IDOrder value) {
 		m_order = value;
-		Reset((value == IDOrder::DESCENDING) ? SDLCore::SDLCORE_INVALID_ID : 0);
+		Reset((value == IDOrder::DESCENDING) ? SDLCORE_INVALID_ID : 0);
 	}
 
 	unsigned int IDManager::GetNewUniqueIdentifierRandom() const {
@@ -78,11 +78,11 @@ namespace SDLCore {
 			m_freeIDs.pop();
 		}
 		else {
-			if (m_idCounter != SDLCore::SDLCORE_INVALID_ID) {
+			if (m_idCounter != SDLCORE_INVALID_ID) {
 				id = m_idCounter++;
 			}
 			else {
-				id = SDLCore::SDLCORE_INVALID_ID;
+				id = SDLCORE_INVALID_ID;
 			}
 		}
 
@@ -96,7 +96,7 @@ namespace SDLCore {
 			id = GetNewUniqueIdentifierFallback();
 		}
 		else {
-			if (m_idCounter != SDLCore::SDLCORE_INVALID_ID) {
+			if (m_idCounter != SDLCORE_INVALID_ID) {
 				id = m_idCounter++;
 			}
 			else {

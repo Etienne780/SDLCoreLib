@@ -1,8 +1,8 @@
 #pragma once
 
-namespace SDLCore {
+inline constexpr unsigned int SDLCORE_INVALID_ID = std::numeric_limits<unsigned int>::max();
 
-	inline constexpr unsigned int SDLCORE_INVALID_ID = std::numeric_limits<unsigned int>::max();
+namespace SDLCore {
 
 	typedef int SDLResult;
 
