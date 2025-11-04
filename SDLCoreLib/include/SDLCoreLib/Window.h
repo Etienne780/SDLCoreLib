@@ -14,6 +14,38 @@ namespace SDLCore {
 		~Window();
 
 		/**
+		* @brief Creates a window
+		*/
+		void CreateWindow();
+
+		/**
+		* @brief Destroys a window
+		*/
+		void DestroyWindow();
+
+		/**
+		* @brief Destroys a window
+		*/
+		void CreateRenderer();
+
+		/**
+		* @brief Destroys a window
+		*/
+		void DestroyRenderer();
+
+		/**
+		* @brief Checks if the SDL window has been created and is valid
+		* @return true if the window exists, false otherwise
+		*/
+		bool HasWindow() const;
+
+		/**
+		* @brief Checks if the SDL renderer has been created and is valid
+		* @return true if the renderer exists, false otherwise
+		*/
+		bool HasRenderer() const;
+
+		/**
 		* @brief Gets the id of this window
 		*/
 		WindowID GetID() const;
@@ -41,6 +73,12 @@ namespace SDLCore {
 		*/
 		int GetHeight() const;
 
+		/**
+		* @brief Gets the current VSync setting.
+		* @return -1 = adaptive, 0 = off, 1 = on.
+		*/
+		int GetVsync() const;
+
 	private:
 		Window(WindowID id);
 		Window(WindowID id, const std::string& name, int width, int height);
@@ -52,31 +90,30 @@ namespace SDLCore {
 		static std::unique_ptr<Window> CreateInstance(WindowID id);
 		static std::unique_ptr<Window> CreateInstance(WindowID id, const std::string& name, int width, int height);
 
-		/**
-		* @brief Creates a window
-		*/
-		void Create();
-
-		/**
-		* @brief Destroys a window
-		*/
-		void Destroy();
-
 		WindowID m_id{ SDLCORE_INVALID_ID };
 		std::string m_name = "Untitled";
 		int m_width = 0;
 		int m_height = 0;
 
+		// ========== window ==========
 		bool m_resizable = true;
 		bool m_alwaysTop = false;
 		bool m_borderless = false;
-		bool m_vsync = true;
+
+		// ========== renderer ==========
+		int m_vsync = true;
 
 		SDL_Window* m_sdlWindow = nullptr;
 		SDL_Renderer* m_sdlRenderer = nullptr;
 
 		SDL_WindowFlags GetWindowFlags();
-		SDL_WindowFlags GetWindowFlags();
+
+		/**
+		* @brief Sets VSync mode for this window’s renderer.
+		* @param value -1 = adaptive, 0 = disabled, 1 = enabled
+		* @return true on success, false on failure (check SDL_GetError()).
+		*/
+		bool SetVsync(int value);
 	};
 
 }

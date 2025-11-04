@@ -41,13 +41,17 @@ namespace SDLCore {
             return cancelStart;
         }
 
+        Uint32 frameStart = 0;
         OnStart();
         while(!m_closeApplication) {
+            frameStart = SDL_GetTicks();
+
             ProcessSDLPollEvents();
             if (m_closeApplication)
                 break;
 
             OnUpdate();
+            FPSCapDelay(frameStart);
         }
         OnQuit();
 
@@ -71,7 +75,7 @@ namespace SDLCore {
         for (auto id : m_windowsToClose) {
             auto win = GetWindow(id);
             if (win) 
-                win->Destroy();
+                win->DestroyWindow();
             RemoveWindow(id);
         }
         m_windowsToClose.clear();
@@ -100,6 +104,18 @@ namespace SDLCore {
         }
     }
 
+    void Application::FPSCapDelay(Uint32 frameStartTime) {
+        if (m_fpsCap <= 0 || m_vsync != 0)
+            return;
+
+        Uint32 targetFrameTime = 1000 / m_fpsCap;
+        Uint32 frameTime = SDL_GetTicks() - frameStartTime;
+
+        if (frameTime < targetFrameTime) {
+            SDL_Delay(targetFrameTime - frameTime);
+        }
+    }
+
     WindowID Application::AddWindow() {
         WindowID newID = WindowID(m_windowIDManager.GetNewUniqueIdentifier());
         if (newID.value == SDLCORE_INVALID_ID) {
@@ -107,7 +123,8 @@ namespace SDLCore {
             return WindowID{ SDLCORE_INVALID_ID };
         }
 
-        m_windows.push_back(Window::CreateInstance(newID));
+        auto& win = m_windows.emplace_back(Window::CreateInstance(newID));
+        win->SetVsync(m_vsync);
         return newID;
     }
 
@@ -119,7 +136,9 @@ namespace SDLCore {
         }
 
         auto& win = m_windows.emplace_back(Window::CreateInstance(newID, name, width, height));
-        win->Create();
+        win->SetVsync(m_vsync);
+        win->CreateWindow();
+        win->CreateRenderer();
         return newID;
     }
 
@@ -145,6 +164,34 @@ namespace SDLCore {
 
     size_t Application::GetWindowCount() const {
         return m_windows.size();
+    }
+
+    void Application::SetFPSCap(int value) {
+        if (value < -2)
+            value = APPLICATION_FPS_UNCAPPED;
+        switch (value)
+        {
+        case APPLICATION_FPS_VSYNC_ON:
+            SetVsyncOnWindows(1);
+            m_vsync = -1;
+            break;
+        case APPLICATION_FPS_VSYNC_ADAPTIVE_ON:
+            SetVsyncOnWindows(-1);
+            m_vsync = -1;
+            break;
+        default:
+            SetVsyncOnWindows(0);
+            m_vsync = 0;
+            break;
+        }
+
+        m_fpsCap = value;
+    }
+
+    void Application::SetVsyncOnWindows(int value) {
+        for (auto& window : m_windows) {
+            window->SetVsync(value);
+        }
     }
 
 }

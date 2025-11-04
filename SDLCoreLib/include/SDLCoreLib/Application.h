@@ -10,6 +10,10 @@
 
 namespace SDLCore {
 
+	constexpr int APPLICATION_FPS_UNCAPPED = 0;
+	constexpr int APPLICATION_FPS_VSYNC_ON = -1;
+	constexpr int APPLICATION_FPS_VSYNC_ADAPTIVE_ON = -2;
+
 	class Application {
 	public:
 		Application(std::string& name, const Version& version);
@@ -60,10 +64,11 @@ namespace SDLCore {
 
 		size_t GetWindowCount() const;
 
+		void SetFPSCap(int value);
+
 		virtual void OnStart() = 0;
 		virtual void OnUpdate() = 0;
 		virtual void OnQuit() = 0;
-
 	private:
 		std::string m_name = "UNKNOWN";
 		Version m_version{ 0, 0, 0 };
@@ -78,10 +83,19 @@ namespace SDLCore {
 		IDManager m_windowIDManager;
 
 		bool m_closeApplication = false;
+		int m_vsync = 0;
+		int m_fpsCap = 0;
 
 		void Init();
 		void ProcessSDLPollEvents();
 		void ProcessSDLPollEventWindow(const std::unique_ptr<Window>& window);
+		void FPSCapDelay(Uint32 frameStartTime);
+
+		/**
+		* @brief Sets the given value to all windows 
+		* @param value -1 = adaptive, 0 = disabled, 1 = enabled
+		*/
+		void SetVsyncOnWindows(int value);
 	};
 
 }
