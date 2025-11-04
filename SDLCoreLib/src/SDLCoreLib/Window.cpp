@@ -1,4 +1,5 @@
 #include <CoreLib/Log.h>
+#include "CoreTime.h"
 #include "Window.h"
 
 namespace SDLCore {
@@ -30,30 +31,34 @@ namespace SDLCore {
 	std::string Window::GetName() const {
 		return m_name;
 	}
+	
+	Vector2 Window::GetPosition() const {
+		PollPosition();
+		return Vector2(static_cast<float>(m_positionX), static_cast<float>(m_positionY));
+	}
 
-	int Window::GetHorizontalPos() {
-		if (!m_sdlWindow) {
-			Log::Error("SDLCore::Window::GetHorizontalPos: Cant get horizontal pos, window is null!");
-			return -1;
-		}
-		SDL_GetWindowPosition(m_sdlWindow.get(), &m_positionX, &m_positionY);
+	int Window::GetHorizontalPos() const {
+		PollPosition();
 		return m_positionX;
 	}
 
-	int Window::GetVerticalPos() {
-		if (!m_sdlWindow) {
-			Log::Error("SDLCore::Window::GetHorizontalPos: Cant get vertical pos, window is null!");
-			return -1;
-		}
-		SDL_GetWindowPosition(m_sdlWindow.get(), &m_positionX, &m_positionY);
+	int Window::GetVerticalPos() const {
+		PollPosition();
 		return m_positionY;
 	}
 
+	Vector2 Window::GetSize() const {
+		PollSize();
+		return Vector2(static_cast<float>(m_width), static_cast<float>(m_height));
+	}
+
 	int Window::GetWidth() const {
+		PollSize();
 		return m_width;
 	}
 
 	int Window::GetHeight() const {
+		PollSize();
 		return m_height;
 	}
 
@@ -112,17 +117,11 @@ namespace SDLCore {
 		return m_sdlRenderer != nullptr;
 	}
 
-	std::shared_ptr<SDL_Window> Window::GetSDLWindow() {
-		if (!m_sdlWindow) {
-			return nullptr;
-		}
+	std::weak_ptr<SDL_Window> Window::GetSDLWindow() {
 		return m_sdlWindow;
 	}
 
-	std::shared_ptr<SDL_Renderer> Window::GetSDLRenderer() {
-		if (!m_sdlRenderer) {
-			return nullptr;
-		}
+	std::weak_ptr<SDL_Renderer> Window::GetSDLRenderer() {
 		return m_sdlRenderer;
 	}
 
@@ -163,11 +162,11 @@ namespace SDLCore {
 		if (!m_sdlRenderer)
 			return false;
 
-		if (SDL_SetRenderVSync(m_sdlRenderer.get(), value) < 0) {
+		if (!SDL_SetRenderVSync(m_sdlRenderer.get(), value)) {
 		
 			if (value == -1) {
 				Log::Warn("SDLCore::Window::SetVsync: Adaptive VSync not supported, falling back to normal VSync.");
-				if (SDL_SetRenderVSync(m_sdlRenderer.get(), 1) < 0) {
+				if (!SDL_SetRenderVSync(m_sdlRenderer.get(), 1)) {
 					Log::Error("SDLCore::Window::SetVsync: Failed to set normal VSync for window '{}': {}", m_name, SDL_GetError());
 					m_vsync = 0;
 					return false;
@@ -181,6 +180,30 @@ namespace SDLCore {
 		}
 
 		return true;
+	}
+
+	void Window::PollPosition() const {
+		if (!m_sdlWindow)
+			return;
+
+		auto now = Time::GetTime();
+		if (m_positionFetchedTime == now)
+			return;
+
+		m_positionFetchedTime = now;
+		SDL_GetWindowPosition(m_sdlWindow.get(), &m_positionX, &m_positionY);
+	}
+
+	void Window::PollSize() const {
+		if (!m_sdlWindow)
+			return;
+
+		auto now = Time::GetTime();
+		if (m_sizeFetchedTime == now)
+			return;
+
+		m_sizeFetchedTime = now;
+		SDL_GetWindowSize(m_sdlWindow.get(), &m_width, &m_height);
 	}
 
 	int Window::GetVsync() const {

@@ -72,15 +72,15 @@ namespace SDLCore {
 
 		/**
 		* @brief Gets the SDL window
-		* @return SDL_Window shared pointer
+		* @return SDL_Window weak pointer
 		*/
-		std::shared_ptr<SDL_Window> GetSDLWindow();
+		std::weak_ptr<SDL_Window> GetSDLWindow();
 
 		/**
 		* @brief Gets the SDL Renderer of this window
-		* @return SDL_Renderer shared pointer
+		* @return SDL_Renderer weak pointer
 		*/
-		std::shared_ptr<SDL_Renderer> GetSDLRenderer();
+		std::weak_ptr<SDL_Renderer> GetSDLRenderer();
 
 		/**
 		* @brief Gets the name/title of this window
@@ -89,26 +89,52 @@ namespace SDLCore {
 		std::string GetName() const;
 
 		/**
-		* @brief Retrieves the current horizontal position of the window.
-		* @return The X coordinate of the window in screen space, or -1 if the window handle is invalid.
+		* @brief Retrieves the current position of the window
+		* @return Vector2 containing the X and Y position in pixels
+		*
+		* This function will poll the window position from SDL if it has not been fetched yet this frame.
+		* Otherwise, it returns the cached position.
 		*/
-		int GetHorizontalPos();
+		Vector2 GetPosition() const;
+
+		/**
+		* @brief Retrieves the current horizontal position of the window.
+		* @return The X coordinate in screen space, or -1 if the window handle is invalid.
+		*
+		* This function polls the window position for the current frame if needed.
+		*/
+		int GetHorizontalPos() const;
 
 		/**
 		* @brief Retrieves the current vertical position of the window.
-		* @return The Y coordinate of the window in screen space, or -1 if the window handle is invalid.
+		* @return The Y coordinate in screen space, or -1 if the window handle is invalid.
+		*
+		* This function polls the window position for the current frame if needed.
 		*/
-		int GetVerticalPos();
+		int GetVerticalPos() const;
 
 		/**
-		* @brief Gets the current width of the window
-		* @return Width in pixels
+		* @brief Retrieves the current size of the window
+		* @return Vector2 containing the width and height in pixels
+		*
+		* This function will poll the window size from SDL if it has not been fetched yet this frame.
+		* Otherwise, it returns the cached size.
+		*/
+		Vector2 GetSize() const;
+
+		/**
+		* @brief Gets the current width of the window.
+		* @return Width in pixels.
+		*
+		* Will poll the window size if it has not been updated this frame.
 		*/
 		int GetWidth() const;
 
 		/**
-		* @brief Gets the current height of the window
-		* @return Height in pixels
+		* @brief Gets the current height of the window.
+		* @return Height in pixels.
+		*
+		* Will poll the window size if it has not been updated this frame.
 		*/
 		int GetHeight() const;
 
@@ -241,10 +267,12 @@ namespace SDLCore {
 		// ======= Window properties =======
 		WindowID m_id{ SDLCORE_INVALID_ID };
 		std::string m_name = "Untitled";
-		int m_positionX = 0;	// < dosent get update automaticly
-		int m_positionY = 0;	// < dosent get update automaticly
-		int m_width = 1;		// < dosent get update automaticly
-		int m_height = 1;		// < dosent get update automaticly
+		mutable int m_positionX = 0;	// < dosent get update automaticly
+		mutable int m_positionY = 30;	// < dosent get update automaticly
+		mutable int m_width = 1;		// < dosent get update automaticly
+		mutable int m_height = 1;		// < dosent get update automaticly
+		mutable Uint64 m_positionFetchedTime = 0;
+		mutable Uint64 m_sizeFetchedTime = 0;
 
 		bool m_resizable = true;
 		bool m_alwaysOnTop = false;
@@ -278,6 +306,20 @@ namespace SDLCore {
 		* @return true on success, false on failure (check SDL_GetError())
 		*/
 		bool SetVsync(int value);
+
+		/**
+		* @brief Polls and updates the cached window position for the current frame
+		*
+		* Only queries SDL_GetWindowPosition if the position has not been fetched this frame.
+		*/
+		void PollPosition() const;
+
+		/**
+		* @brief Polls and updates the cached window size for the current frame
+		*
+		* Only queries SDL_GetWindowSize if the size has not been fetched this frame.
+		*/
+		void PollSize() const;
 	};
 
 }
