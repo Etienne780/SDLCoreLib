@@ -13,6 +13,13 @@ namespace SDLCore {
 		constexpr SDLCoreID() = default;
 		explicit constexpr SDLCoreID(unsigned int v) : value(v) {}
 
+		constexpr bool operator==(unsigned int other) const { return value == other; }
+		constexpr bool operator!=(unsigned int other) const { return value != other; }
+		constexpr bool operator<(unsigned int other) const { return value < other; }
+		constexpr bool operator>(unsigned int other) const { return value > other; }
+		constexpr bool operator<=(unsigned int other) const { return value <= other; }
+		constexpr bool operator>=(unsigned int other) const { return value >= other; }
+
 		constexpr bool operator==(const SDLCoreID& other) const { return value == other.value; }
 		constexpr bool operator!=(const SDLCoreID& other) const { return value != other.value; }
 		constexpr bool operator<(const SDLCoreID& other) const { return value < other.value; }
