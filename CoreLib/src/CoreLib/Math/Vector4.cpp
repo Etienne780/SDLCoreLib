@@ -40,6 +40,14 @@ Matrix Vector4::ToMatrix1x4() const {
     return Matrix(1, 4, data);
 }
 
+Vector4& Vector4::Set(const Vector4& other) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+    w = other.w;
+    return *this;
+}
+
 Vector4& Vector4::Set(float _x, float _y, float _z, float _w) {
     x = _x;
     y = _y;

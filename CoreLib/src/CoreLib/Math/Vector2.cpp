@@ -48,6 +48,12 @@ Matrix Vector2::ToMatrix1x2() const {
     return Matrix(1, 2, data);
 }
 
+Vector2& Vector2::Set(const Vector2& other) {
+    x = other.x;
+    y = other.y;
+    return *this;
+}
+
 Vector2& Vector2::Set(float _x, float _y) {
     x = _x;
     y = _y;

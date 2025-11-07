@@ -51,6 +51,13 @@ Matrix Vector3::ToMatrix1x3() const {
     return Matrix(1, 3, data);
 }
 
+Vector3& Vector3::Set(const Vector3& other) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+    return *this;
+}
+
 Vector3& Vector3::Set(float _x, float _y, float _z) {
     x = _x;
     y = _y;

@@ -43,6 +43,13 @@ public:
     Matrix ToMatrix1x4() const;
 
     /**
+    * @brief Sets the components of the vector from another vector
+    * @param other The source vector whose components will be assigned to this vector
+    * @return Reference to this vector after setting the components
+    */
+    Vector4& Set(const Vector4& other);
+
+    /**
     * @brief Sets each component of a vector
     *
     * @param x component of the vector
