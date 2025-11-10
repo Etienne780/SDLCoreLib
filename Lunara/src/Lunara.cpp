@@ -21,6 +21,9 @@ static SDLCore::WindowID winStrokeID;
 static SDLCore::WindowID winPolygonID;
 std::vector<MovingRect> movingRects;
 
+std::vector<SDLCore::Vertex> vertices;
+std::vector<Vector2> velocity;
+
 SDLCore::InputAction testAction;
 
 void InputActionTest() {
@@ -69,7 +72,6 @@ void InputTest() {
 
     switch (g_inputTestType) {
     case 0: { // Keyboard
-        Log::Print("Keyboard Test:");
         for (int code = static_cast<int>(KeyCode::A); code <= static_cast<int>(KeyCode::Z); ++code) {
             KeyCode kc = static_cast<KeyCode>(code);
             if (Input::KeyPressed(kc))
@@ -82,8 +84,6 @@ void InputTest() {
         break;
     }
     case 1: { // Mouse
-        Log::Print("Mouse Test:");
-
         for (MouseButton mb : { MouseButton::LEFT, MouseButton::MIDDLE, MouseButton::RIGHT, MouseButton::X1, MouseButton::X2 }) {
             if (Input::MousePressed(mb))
                 Log::Print("  MousePressed: {}", mb);
@@ -100,13 +100,13 @@ void InputTest() {
         break;
     }
     case 2: { // Gamepad
-        Log::Print("Gamepad Test:");
         Log::Print("  Gamepad input currently not implemented.");
         break;
     }
     }
 }
 
+bool MovePolygon();
 void MoveRects();
 void Lunara::OnStart() {
     {
@@ -119,12 +119,9 @@ void Lunara::OnStart() {
         Log::Print("Press 'T' to toggle");
     }
 
-    auto* winFill = CreateWindow("FillRects", 800, 800);
-    winFillID = winFill->GetID();
-    winFill->AddOnClose([]() { winFillID.value = SDLCORE_INVALID_ID; });
-
-    auto* winStroke = CreateWindow(&winStrokeID, "StrokeRects", 800, 800);
-    auto* winPolygon = CreateWindow(&winPolygonID, "Polygon", 800, 800);
+    CreateWindow(&winFillID, "FillRects", 800, 800);
+    CreateWindow(&winStrokeID, "StrokeRects", 800, 800);
+    CreateWindow(&winPolygonID, "Polygon", 800, 800);
 
     int count = 50;
     for (int i = 0; i < count; ++i) {
@@ -133,7 +130,19 @@ void Lunara::OnStart() {
         movingRects.emplace_back(rect, velocity);
     }
 
-    SetFPSCap(60);
+    {
+        float x = 400.0f;
+        float y = 400.0f;
+        float size = 100.0f;
+
+        vertices.emplace_back(Vector2{ x, y - size * 0.5f }, Vector4{ 0, 0, 0, 0 }, Vector2{ 0, 0 });
+        vertices.emplace_back(Vector2{ x - size * 0.5f, y + size * 0.5f }, Vector4{ 0, 0, 0, 0 }, Vector2{ 0, 1 });
+        vertices.emplace_back(Vector2{ x + size * 0.5f, y + size * 0.5f }, Vector4{ 0, 0, 0, 0 }, Vector2{ 1, 1 });
+
+        velocity = { Vector2(1.0f, 0.4f), Vector2(0.25f, -0.8f), Vector2(-0.4f, 0.9) };
+    }
+
+    SetFPSCap(240);
 }
 
 void Lunara::OnUpdate() {
@@ -194,36 +203,105 @@ void Lunara::OnUpdate() {
             RemoveWindow(winStrokeID);
     }
 
+    if (winPolygonID != SDLCORE_INVALID_ID) {
+        Input::SetWindow(winPolygonID);
+        RE::SetWindowRenderer(winPolygonID);
+        RE::SetColor(10, 30, 70);
+        RE::Clear();
+
+        float time = Time::GetTimeSec() * 100;
+        Vector3 color{ 
+            static_cast<float>(static_cast<int>(time) % 255),
+            static_cast<float>(static_cast<int>(time + 50) % 255),
+            static_cast<float>(static_cast<int>(time + 120) % 255) 
+        };
+
+        static Vector3 currentColor = color;
+
+        if (MovePolygon()) {
+            currentColor = color;
+        }
+
+        RE::SetColor(currentColor);
+        RE::Polygon(vertices);
+
+        RE::Present();
+
+        // needs to be called after using the window. becaus nullptr and so ...
+        if (Input::KeyJustPressed(KeyCode::ESCAPE))
+            RemoveWindow(winPolygonID);
+    }
+
     // Log::Print(SDLCore::Time::GetFrameRate());
 }
 
 void Lunara::OnQuit() {
 }
 
+bool MovePolygon() {
+    using namespace SDLCore;
+    auto* app = Application::GetInstance();
+
+    float speed = 200;
+    bool touch = false;
+    Window* win = nullptr;
+    if (winPolygonID != SDLCORE_INVALID_ID)
+        win = app->GetWindow(winPolygonID);
+
+    if (!win)
+        return false;
+
+    for (size_t i = 0; i < vertices.size(); i++) {
+        Vertex vert = vertices[i];
+        Vector2 vel = velocity[i];
+
+        Vector2& pos = vert.position;
+        pos.x += vel.x * static_cast<float>(Time::GetDeltaTimeSec()) * speed;
+        pos.y += vel.y * static_cast<float>(Time::GetDeltaTimeSec()) * speed;
+
+        if (pos.x < 0 || pos.x > win->GetWidth()) {
+            vel.x *= -1;
+            pos.x += vel.x * static_cast<float>(Time::GetDeltaTimeSec()) * speed;
+            touch = true;
+        }
+
+        if (pos.y < 0 || pos.y > win->GetHeight()) {
+            vel.y *= -1;
+            pos.y += vel.y * static_cast<float>(Time::GetDeltaTimeSec()) * speed;
+            touch = true;
+        }
+
+        vertices[i] = vert;
+        velocity[i] = vel;
+    }
+
+    return touch;
+}
+
 void MoveRects() {
     using namespace SDLCore;
     auto* app = Application::GetInstance();
+
+    Window* win = nullptr;
+    if (winStrokeID != SDLCORE_INVALID_ID)
+        win = app->GetWindow(winStrokeID);
+    else if (winFillID != SDLCORE_INVALID_ID)
+        win = app->GetWindow(winFillID);
+
+    if (!win)
+        return;
 
     for (auto& mr : movingRects) {
         mr.rect.x += mr.velocity.x * static_cast<float>(Time::GetDeltaTimeSec()) * 500.0f;
         mr.rect.y += mr.velocity.y * static_cast<float>(Time::GetDeltaTimeSec()) * 500.0f;
 
-        Window* win = nullptr;
-        if (winStrokeID != SDLCORE_INVALID_ID)
-            win = app->GetWindow(winStrokeID);
-        else if (winFillID != SDLCORE_INVALID_ID)
-            win = app->GetWindow(winFillID);
+        if (mr.rect.x <= 0 || mr.rect.x + mr.rect.z >= win->GetWidth()) mr.velocity.x *= -1;
+        if (mr.rect.y <= 0 || mr.rect.y + mr.rect.w >= win->GetHeight()) mr.velocity.y *= -1;
 
-        if (win) {
-            if (mr.rect.x <= 0 || mr.rect.x + mr.rect.z >= win->GetWidth()) mr.velocity.x *= -1;
-            if (mr.rect.y <= 0 || mr.rect.y + mr.rect.w >= win->GetHeight()) mr.velocity.y *= -1;
-
-            if (mr.rect.x + mr.rect.z < 0 || mr.rect.x > win->GetWidth() ||
-                mr.rect.y + mr.rect.w < 0 || mr.rect.y > win->GetHeight()) {
-                mr.rect.x = win->GetWidth() * 0.5f;
-                mr.rect.y = win->GetHeight() * 0.5f;
-            }
-
+        if (mr.rect.x + mr.rect.z < 0 || mr.rect.x > win->GetWidth() ||
+            mr.rect.y + mr.rect.w < 0 || mr.rect.y > win->GetHeight()) {
+            mr.rect.x = win->GetWidth() * 0.5f;
+            mr.rect.y = win->GetHeight() * 0.5f;
         }
     }
 }

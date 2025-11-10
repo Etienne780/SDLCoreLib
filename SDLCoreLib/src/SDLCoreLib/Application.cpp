@@ -119,7 +119,7 @@ namespace SDLCore {
         }
     }
 
-    Window* Application::AddWindow(std::string name, int width, int height) {
+    Window* Application::AddWindow(WindowID* idPtr, std::string name, int width, int height) {
         WindowID newID = WindowID(m_windowIDManager.GetNewUniqueIdentifier());
         if (newID.value == SDLCORE_INVALID_ID) {
             Log::Error("SDLCore::Application::AddWindow: Cant add window, id is invalid");
@@ -128,11 +128,13 @@ namespace SDLCore {
 
         auto& win = m_windows.emplace_back(Window::CreateInstance(newID, name, width, height));
         win->SetVsync(m_vsync);
-        return win.get();
-    }
 
-    Window* Application::CreateWindow(const std::string& name, int width, int height) {
-        return CreateWindow(nullptr, name, width, height);
+        if (idPtr) {
+            *idPtr = newID;
+            win->AddOnClose([idPtr]() { idPtr->value = SDLCORE_INVALID_ID; });
+        }
+
+        return win.get();
     }
 
     Window* Application::CreateWindow(WindowID* idPtr, const std::string& name, int width, int height) {
