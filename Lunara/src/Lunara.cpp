@@ -211,9 +211,9 @@ void Lunara::OnUpdate() {
 
         float time = Time::GetTimeSec() * 100;
         Vector3 color{ 
-            static_cast<float>(static_cast<int>(time) % 255),
-            static_cast<float>(static_cast<int>(time + 50) % 255),
-            static_cast<float>(static_cast<int>(time + 120) % 255) 
+            static_cast<float>((std::sin(time * 1.3) * 0.5 + 0.5) * 255),
+            static_cast<float>((std::sin(time * 0.9 + 2.0) * 0.5 + 0.5) * 255),
+            static_cast<float>((std::sin(time * 1.7 + 4.0) * 0.5 + 0.5) * 255)
         };
 
         static Vector3 currentColor = color;
