@@ -48,12 +48,27 @@ public:
 		if (minVal > maxVal)
 			std::swap(minVal, maxVal);
 
-		if (a < minVal) {
-			a = static_cast<A>(minVal);
-		}
-		else if (a > maxVal) {
-			a = static_cast<A>(maxVal);
-		}
+		if (a < minVal) a = static_cast<A>(minVal);
+		if (a > maxVal) a = static_cast<A>(maxVal);
+	}
+
+	template<typename A, typename B, typename C>
+	static auto ClampValue(A a, B min, C max) {
+		static_assert(std::is_arithmetic_v<A> &&
+			std::is_arithmetic_v<B> &&
+			std::is_arithmetic_v<C>,
+			"Clamp requires arithmetic types");
+
+		using Result = std::common_type_t<A, B, C>;
+		Result minVal = static_cast<Result>(min);
+		Result maxVal = static_cast<Result>(max);
+
+		if (minVal > maxVal)
+			std::swap(minVal, maxVal);
+
+		if (a < minVal) return static_cast<A>(minVal);
+		if (a > maxVal) return static_cast<A>(maxVal);
+		return a;
 	}
 
 private:
