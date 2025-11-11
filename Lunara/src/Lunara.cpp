@@ -142,7 +142,7 @@ void Lunara::OnStart() {
         velocity = { Vector2(1.0f, 0.4f), Vector2(0.25f, -0.8f), Vector2(-0.4f, 0.9) };
     }
 
-    SetFPSCap(240);
+    SetFPSCap(APPLICATION_FPS_UNCAPPED);
 }
 
 void Lunara::OnUpdate() {
@@ -231,8 +231,11 @@ void Lunara::OnUpdate() {
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
             RemoveWindow(winPolygonID);
     }
-
-    // Log::Print(SDLCore::Time::GetFrameRate());
+    static double lastTime = -1;
+    if (lastTime < Time::GetTimeSec()) {
+        Log::Print(SDLCore::Time::GetFrameRate());
+        lastTime = Time::GetTimeSec() + 0.5;
+    }
 }
 
 void Lunara::OnQuit() {
