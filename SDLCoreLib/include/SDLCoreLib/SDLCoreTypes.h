@@ -4,6 +4,9 @@
 #include "types/Vertex.h"
 
 inline constexpr unsigned int SDLCORE_INVALID_ID = std::numeric_limits<unsigned int>::max();
+inline constexpr int APPLICATION_FPS_UNCAPPED = 0;
+inline constexpr int APPLICATION_FPS_VSYNC_ON = -1;
+inline constexpr int APPLICATION_FPS_VSYNC_ADAPTIVE_ON = -2;
 
 namespace SDLCore {
 

@@ -13,10 +13,6 @@
 
 namespace SDLCore {
 
-	constexpr int APPLICATION_FPS_UNCAPPED = 0;
-	constexpr int APPLICATION_FPS_VSYNC_ON = -1;
-	constexpr int APPLICATION_FPS_VSYNC_ADAPTIVE_ON = -2;
-
 	class Application {
 	public:
 		Application(std::string& name, const Version& version);
