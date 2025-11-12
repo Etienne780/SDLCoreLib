@@ -8,7 +8,7 @@
 #include "CoreTime.h"
 #include "CoreInput.h"
 #include "IDManager.h"
-#include "Version.h"
+#include "types/Version.h"
 #include "Window.h"
 
 namespace SDLCore {
