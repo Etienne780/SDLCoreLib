@@ -7,19 +7,58 @@
 
 namespace SDLCore {
 
+    static SDL_Surface* GenerateFallbackSurface(int width = 32, int height = 32) {
+        SDL_Surface* surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGBA8888);
+        if (!surface) {
+            Log::Error("Failed to create fallback surface: {}", SDL_GetError());
+            return nullptr;
+        }
+        const SDL_PixelFormatDetails* fmt = SDL_GetPixelFormatDetails(surface->format);
+        Uint32 colorA = SDL_MapRGBA(fmt, nullptr, 0x00, 0x00, 0x00, 0xFF);
+        Uint32 colorB = SDL_MapRGBA(fmt, nullptr, 0xFB, 0x3E, 0xF9, 0xFF);
+
+        Uint32* pixels = static_cast<Uint32*>(surface->pixels);
+        int pitch = surface->pitch / sizeof(Uint32);
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                if ((x < width / 2 && y < height / 2) || (x >= width / 2 && y >= height / 2)) {
+                    pixels[y * pitch + x] = colorA;
+                }
+                else {
+                    pixels[y * pitch + x] = colorB;
+                }
+            }
+        }
+
+        return surface;
+    }
+
+    Texture::Texture(bool fallbackTexture) {
+        if (fallbackTexture) {
+            LoadFallback();
+        }
+    }
+
     Texture::Texture(const std::string& path, Type type)
         : m_type(type)
     {
 
-        int ver = IMG_Version();
-        m_surface = IMG_Load(path.c_str());
-        if (!m_surface) {
-            Log::Error("SDLCore::Texture: Failed to load '{}': {}", path, SDL_GetError());
-            return;
+        if (File::Exists(path)) {
+            m_surface = IMG_Load(path.c_str());
+            if (!m_surface) {
+                Log::Error("SDLCore::Texture: Failed to load '{}': {}", path, SDL_GetError());
+                return;
+            }
+
+            m_width = m_surface->w;
+            m_height = m_surface->h;
         }
-        
-        m_width = m_surface->w;
-        m_height = m_surface->h;
+        else {
+            // fallback
+            Log::Warn("SDLCore::Texture: File '{}' does not exist, using fallback texture", path);
+            LoadFallback();
+        }
     }
 
     Texture::Texture(const SystemFilePath& path, Type type)
@@ -43,19 +82,15 @@ namespace SDLCore {
     }
 
     bool Texture::CreateForWindow(WindowID windowID) {
-        if (!m_surface)
+        if (!m_surface) {
+            Log::Warn("SDLCore::Texture::CreateForWindow: Failed to create texture for window '{}', no valid texture available, using fallback texture!", windowID);
+            LoadFallback();
             return false;
+        }
 
         auto renderer = GetRenderer(windowID);
         if (!renderer) {
             Log::Error("Renderer is null for window {}", windowID.value);
-            return false;
-        }
-
-        // Konvertiere Surface in gängiges Format
-        SDL_Surface* formatted = SDL_ConvertSurface(m_surface, SDL_PIXELFORMAT_RGBA8888);
-        if (!formatted) {
-            Log::Error("Failed to convert surface: {}", SDL_GetError());
             return false;
         }
 
@@ -65,9 +100,7 @@ namespace SDLCore {
             m_textures.erase(existing);
         }
 
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, formatted);
-        SDL_DestroySurface(formatted);
-
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, m_surface);
         if (!tex) {
             Log::Error("Failed to create texture for window {}: {}", windowID.value, SDL_GetError());
             return false;
@@ -225,6 +258,12 @@ namespace SDLCore {
         other.m_width = 0;
         other.m_height = 0;
         other.m_textures.clear();
+    }
+
+    void Texture::LoadFallback() {
+        m_surface = GenerateFallbackSurface();
+        m_width = m_surface->w;
+        m_height = m_surface->h;
     }
 
 }

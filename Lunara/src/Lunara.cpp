@@ -22,12 +22,11 @@ static SDLCore::WindowID winPolygonID;
 static SDLCore::WindowID winImageID;
 std::vector<MovingRect> movingRects;
 
-SDLCore::Texture test;
-
 std::vector<SDLCore::Vertex> vertices;
 std::vector<Vector2> velocity;
 
 SDLCore::InputAction testAction;
+SDLCore::Texture exampleImage;
 
 void InputActionTest() {
     using namespace SDLCore;
@@ -112,7 +111,7 @@ void InputTest() {
 bool MovePolygon();
 void MoveRects();
 void Lunara::OnStart() {
-    test = SDLCore::Texture(SystemFilePath("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png"));
+    // exampleImage = SDLCore::Texture(SystemFilePath("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png"));
 
     {
         using namespace SDLCore;
@@ -129,7 +128,7 @@ void Lunara::OnStart() {
     CreateWindow(&winPolygonID, "Polygon", 800, 800);
     CreateWindow(&winImageID, "Image", 800, 800);
 
-    test.CreateForWindow(winImageID);
+    exampleImage.CreateForWindow(winImageID);
 
     int count = 50;
     for (int i = 0; i < count; ++i) {
@@ -247,7 +246,7 @@ void Lunara::OnUpdate() {
         RE::Clear();
 
         for (auto& mr : movingRects)
-            test.Render(mr.rect.x, mr.rect.y, mr.rect.z, mr.rect.w);
+            exampleImage.Render(mr.rect.x, mr.rect.y, mr.rect.z, mr.rect.w);
 
         RE::Present();
 
@@ -315,7 +314,7 @@ void MoveRects() {
     else if (winFillID != SDLCORE_INVALID_ID)
         win = app->GetWindow(winFillID);
     else if (winImageID != SDLCORE_INVALID_ID)
-        win = app->GetWindow(winFillID);
+        win = app->GetWindow(winImageID);
 
     if (!win)
         return;

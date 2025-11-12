@@ -11,37 +11,8 @@
 
 namespace SDLCore {
 	
-    enum class TextureParams : int {
-        NONE        = 0,
-        ROTATION    = 1 << 0,
-        CENTER      = 1 << 1,
-        COLOR_TINT  = 1 << 2,
-        FLIP        = 1 << 3,
-        TYPE        = 1 << 4
-    };
+    inline constexpr bool TEXTURE_FALLBACK_TEXTURE = true;
 
-    inline TextureParams operator|(TextureParams a, TextureParams b) {
-        return static_cast<TextureParams>(static_cast<int>(a) | static_cast<int>(b));
-    }
-
-    inline TextureParams operator&(TextureParams a, TextureParams b) {
-        return static_cast<TextureParams>(static_cast<int>(a) & static_cast<int>(b));
-    }
-
-    inline TextureParams& operator|=(TextureParams& a, TextureParams b) {
-        a = a | b;
-        return a;
-    }
-
-    inline TextureParams& operator&=(TextureParams& a, TextureParams b) {
-        a = a & b;
-        return a;
-    }
-
-    inline bool operator!(TextureParams a) {
-        return static_cast<int>(a) == 0;
-    }
-    
     /**
     * @brief Manages texture loading, GPU upload, and rendering for multiple SDL windows.
     *
@@ -51,6 +22,7 @@ namespace SDLCore {
     */
     class Texture {
     public:
+
         /**
         * @brief Specifies how the texture behaves.
         */
@@ -67,9 +39,10 @@ namespace SDLCore {
         };
         
         /**
-        * @brief Default constructor (creates an empty texture).
+        * @brief Default constructor (creates an empty texture or a fallback texture if requested).
+        * @param fallbackTexture If true, generates a simple fallback texture instead of leaving empty.
         */
-        Texture() = default;
+        Texture(bool fallbackTexture = false);
 
         /**
         * @brief Loads an image from a file path.
@@ -185,22 +158,13 @@ namespace SDLCore {
         * @param other Source texture whose internal data is transferred. After the call, @p other no longer owns any resources.
         */
         void MoveFrom(Texture&& other) noexcept;
+
+        /*
+        * @brief loads the fallback texture in to the sdl surface
+        */
+        void LoadFallback();
     };
 
-}
-
-template<>
-static inline std::string FormatUtils::toString<SDLCore::TextureParams>(SDLCore::TextureParams param) {
-    switch (param)
-    {
-    case SDLCore::TextureParams::NONE: return "NONE";
-    case SDLCore::TextureParams::ROTATION: return "ROTATION";
-    case SDLCore::TextureParams::CENTER:  return "CENTER";
-    case SDLCore::TextureParams::COLOR_TINT: return "COLOR_TINT";
-    case SDLCore::TextureParams::FLIP: return "FLIP";
-    case SDLCore::TextureParams::TYPE: return "TYPE";
-    default: return "UNKNWON";
-    }
 }
 
 template<>
