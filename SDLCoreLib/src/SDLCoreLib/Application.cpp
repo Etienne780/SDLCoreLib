@@ -1,5 +1,5 @@
 #include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <CoreLib/Log.h>
 #include <CoreLib/Algorithm.h>
 
@@ -32,14 +32,19 @@ namespace SDLCore {
 
     void Application::Init() {
         if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-            m_sdlErrorMsg = SDL_GetError();
+            m_cancelErrorMsg = SDL_GetError();
             cancelStart = 1;
+        }
+
+        if (TTF_Init()) {
+            m_cancelErrorMsg = SDL_GetError();
+            cancelStart = 2;
         }
     }
 
     int Application::Start() {
         if (cancelStart != 0) {
-            Log::Error("SDLCore::Application::Start: {} Could not start SDL error = {}", m_name, m_sdlErrorMsg);
+            Log::Error("SDLCore::Application::Start: {} Could not start SDL error = {}", m_name, m_cancelErrorMsg);
             return cancelStart;
         }
 
@@ -61,6 +66,7 @@ namespace SDLCore {
 
         Renderer::SetWindowRenderer();
         m_windows.clear();
+        TTF_Quit();
         SDL_Quit();
 
         return 0;

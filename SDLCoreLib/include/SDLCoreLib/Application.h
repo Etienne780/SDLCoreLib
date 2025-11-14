@@ -105,7 +105,7 @@ namespace SDLCore {
 
 		// 0 = ok; 1 = SDL error;
 		int cancelStart = 0;
-		std::string m_sdlErrorMsg;
+		std::string m_cancelErrorMsg;
 		
 		SDL_Event m_sdlEvent;
 		std::vector<std::unique_ptr<Window>> m_windows;
