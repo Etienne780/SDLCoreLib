@@ -2,7 +2,7 @@
 #include <CoreLib/Math/Vector2.h>
 #include <CoreLib/Math/Vector3.h>
 #include <CoreLib/Math/Vector4.h>
-#include <SDLCoreTypes.h>
+#include "SDLCoreTypes.h"
 #include "Window.h"
 
 namespace SDLCore {
