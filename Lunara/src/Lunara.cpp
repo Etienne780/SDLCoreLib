@@ -111,7 +111,7 @@ void InputTest() {
 bool MovePolygon();
 void MoveRects();
 void Lunara::OnStart() {
-    // exampleImage = SDLCore::Texture(SystemFilePath("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png"));
+    exampleImage = SDLCore::Texture(SystemFilePath("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png"));
 
     {
         using namespace SDLCore;

@@ -411,6 +411,10 @@ namespace SDLCore::Renderer {
 
 	#pragma endregion
 
-
+	void Text(const std::string& text, float x, float y);
+	void SetFont(const SystemFilePath& path);
+	void SetFontSize(float size);
+	float GetTextWidth(const std::string& text);
+	float GetTextHeight(const std::string& text);
 
 }

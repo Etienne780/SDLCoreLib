@@ -16,6 +16,9 @@ namespace SDLCore {
 		case 1:
 			msg = "Application SDL3 error!";
 			break;
+		case 2:
+			msg = "Application SDL3_ttf error!";
+			break;
 		default:
 			msg = "Result '" + FormatUtils::toString(result) + "' is Unknon!";
 		}
