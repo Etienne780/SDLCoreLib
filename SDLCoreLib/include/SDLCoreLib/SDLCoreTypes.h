@@ -6,9 +6,21 @@ inline constexpr int APPLICATION_FPS_UNCAPPED = 0;
 inline constexpr int APPLICATION_FPS_VSYNC_ON = -1;
 inline constexpr int APPLICATION_FPS_VSYNC_ADAPTIVE_ON = -2;
 
+class Vector4;
+
 namespace SDLCore {
 
 	typedef int SDLResult;
+	typedef SDL_Rect Rect;/**< Rect with int components (SDL_Rect) */
+	typedef SDL_FRect FRect;/**< Rect with float components (SDL_FRect) */
+	typedef SDL_Color Color;/**< Color with uint8 components (SDL_Color) */
+	typedef SDL_FColor FColor;/**< Color with float components (SDL_FColor) */
+
+	Rect ToRect(const FRect& fRect);
+	Rect ToRect(const Vector4& fRect);
+
+	FRect ToFRect(const Rect& rect);
+	FRect ToFRect(const Vector4& rect);
 
 	template<typename Tag>
 	struct SDLCoreID {
