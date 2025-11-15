@@ -35,17 +35,17 @@ namespace SDLCore {
     }
 
     Texture::Texture(bool fallbackTexture) {
+        m_type = Type::STATIC;
         if (fallbackTexture) {
             LoadFallback();
         }
     }
 
-    Texture::Texture(const std::string& path, Type type)
-        : m_type(type)
-    {
+    Texture::Texture(const char* path, Type type) 
+        : m_type(type) {
 
         if (File::Exists(path)) {
-            m_surface = IMG_Load(path.c_str());
+            m_surface = IMG_Load(path);
             if (!m_surface) {
                 Log::Error("SDLCore::Texture: Failed to load '{}': {}", path, SDL_GetError());
                 return;
@@ -61,8 +61,12 @@ namespace SDLCore {
         }
     }
 
+    Texture::Texture(const std::string& path, Type type)
+        : Texture(path.c_str(), type){
+    }
+
     Texture::Texture(const SystemFilePath& path, Type type)
-        : Texture(path.string(), type) {
+        : Texture(path.string().c_str(), type) {
     }
 
     Texture::~Texture() {
@@ -234,14 +238,18 @@ namespace SDLCore {
         return this;
     }
 
-    SDL_Renderer* Texture::GetRenderer(WindowID winID, Window* OutWin) {
+    SDL_Renderer* Texture::GetRenderer(WindowID winID) {
+        Window* win = nullptr;
+        return GetRenderer(winID, win);
+    }
+
+    SDL_Renderer* Texture::GetRenderer(WindowID winID, Window*& OutWin) {
         auto app = Application::GetInstance();
         if (!app)
             return nullptr;
 
         auto win = app->GetWindow(winID);
-        if (OutWin)
-            OutWin = win;
+        OutWin = win;
 
         if (!win)
             return nullptr;

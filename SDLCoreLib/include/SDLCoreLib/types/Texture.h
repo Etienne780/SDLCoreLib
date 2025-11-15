@@ -51,6 +51,13 @@ namespace SDLCore {
         * @param path Path to the image file.
         * @param type Texture type (default Type::STATIC).
         */
+        Texture(const char* path, Type type = Type::STATIC);
+
+        /**
+        * @brief Loads an image from a file path.
+        * @param path Path to the image file.
+        * @param type Texture type (default Type::STATIC).
+        */
         Texture(const std::string& path, Type type = Type::STATIC);
 
         /**
@@ -147,7 +154,7 @@ namespace SDLCore {
         int m_height = 0;
         float m_rotation = 0.0f;
         Vector2 m_center { 0.0f, 0.0f };
-        Vector3 m_colorTint { 1.0f, 1.0f, 1.0f };
+        Vector3 m_colorTint { 255.0f, 255.0f, 255.0f };
         Flip m_flip = Flip::NONE;
         Type m_type = Type::STATIC;
 
@@ -156,7 +163,8 @@ namespace SDLCore {
         * @param winID The window ID.
         * @return Pointer to the renderer or nullptr on failure.
         */
-        static SDL_Renderer* GetRenderer(WindowID winID, Window* OutWin = nullptr);
+        static SDL_Renderer* GetRenderer(WindowID winID);
+        static SDL_Renderer* GetRenderer(WindowID winID, Window*& OutWin);
 
         /**
         * @brief Frees all SDL resources owned by this texture (CPU surface and GPU textures).
