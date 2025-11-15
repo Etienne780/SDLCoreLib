@@ -252,7 +252,7 @@ namespace SDLCore {
 		* @param cb The function or lambda to call on window close.
 		* @return A unique WindowCallbackID that can be used to remove the callback later.
 		*/
-		WindowCallbackID AddOnClose(Callback cb);
+		WindowCallbackID AddOnClose(Callback&& cb);
 
 		/**
 		* @brief Removes a previously registered close callback.
@@ -264,6 +264,10 @@ namespace SDLCore {
 		* @return Pointer to this Window to allow method chaining.
 		*/
 		Window* RemoveOnClose(WindowCallbackID id);
+
+		WindowCallbackID AddOnSDLRendererDestroy(Callback&& cb);
+
+		Window* RemoveOnSDLRendererDestroy(WindowCallbackID id);
 
 		// ======= Properties that require window recreation =======
 
@@ -311,6 +315,7 @@ namespace SDLCore {
 
 		IDManager m_callbackIDManager;
 		std::vector<WindowCallback> m_onCloseCallbacks;
+		std::vector<WindowCallback> m_onSDLRendererDestroyCallbacks;
 
 		// ======= Renderer properties =======
 		int m_vsync = true;
@@ -318,7 +323,36 @@ namespace SDLCore {
 		std::shared_ptr<SDL_Window> m_sdlWindow = nullptr;
 		std::shared_ptr<SDL_Renderer> m_sdlRenderer = nullptr;
 
+		/**
+		* @brief Adds a callback to the given callback list and returns a unique ID for it.
+		*
+		* The callback will be stored in the vector and can later be invoked using CallCallbacks().
+		* @param callbacks The vector of callbacks to which the new callback should be added.
+		* @param cb The callback function to add.
+		* @return WindowCallbackID A unique identifier for the added callback.
+		*/
+		WindowCallbackID AddCallback(std::vector<WindowCallback>& callbacks, Callback cb);
+		
+		/**
+		* @brief Removes a callback from the given callback list by its unique ID.
+		*
+		* The callback identifier is released back to the internal ID manager.
+		* @param callbacks The vector of callbacks from which the callback should be removed.
+		* @param id The unique ID of the callback to remove.
+		* @return true if a callback was actually removed, false if no matching callback was found.
+		*/
+		bool RemoveCallback(std::vector<WindowCallback>& callbacks, WindowCallbackID id);
+
+		/**
+		* @brief Invokes all callbacks in the given callback list.
+		*
+		* Each callback that is valid (non-null) will be executed in the order they appear in the vector.
+		* @param callbacks The vector of callbacks to call.
+		*/
+		void CallCallbacks(const std::vector<WindowCallback>& callbacks);
+
 		void CallOnClose();
+		void CallOnSDLRendererDestroy();
 		
 		/**
 		* @brief Gets SDL window flags based on current settings
