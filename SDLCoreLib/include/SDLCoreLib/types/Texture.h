@@ -39,7 +39,7 @@ namespace SDLCore {
             VERTICAL = SDL_FlipMode::SDL_FLIP_VERTICAL,                                 /**< flip vertically */
             HORIZONTAL_AND_VERTICAL = SDL_FlipMode::SDL_FLIP_HORIZONTAL_AND_VERTICAL    /**< flip horizontally and vertically (not a diagonal flip) */
         };
-        
+
         /**
         * @brief Default constructor (creates an empty texture or a fallback texture if requested).
         * @param fallbackTexture If true, generates a simple fallback texture instead of leaving empty.
