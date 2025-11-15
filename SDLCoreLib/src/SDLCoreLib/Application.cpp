@@ -138,30 +138,21 @@ namespace SDLCore {
 
         if (idPtr) {
             *idPtr = newID;
-            win->AddOnClose([idPtr]() { idPtr->value = SDLCORE_INVALID_ID; });
+            win->AddOnClose([idPtr](Window* win) { idPtr->value = SDLCORE_INVALID_ID; });
         }
 
         return win.get();
     }
 
     Window* Application::CreateWindow(WindowID* idPtr, const std::string& name, int width, int height) {
-        WindowID newID = WindowID(m_windowIDManager.GetNewUniqueIdentifier());
-        if (newID.value == SDLCORE_INVALID_ID) {
-            Log::Error("SDLCore::Application::CreateWindow: Cant add window, id is invalid");
+        auto* win = AddWindow(idPtr, name, width, height);
+        if (!win)
             return nullptr;
-        }
 
-        auto& win = m_windows.emplace_back(Window::CreateInstance(newID, name, width, height));
-        win->SetVsync(m_vsync);
         win->CreateWindow();
         win->CreateRenderer();
 
-        if (idPtr) {
-            *idPtr = newID;
-            win->AddOnClose([idPtr]() { idPtr->value = SDLCORE_INVALID_ID; });
-        }
-
-        return win.get();
+        return win;
     }
 
     bool Application::RemoveWindow(WindowID id) {
