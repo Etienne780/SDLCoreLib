@@ -23,7 +23,7 @@ namespace SDLCore {
 	class Window {
 	friend class Application;
 	public:
-		using Callback = std::function<void(Window* win)>;
+		using Callback = std::function<void()>;
 
 		~Window();
 

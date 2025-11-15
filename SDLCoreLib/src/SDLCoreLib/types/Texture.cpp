@@ -83,21 +83,21 @@ namespace SDLCore {
         return *this;
     }
 
-    bool Texture::CreateForWindow(WindowID windowID) {
+    bool Texture::CreateForWindow(WindowID winID) {
         if (!m_surface) {
-            Log::Warn("SDLCore::Texture::CreateForWindow: Failed to create texture for window '{}', no valid texture available, using fallback texture!", windowID);
+            Log::Warn("SDLCore::Texture::CreateForWindow: Failed to create texture for window '{}', no valid texture available, using fallback texture!", winID);
             LoadFallback();
             return false;
         }
 
         Window* win = nullptr;
-        auto renderer = GetRenderer(windowID, win);
+        auto renderer = GetRenderer(winID, win);
         if (!renderer) {
-            Log::Error("Renderer is null for window {}", windowID.value);
+            Log::Error("Renderer is null for window {}", winID.value);
             return false;
         }
         
-        auto existing = m_textures.find(windowID);
+        auto existing = m_textures.find(winID);
         if (existing != m_textures.end()) {
             SDL_DestroyTexture(existing->second);
             m_textures.erase(existing);
@@ -106,18 +106,17 @@ namespace SDLCore {
         // adds this texture to an event of the window
         if (win) {
             // remove old callback
-            RemoveSDLRendererDestroyCallbackForWindow(windowID);
-            m_windowSDLRendererDestroyCallbacks[windowID] = win->AddOnSDLRendererDestroy(
-                [this](Window* win) { FreeForWindow(win->GetID()); });
+            RemoveSDLRendererDestroyCallbackForWindow(winID);
+            m_windowSDLRendererDestroyCallbacks[winID] = win->AddOnSDLRendererDestroy([this, winID]() { FreeForWindow(winID); });
         }
 
         SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, m_surface);
         if (!tex) {
-            Log::Error("Failed to create texture for window {}: {}", windowID.value, SDL_GetError());
+            Log::Error("Failed to create texture for window {}: {}", winID.value, SDL_GetError());
             return false;
         }
 
-        m_textures[windowID] = tex;
+        m_textures[winID] = tex;
         return true;
     }
 

@@ -145,7 +145,7 @@ namespace SDLCore {
 
         if (idPtr) {
             *idPtr = newID;
-            win->AddOnClose([idPtr](Window* win) { idPtr->value = SDLCORE_INVALID_ID; });
+            win->AddOnClose([idPtr]() { idPtr->value = SDLCORE_INVALID_ID; });
         }
 
         return win.get();

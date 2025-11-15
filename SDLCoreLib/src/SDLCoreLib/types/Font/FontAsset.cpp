@@ -222,7 +222,7 @@ namespace SDLCore {
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer.get(), glyphAtlasSurf);
         if (texture) {
             m_winIDToGlyphAtlasTexture[winID] = texture;
-            m_winIDToWinCallbackID[winID] = win->AddOnSDLRendererDestroy([this](Window* win) { FreeTextureForWindow(win->GetID()); });
+            m_winIDToWinCallbackID[winID] = win->AddOnSDLRendererDestroy([this, winID]() { FreeTextureForWindow(winID); });
         }
 
         return texture;
