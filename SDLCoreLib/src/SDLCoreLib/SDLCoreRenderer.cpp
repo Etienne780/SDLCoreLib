@@ -567,6 +567,11 @@ namespace SDLCore::Renderer {
         if (!atlas)
             return;
 
+        SDL_SetTextureColorMod(atlas, 
+            s_activeColor.r, 
+            s_activeColor.g, 
+            s_activeColor.b);
+
         float penX = x;
         float penY = y;
 

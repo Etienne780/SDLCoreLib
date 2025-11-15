@@ -288,6 +288,7 @@ void Lunara::OnUpdate() {
         std::string msg = "Hello World!";
         RE::SetColor(0);
         RE::FillRect(pos.x, pos.y, RE::GetTextWidth(msg), RE::GetTextHeight(msg));
+        RE::SetColor(0, 255, 0);
         RE::Text(msg, pos.x, pos.y);
 
         RE::Present();
