@@ -1,4 +1,5 @@
 ﻿#include <vector>
+#include <cmath>
 
 #include <SDL3/SDL.h>
 #include <CoreLib/Log.h>
@@ -12,10 +13,15 @@ namespace SDLCore::Renderer {
     static std::weak_ptr<SDL_Renderer> s_renderer;
     static WindowID s_winID { SDLCORE_INVALID_ID };
 
+    // ========== Primitives ========== 
     static constexpr bool SET_COLOR = true;
     static SDL_Color s_activeColor { 255, 255, 255, 255 };
     static float s_strokeWidth = 1;
     static bool s_innerStroke = true;
+
+    // ========== Text ==========
+    std::shared_ptr<SDLCore::Font> s_font = nullptr;
+    float s_fontSize = 16;
 
     SDL_Renderer* GetActiveRenderer() {
         auto rendererPtr = s_renderer.lock();
@@ -546,23 +552,103 @@ namespace SDLCore::Renderer {
     #pragma endregion
 
     void Text(const std::string& text, float x, float y) {
+        auto renderer = GetActiveRenderer("Text");
+        if (!renderer)
+            return;
 
+        if (!s_font) {
+            Log::Error("SDLCore::Renderer::Text: Faild to draw text '{}', no font was set", text);
+            return;
+        }
+
+        auto* asset = s_font->GetFontAsset();
+
+        SDL_Texture* atlas = asset->GetGlyphAtlasTexture(s_winID);
+        if (!atlas)
+            return;
+
+        float penX = x;
+        float penY = y;
+
+        float h = GetTextHeight(text);
+        for (char c : text) {
+            auto* m = asset->GetGlyphMetrics(c);
+            if (!m) continue;
+
+            SDL_FRect dst{
+              static_cast<float>(penX),
+              static_cast<float>(penY),
+              static_cast<float>(m->atlasWidth),
+              static_cast<float>(m->atlasHeight)
+            };
+            float d = m->MetricsHeight();
+            float res = d * s_fontSize;
+
+            SDL_FRect src{
+              static_cast<float>(m->atlasX),
+              static_cast<float>(m->atlasY),
+              static_cast<float>(m->atlasWidth),
+              static_cast<float>(m->atlasHeight)
+            };
+
+            SDL_RenderTexture(renderer.get(), atlas, &src, &dst);
+           
+            penX += m->advance;
+        }
+    }
+
+    void SetFont(std::shared_ptr<Font> font) {
+        s_font = font;
+        s_font->SelectSize(s_fontSize);
     }
 
     void SetFont(const SystemFilePath& path) {
-
+        s_font = std::make_shared<Font>(path);
+        s_font->SelectSize(s_fontSize);
     }
 
     void SetFontSize(float size) {
+        s_fontSize = std::max(size, 0.0f);
+        if (s_font)
+            s_font->SelectSize(s_fontSize);
+    }
 
+    float GetActiveFontSize() {
+        return (s_font) ? s_font->GetSelectedSize() : s_fontSize;
+    }
+
+    std::shared_ptr<Font> GetActiveFont() {
+        return s_font;
     }
 
     float GetTextWidth(const std::string& text) {
-        return 0;
+        if (!s_font) {
+            Log::Error("SDLCore::Renderer::GetTextWidth: Faild to get text width for text'{}', no font was set", text);
+            return 0.0f;
+        }
+
+        float width = 0.0f;
+        auto* asset = s_font->GetFontAsset();
+        for (char c : text) {
+            if (auto* m = asset->GetGlyphMetrics(c))
+                width += m->advance;
+        }
+        return width;
     }
 
     float GetTextHeight(const std::string& text) {
-        return 0;
+        if (!s_font) {
+            Log::Error("SDLCore::Renderer::GetTextHeight: Faild to get text height for text'{}', no font was set", text);
+            return 0.0f;
+        }
+
+        auto* asset = s_font->GetFontAsset();
+        float maxH = 0;
+        for (char c : text) {
+            if (auto* m = asset->GetGlyphMetrics(c))
+                maxH = std::max(maxH, static_cast<float>(m->atlasHeight));
+        }
+        return maxH;
     }
 
 }

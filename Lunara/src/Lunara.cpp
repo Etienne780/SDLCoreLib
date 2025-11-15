@@ -20,6 +20,7 @@ static SDLCore::WindowID winFillID;
 static SDLCore::WindowID winStrokeID;
 static SDLCore::WindowID winPolygonID;
 static SDLCore::WindowID winImageID;
+static SDLCore::WindowID winTextID;
 std::vector<MovingRect> movingRects;
 
 std::vector<SDLCore::Vertex> vertices;
@@ -108,38 +109,9 @@ void InputTest() {
     }
 }
 
-/*
-Font() = default;
-Font(const SystemFilePath& path, std::vector<int> sizes = {}, size_t cachedSizes = 10);
-
-Font* SelectSize(int size);
-Font* SetCachSize(size_t size);
-Font* Setpath(const SystemFilePath& path);
-Font* Clear();
-*/
-
 bool MovePolygon();
 void MoveRects();
 void Lunara::OnStart() {
-    {
-        using namespace SDLCore;
-
-        Font font1;
-        font1.SelectSize(10);
-        font1.Setpath("D:/Dev/GameDesign/Fonts/AmazDooMLeft.ttf");
-        font1.SelectSize(12);
-
-        font1.SetCachSize(2);
-
-        font1.SelectSize(13);
-        font1.SelectSize(14);
-        font1.SelectSize(15);
-
-        font1.Clear();
-
-        Font font2("D:/Dev/GameDesign/Fonts/AmazDooMLeft.ttf", { 20, 10, 12, 13, 32 }, 3);
-    }
-    
     exampleImage = SDLCore::Texture("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png");
 
     {
@@ -156,6 +128,7 @@ void Lunara::OnStart() {
     CreateWindow(&winStrokeID, "StrokeRects", 800, 800);
     CreateWindow(&winPolygonID, "Polygon", 800, 800);
     CreateWindow(&winImageID, "Image", 800, 800);
+    CreateWindow(&winTextID, "Text", 800, 800);
 
     exampleImage.CreateForWindow(winImageID);
 
@@ -179,6 +152,9 @@ void Lunara::OnStart() {
     }
 
     SetFPSCap(APPLICATION_FPS_UNCAPPED);
+
+    SDLCore::Renderer::SetFont("C:/Windows/WinSxS/amd64_microsoft-windows-font-truetype-arial_31bf3856ad364e35_10.0.26100.1_none_6f77189015e7ae71/arial.ttf");
+    SDLCore::Renderer::SetFontSize(120);
 }
 
 void Lunara::OnUpdate() {
@@ -269,6 +245,10 @@ void Lunara::OnUpdate() {
     }
 
     if (winImageID != SDLCORE_INVALID_ID) {
+        // auto* win =GetWindow(winImageID);
+        // double op = ((std::sin(Time::GetTimeSec()) + 1) / 2);
+        // win->SetOpacity(op);
+        
         Input::SetWindow(winImageID);
         RE::SetWindowRenderer(winImageID);
         RE::SetColor(120, 50, 70);
@@ -282,6 +262,39 @@ void Lunara::OnUpdate() {
         // needs to be called after using the window. becaus nullptr and so ...
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
             RemoveWindow(winImageID);
+    }
+
+    if (winTextID != SDLCORE_INVALID_ID) {
+        Input::SetWindow(winTextID);
+        RE::SetWindowRenderer(winTextID);
+        RE::SetColor(23, 43, 89);
+        RE::Clear();
+
+        int scrollDir = 0;
+        if (Input::GetScrollDir(scrollDir)) {
+            float step = 2.0f;
+            float fontsize = RE::GetActiveFontSize() + scrollDir * step;
+            fontsize = std::clamp(fontsize, 6.0f, 144.0f);
+            RE::SetFontSize(fontsize);
+        }
+
+        static Vector2 pos{ 20, 100 };
+        float speed = 2;
+        if (Input::KeyPressed(KeyCode::W)) pos.y += speed * Time::GetDeltaTime();
+        if (Input::KeyPressed(KeyCode::S)) pos.y -= speed * Time::GetDeltaTime();
+        if (Input::KeyPressed(KeyCode::A)) pos.x += speed * Time::GetDeltaTime();
+        if (Input::KeyPressed(KeyCode::D)) pos.x -= speed * Time::GetDeltaTime();
+
+        std::string msg = "Hello World!";
+        RE::SetColor(0);
+        RE::FillRect(pos.x, pos.y, RE::GetTextWidth(msg), RE::GetTextHeight(msg));
+        RE::Text(msg, pos.x, pos.y);
+
+        RE::Present();
+
+        // needs to be called after using the window. becaus nullptr and so ...
+        if (Input::KeyJustPressed(KeyCode::ESCAPE))
+            RemoveWindow(winTextID);
     }
     static double lastTime = -1;
     if (lastTime < Time::GetTimeSec()) {

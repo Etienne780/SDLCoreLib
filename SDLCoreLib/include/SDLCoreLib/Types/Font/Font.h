@@ -1,9 +1,8 @@
 #pragma once
 #include <vector>
 #include <unordered_map>
-#include "SDLCoreTypes.h"
-
-struct TTF_Font;
+#include "Types/Font/FontAsset.h"
+#include "Types/Types.h"
 
 namespace SDLCore {
 
@@ -17,6 +16,9 @@ namespace SDLCore {
 		Font* Setpath(const SystemFilePath& path);
 		Font* Clear();
 
+		FontAsset* GetFontAsset();
+		FontAsset* GetFontAsset(float size);
+
 		float GetSelectedSize() const;
 		SystemFilePath GetSystemPath() const;
 		std::string GetFileName() const;
@@ -24,26 +26,6 @@ namespace SDLCore {
 		size_t GetNumberOfCachedFontAssets() const;
 
 	private:
-		class FontAsset {
-		public:
-			FontAsset(TTF_Font* font, size_t size);
-			~FontAsset();
-
-			FontAsset(const FontAsset&) = delete;
-			FontAsset& operator=(const FontAsset&) = delete;
-
-			FontAsset(FontAsset&& other) noexcept;
-			FontAsset& operator=(FontAsset&& other) noexcept;
-
-			float fontSize = -1;
-			size_t lastUseTick = 0;
-			TTF_Font* ttfFont = nullptr;
-
-		private:
-			void MoveFrom(FontAsset&& other) noexcept;
-			void Cleanup();
-		};
-
 		SystemFilePath m_path;
 		std::vector<FontAsset> m_fontAssets;
 		size_t m_maxFontSizesCached = 10;/**< number of font sizes that get stored at the same time */
@@ -51,7 +33,6 @@ namespace SDLCore {
 		size_t m_globalAccessCounter = 0;
 		float m_selectedSize = -1;
 
-		FontAsset* GetFontAsset(float size);
 		bool CreateFontAsset(float size);
 		void CalculateCachedFonts();
 	};

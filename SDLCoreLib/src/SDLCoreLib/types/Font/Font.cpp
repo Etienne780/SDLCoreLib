@@ -1,6 +1,8 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <CoreLib/Log.h>
-#include "types/Font.h"
+#include <CoreLib/File.h>
+
+#include "Types/Font/Font.h"
 
 namespace SDLCore {
 
@@ -13,7 +15,7 @@ namespace SDLCore {
 		}
 
 		for (float size : sizes) {
-			if (!GetFontAsset(size)) {
+			if (!CreateFontAsset(size)) {
 				Log::Error("SDLCore::Font: Could not create Font with size {}!", size);
 			}
 		}
@@ -68,6 +70,22 @@ namespace SDLCore {
 		return this;
 	}
 
+	FontAsset* Font::GetFontAsset() {
+		return GetFontAsset(m_selectedSize);
+	}
+
+	FontAsset* Font::GetFontAsset(float size) {
+		auto it = std::find_if(m_fontAssets.begin(), m_fontAssets.end(),
+			[size](const FontAsset& fontAsset) { return fontAsset.fontSize == size; });
+
+		if (it != m_fontAssets.end())
+			return &(*it);
+
+		if (!CreateFontAsset(size))
+			return nullptr;
+
+		return &m_fontAssets.back();
+	}
 
 	float Font::GetSelectedSize() const {
 		return m_selectedSize;
@@ -87,19 +105,6 @@ namespace SDLCore {
 
 	size_t Font::GetNumberOfCachedFontAssets() const {
 		return m_fontAssets.size();
-	}
-
-	Font::FontAsset* Font::GetFontAsset(float size) {
-		auto it = std::find_if(m_fontAssets.begin(), m_fontAssets.end(),
-			[size](const FontAsset& fontAsset) { return fontAsset.fontSize == size; });
-
-		if (it != m_fontAssets.end())
-			return &(*it);
-
-		if (!CreateFontAsset(size))
-			return nullptr;
-
-		return &m_fontAssets.back();
 	}
 
 	// could create multiple fontassets with the same size
@@ -138,46 +143,5 @@ namespace SDLCore {
 			m_selectedSize = -1;
 		}
 	}
-
-	#pragma region FontAsset
-
-	Font::FontAsset::FontAsset(TTF_Font* font, size_t size)
-		: ttfFont(font), fontSize(size) {
-	}
-
-	Font::FontAsset::~FontAsset() {
-		Cleanup();
-	};
-
-	Font::FontAsset::FontAsset(FontAsset&& other) noexcept {
-		MoveFrom(std::move(other));
-	}
-
-	Font::FontAsset& Font::FontAsset::operator=(Font::FontAsset&& other) noexcept {
-		MoveFrom(std::move(other));
-		return *this;
-	}
-
-	void Font::FontAsset::MoveFrom(FontAsset&& other) noexcept {
-		if (this == &other) return;
-		Cleanup();
-
-		this->fontSize = other.fontSize;
-		this->lastUseTick = other.lastUseTick;
-		this->ttfFont = other.ttfFont;
-		other.fontSize = 0;
-		other.lastUseTick = 0;
-		other.ttfFont = nullptr;
-	}
-
-	void Font::FontAsset::Cleanup() {
-		if (ttfFont)
-			TTF_CloseFont(ttfFont);
-		ttfFont = nullptr;
-		lastUseTick = 0;
-		fontSize = 0;
-	}
-
-	#pragma endregion
 
 }

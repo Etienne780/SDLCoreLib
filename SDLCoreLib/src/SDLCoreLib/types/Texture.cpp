@@ -70,7 +70,8 @@ namespace SDLCore {
     }
 
     Texture::~Texture() {
-        Cleanup();
+        if (!Application::IsQuit())
+            Cleanup();
     }
 
     Texture::Texture(Texture&& other) noexcept {

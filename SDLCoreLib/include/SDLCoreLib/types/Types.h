@@ -63,27 +63,11 @@ namespace SDLCore {
 		TYPE = 1 << 4
 	};
 
-	inline TextureParams operator|(TextureParams a, TextureParams b) {
-		return static_cast<TextureParams>(static_cast<int>(a) | static_cast<int>(b));
-	}
-
-	inline TextureParams operator&(TextureParams a, TextureParams b) {
-		return static_cast<TextureParams>(static_cast<int>(a) & static_cast<int>(b));
-	}
-
-	inline TextureParams& operator|=(TextureParams& a, TextureParams b) {
-		a = a | b;
-		return a;
-	}
-
-	inline TextureParams& operator&=(TextureParams& a, TextureParams b) {
-		a = a & b;
-		return a;
-	}
-
-	inline bool operator!(TextureParams a) {
-		return static_cast<int>(a) == 0;
-	}
+	TextureParams operator|(TextureParams a, TextureParams b);
+	TextureParams operator&(TextureParams a, TextureParams b);
+	TextureParams& operator|=(TextureParams& a, TextureParams b);
+	TextureParams& operator&=(TextureParams& a, TextureParams b);
+	bool operator!(TextureParams a);
 
 }
 

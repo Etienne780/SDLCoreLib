@@ -1,7 +1,10 @@
 #pragma once
+#include <memory>
+
 #include <CoreLib/Math/Vector2.h>
 #include <CoreLib/Math/Vector3.h>
 #include <CoreLib/Math/Vector4.h>
+
 #include "SDLCoreTypes.h"
 #include "Window.h"
 
@@ -412,8 +415,12 @@ namespace SDLCore::Renderer {
 	#pragma endregion
 
 	void Text(const std::string& text, float x, float y);
+	void SetFont(std::shared_ptr<Font> font);
 	void SetFont(const SystemFilePath& path);
 	void SetFontSize(float size);
+
+	float GetActiveFontSize();
+	std::shared_ptr<Font> GetActiveFont();
 	float GetTextWidth(const std::string& text);
 	float GetTextHeight(const std::string& text);
 

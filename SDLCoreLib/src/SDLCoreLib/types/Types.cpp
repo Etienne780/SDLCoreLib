@@ -1,5 +1,5 @@
 #include <CoreLib/Math/Vector4.h>
-#include "SDLCoreTypes.h"
+#include "Types/Types.h"
 
 namespace SDLCore {
 
@@ -21,6 +21,28 @@ namespace SDLCore {
 
 	FRect ToFRect(const Vector4& rect) {
 		return FRect{ rect.x, rect.y, rect.z, rect.w };
+	}
+
+	TextureParams operator|(TextureParams a, TextureParams b) {
+		return static_cast<TextureParams>(static_cast<int>(a) | static_cast<int>(b));
+	}
+
+	TextureParams operator&(TextureParams a, TextureParams b) {
+		return static_cast<TextureParams>(static_cast<int>(a) & static_cast<int>(b));
+	}
+
+	TextureParams& operator|=(TextureParams& a, TextureParams b) {
+		a = a | b;
+		return a;
+	}
+
+	TextureParams& operator&=(TextureParams& a, TextureParams b) {
+		a = a & b;
+		return a;
+	}
+
+	bool operator!(TextureParams a) {
+		return static_cast<int>(a) == 0;
 	}
 
 }
