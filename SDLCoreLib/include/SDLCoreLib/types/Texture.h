@@ -11,6 +11,8 @@
 
 namespace SDLCore {
 	
+    class Window;
+    
     inline constexpr bool TEXTURE_FALLBACK_TEXTURE = true;
 
     /**
@@ -81,11 +83,27 @@ namespace SDLCore {
 
         /**
         * @brief Ensures a GPU texture exists for the specified window.
-        *        If a texture is already present, it will be replaced.
+        *
+        * If a texture is already present for the window, it will be destroyed and replaced.
+        * If the underlying surface is null, a fallback texture will be loaded instead.
+        * Also registers a callback with the window to automatically free the texture
+        * when the window is closed.
+        *
         * @param windowID The identifier of the window for which to create the texture.
         * @return True if the texture was created or replaced successfully, false otherwise.
         */
         bool CreateForWindow(WindowID windowID);
+
+        /**
+        * @brief Frees the GPU texture for a specific window.
+        *
+        * This removes the texture from the GPU and unregisters any on-close callbacks
+        * associated with this window. After calling this, the texture will need
+        * to be recreated via CreateForWindow if it should be used again.
+        *
+        * @param windowID ID of the window whose texture should be released.
+        */
+        void FreeForWindow(WindowID windowID);
 
         /**
         * @brief Renders this texture in the active window.
@@ -105,12 +123,6 @@ namespace SDLCore {
         */
         void Update(WindowID windowID, const void* pixels, int pitch);
 
-        /**
-        * @brief Frees the GPU texture for a specific window.
-        * @param windowID ID of the window whose texture should be released.
-        */
-        void FreeForWindow(WindowID windowID);
-
         Texture* SetRotation(float rotation);
         Texture* SetCenter(const Vector2& center);
         Texture* SetColorTint(const Vector3& color);
@@ -129,6 +141,7 @@ namespace SDLCore {
     private:
         SDL_Surface* m_surface = nullptr;
         std::unordered_map<WindowID, SDL_Texture*> m_textures;
+        std::unordered_map<WindowID, WindowCallbackID> m_windowCloseCallbacks;
 
         int m_width = 0;
         int m_height = 0;
@@ -143,7 +156,7 @@ namespace SDLCore {
         * @param winID The window ID.
         * @return Pointer to the renderer or nullptr on failure.
         */
-        static SDL_Renderer* GetRenderer(WindowID winID);
+        static SDL_Renderer* GetRenderer(WindowID winID, Window* OutWin = nullptr);
 
         /**
         * @brief Frees all SDL resources owned by this texture (CPU surface and GPU textures).
@@ -163,6 +176,19 @@ namespace SDLCore {
         * @brief loads the fallback texture in to the sdl surface
         */
         void LoadFallback();
+
+        /**
+        * @brief Removes the registered "on-close" callback for a specific window.
+        *
+        * This will unregister the callback from the window and remove it from
+        * the internal map of window callbacks.
+        *
+        * If the application instance or the window does not exist, the function
+        * will silently return.
+        *
+        * @param winID The ID of the window whose callback should be removed.
+        */
+        void RemoveCloseCallbackForWindow(WindowID winID);
     };
 
 }

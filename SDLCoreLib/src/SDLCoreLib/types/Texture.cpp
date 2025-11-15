@@ -85,10 +85,16 @@ namespace SDLCore {
             return false;
         }
 
-        auto renderer = GetRenderer(windowID);
+        Window* win = nullptr;
+        auto renderer = GetRenderer(windowID, win);
         if (!renderer) {
             Log::Error("Renderer is null for window {}", windowID.value);
             return false;
+        }
+
+        // adds this texture to the close event of the window
+        if (win) {
+            win->AddOnClose([this, windowID]() { FreeForWindow(windowID); });
         }
 
         auto existing = m_textures.find(windowID);
@@ -168,7 +174,10 @@ namespace SDLCore {
             SDL_DestroyTexture(it->second);
             m_textures.erase(it);
         }
+
+        RemoveCloseCallbackForWindow(windowID);
     }
+
 
     Texture* Texture::SetRotation(float rotation) {
         m_rotation = rotation;
@@ -225,16 +234,19 @@ namespace SDLCore {
         return this;
     }
 
-    SDL_Renderer* Texture::GetRenderer(WindowID winID) {
+    SDL_Renderer* Texture::GetRenderer(WindowID winID, Window* OutWin) {
         auto app = Application::GetInstance();
         if (!app)
             return nullptr;
 
-        auto window = app->GetWindow(winID);
-        if (!window)
+        auto win = app->GetWindow(winID);
+        if (OutWin)
+            OutWin = win;
+
+        if (!win)
             return nullptr;
 
-        auto renderer = window->GetSDLRenderer().lock();
+        auto renderer = OutWin->GetSDLRenderer().lock();
         if (!renderer)
             return nullptr;
 
@@ -250,6 +262,17 @@ namespace SDLCore {
             SDL_DestroySurface(m_surface);
             m_surface = nullptr;
         }
+
+        // Remove all window callbacks safely
+        std::vector<WindowID> windowIDs;
+        windowIDs.reserve(m_windowCloseCallbacks.size());
+        for (auto& [winID, _] : m_windowCloseCallbacks)
+            windowIDs.push_back(winID);
+
+        for (auto winID : windowIDs)
+            RemoveCloseCallbackForWindow(winID);
+
+        m_windowCloseCallbacks.clear();
     }
 
     void Texture::MoveFrom(Texture&& other) noexcept {
@@ -273,6 +296,20 @@ namespace SDLCore {
         m_surface = GenerateFallbackSurface();
         m_width = m_surface->w;
         m_height = m_surface->h;
+    }
+
+    void Texture::RemoveCloseCallbackForWindow(WindowID winID) {
+        auto itCallback = m_windowCloseCallbacks.find(winID);
+        if (itCallback == m_windowCloseCallbacks.end())
+            return;
+
+        if (auto* app = Application::GetInstance()) {
+            if (auto* win = app->GetWindow(winID)) {
+                win->RemoveOnClose(itCallback->second);
+            }
+        }
+
+        m_windowCloseCallbacks.erase(itCallback);
     }
 
 }
