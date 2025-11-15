@@ -30,7 +30,7 @@ namespace SDLCore {
         return m_application;
     }
 
-    bool Application::IsApplicationQuit() {
+    bool Application::IsQuit() {
         if (m_application) {
             return m_application->m_closeApplication;
         }

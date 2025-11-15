@@ -24,7 +24,7 @@ namespace SDLCore {
 		* @brief Returns whether the entire application is scheduled to quit.
 		* @return true if the application shutdown has been requested, false otherwise
 		*/
-		static bool IsApplicationQuit();
+		static bool IsQuit();
 
 		/**
 		* @brief Starts the main loop of the application
