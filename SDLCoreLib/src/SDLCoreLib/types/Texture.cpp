@@ -246,7 +246,7 @@ namespace SDLCore {
         if (!win)
             return nullptr;
 
-        auto renderer = OutWin->GetSDLRenderer().lock();
+        auto renderer = win->GetSDLRenderer().lock();
         if (!renderer)
             return nullptr;
 
