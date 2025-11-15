@@ -122,9 +122,9 @@ namespace SDLCore {
 	}
 
 	void Window::CallOnClose() {
-		for (auto& cb : m_onCloseCallbacks) {
-			if (cb)
-				cb();
+		for (auto& windowCallback : m_onCloseCallbacks) {
+			if (windowCallback.cb)
+				windowCallback.cb();
 		}
 	}
 
@@ -313,8 +313,20 @@ namespace SDLCore {
 		return this;
 	}
 
-	Window* Window::AddOnClose(const Callback& cb) {
-		m_onCloseCallbacks.emplace_back(cb);
+	WindowCallbackID Window::AddOnClose(Callback cb) {
+		WindowCallbackID id{ m_callbackIDManager.GetNewUniqueIdentifier() };
+		m_onCloseCallbacks.emplace_back(id, std::move(cb));
+		return id;
+	}
+
+	Window* Window::RemoveOnClose(WindowCallbackID id) {
+		m_onCloseCallbacks.erase(
+			std::remove_if(m_onCloseCallbacks.begin(), m_onCloseCallbacks.end(),
+				[id](const WindowCallback& wc) { return wc.id == id; }),
+			m_onCloseCallbacks.end()
+		);
+
+		m_callbackIDManager.FreeUniqueIdentifier(id.value);
 		return this;
 	}
 

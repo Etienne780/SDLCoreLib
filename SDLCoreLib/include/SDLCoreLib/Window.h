@@ -5,6 +5,7 @@
 #include <SDL3/SDL.h>
 #include <CoreLib/Math/Vector2.h>
 
+#include "IDManager.h"
 #include "SDLCoreTypes.h"
 
 namespace SDLCore {
@@ -243,9 +244,26 @@ namespace SDLCore {
 		Window* SetOpacity(float opacity);
 
 		/**
-		* @brief Subcribes to the close event of this window
+		* @brief Subscribes a callback to be called when this window is closed.
+		*
+		* The callback will be stored internally and invoked when the window is destroyed
+		* or explicitly closed. Multiple callbacks can be registered.
+		*
+		* @param cb The function or lambda to call on window close.
+		* @return A unique WindowCallbackID that can be used to remove the callback later.
 		*/
-		Window* AddOnClose(const Callback& cb);
+		WindowCallbackID AddOnClose(Callback cb);
+
+		/**
+		* @brief Removes a previously registered close callback.
+		*
+		* Use the WindowCallbackID returned by AddOnClose to remove a specific callback.
+		* If the ID is invalid or already removed, this function does nothing.
+		*
+		* @param id The unique ID of the callback to remove.
+		* @return Pointer to this Window to allow method chaining.
+		*/
+		Window* RemoveOnClose(WindowCallbackID id);
 
 		// ======= Properties that require window recreation =======
 
@@ -257,6 +275,15 @@ namespace SDLCore {
 		Window(Window&&) = delete;
 		Window& operator=(Window&&) = delete;
 		
+		struct WindowCallback {
+			WindowCallbackID id;
+			Callback cb;
+
+			WindowCallback(WindowCallbackID _id, Callback _cb) 
+				: id(_id), cb(_cb) {
+			}
+		};
+
 		/**
 		* @brief Creates a new instance of Window
 		* @param id Window ID
@@ -282,7 +309,8 @@ namespace SDLCore {
 		bool m_borderless = false;
 		float m_opacity = 1;
 
-		std::vector<Callback> m_onCloseCallbacks;
+		IDManager m_callbackIDManager;
+		std::vector<WindowCallback> m_onCloseCallbacks;
 
 		// ======= Renderer properties =======
 		int m_vsync = true;

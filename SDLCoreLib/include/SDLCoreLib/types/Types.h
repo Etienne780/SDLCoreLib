@@ -50,7 +50,9 @@ namespace SDLCore {
 	};
 
 	struct WindowTag {};
+	struct WindowCallbackTag {};
 	using WindowID = SDLCoreID<WindowTag>;
+	using WindowCallbackID = SDLCoreID<WindowCallbackTag>;
 
 	enum class TextureParams : int {
 		NONE = 0,
@@ -96,6 +98,11 @@ namespace std {
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::WindowTag>>(SDLCore::WindowID id) {
+	return FormatUtils::toString(id.value);
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::WindowCallbackTag>>(SDLCore::WindowCallbackID id) {
 	return FormatUtils::toString(id.value);
 }
 
