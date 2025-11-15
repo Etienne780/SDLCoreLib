@@ -95,16 +95,19 @@ namespace SDLCore {
             Log::Error("Renderer is null for window {}", windowID.value);
             return false;
         }
-
-        // adds this texture to the close event of the window
-        if (win) {
-            win->AddOnClose([this, windowID]() { FreeForWindow(windowID); });
-        }
-
+        
         auto existing = m_textures.find(windowID);
         if (existing != m_textures.end()) {
             SDL_DestroyTexture(existing->second);
             m_textures.erase(existing);
+        }
+        
+        // adds this texture to an event of the window
+        if (win) {
+            // remove old callback
+            RemoveSDLRendererDestroyCallbackForWindow(windowID);
+            m_windowSDLRendererDestroyCallbacks[windowID] = win->AddOnSDLRendererDestroy(
+                [this, windowID]() { FreeForWindow(windowID); });
         }
 
         SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, m_surface);
@@ -179,7 +182,7 @@ namespace SDLCore {
             m_textures.erase(it);
         }
 
-        RemoveCloseCallbackForWindow(windowID);
+        RemoveSDLRendererDestroyCallbackForWindow(windowID);
     }
 
 
@@ -273,14 +276,14 @@ namespace SDLCore {
 
         // Remove all window callbacks safely
         std::vector<WindowID> windowIDs;
-        windowIDs.reserve(m_windowCloseCallbacks.size());
-        for (auto& [winID, _] : m_windowCloseCallbacks)
+        windowIDs.reserve(m_windowSDLRendererDestroyCallbacks.size());
+        for (auto& [winID, _] : m_windowSDLRendererDestroyCallbacks)
             windowIDs.push_back(winID);
 
         for (auto winID : windowIDs)
-            RemoveCloseCallbackForWindow(winID);
+            RemoveSDLRendererDestroyCallbackForWindow(winID);
 
-        m_windowCloseCallbacks.clear();
+        m_windowSDLRendererDestroyCallbacks.clear();
     }
 
     void Texture::MoveFrom(Texture&& other) noexcept {
@@ -306,18 +309,18 @@ namespace SDLCore {
         m_height = m_surface->h;
     }
 
-    void Texture::RemoveCloseCallbackForWindow(WindowID winID) {
-        auto itCallback = m_windowCloseCallbacks.find(winID);
-        if (itCallback == m_windowCloseCallbacks.end())
+    void Texture::RemoveSDLRendererDestroyCallbackForWindow(WindowID winID) {
+        auto itCallback = m_windowSDLRendererDestroyCallbacks.find(winID);
+        if (itCallback == m_windowSDLRendererDestroyCallbacks.end())
             return;
 
         if (auto* app = Application::GetInstance()) {
             if (auto* win = app->GetWindow(winID)) {
-                win->RemoveOnClose(itCallback->second);
+                win->RemoveOnSDLRendererDestroy(itCallback->second);
             }
         }
 
-        m_windowCloseCallbacks.erase(itCallback);
+        m_windowSDLRendererDestroyCallbacks.erase(itCallback);
     }
 
 }

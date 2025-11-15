@@ -148,7 +148,7 @@ namespace SDLCore {
     private:
         SDL_Surface* m_surface = nullptr;
         std::unordered_map<WindowID, SDL_Texture*> m_textures;
-        std::unordered_map<WindowID, WindowCallbackID> m_windowCloseCallbacks;
+        std::unordered_map<WindowID, WindowCallbackID> m_windowSDLRendererDestroyCallbacks;
 
         int m_width = 0;
         int m_height = 0;
@@ -196,7 +196,7 @@ namespace SDLCore {
         *
         * @param winID The ID of the window whose callback should be removed.
         */
-        void RemoveCloseCallbackForWindow(WindowID winID);
+        void RemoveSDLRendererDestroyCallbackForWindow(WindowID winID);
     };
 
 }
