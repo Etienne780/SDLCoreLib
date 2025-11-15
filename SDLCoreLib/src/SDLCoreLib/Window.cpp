@@ -143,7 +143,7 @@ namespace SDLCore {
 	void Window::CallCallbacks(const std::vector<WindowCallback>& callbacks) {
 		for (auto& windowCallback : callbacks) {
 			if (windowCallback.cb)
-				windowCallback.cb();
+				windowCallback.cb(this);
 		}
 	}
 
