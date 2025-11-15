@@ -21,8 +21,8 @@ namespace SDLCore {
         return static_cast<double>(GetTime()) / 1000.0;
     }
 
-    uint32_t Time::GetDeltaTime() {
-        return static_cast<uint32_t>(s_deltaTimeSec * 1000.0f);
+    double Time::GetDeltaTime() {
+        return static_cast<double>(s_deltaTimeSec * 1000.0f);
     }
 
     double Time::GetDeltaTimeSec() {

@@ -31,7 +31,7 @@ namespace SDLCore {
         * @brief Gets the delta time since last frame in milliseconds
         * @return Delta time in milliseconds
         */
-        static uint32_t GetDeltaTime();
+        static double GetDeltaTime();
 
         /**
         * @brief Gets the delta time since last frame in seconds
