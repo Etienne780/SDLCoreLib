@@ -30,6 +30,13 @@ namespace SDLCore {
         return m_application;
     }
 
+    bool Application::IsApplicationQuit() {
+        if (m_application) {
+            return m_application->m_closeApplication;
+        }
+        return true;
+    }
+
     void Application::Init() {
         if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
             m_cancelErrorMsg = SDL_GetError();
