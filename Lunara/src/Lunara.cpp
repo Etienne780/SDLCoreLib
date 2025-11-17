@@ -153,7 +153,7 @@ void Lunara::OnStart() {
 
     SetFPSCap(APPLICATION_FPS_UNCAPPED);
 
-    SDLCore::Renderer::SetFont("C:/Windows/WinSxS/amd64_microsoft-windows-font-truetype-arial_31bf3856ad364e35_10.0.26100.1_none_6f77189015e7ae71/arial.ttf");
+    SDLCore::Renderer::SetFont("C:/Users/Etienne Richter/AppData/Roaming/Opera Software/Opera GX Stable/Default/Extensions/igpdmclhhlcpoindmhkhillbfhdgoegm/6.12.0.7_0/assets/b25893558c7f1ad49e5e.ttf");
     SDLCore::Renderer::SetFontSize(120);
 }
 
@@ -245,9 +245,9 @@ void Lunara::OnUpdate() {
     }
 
     if (winImageID != SDLCORE_INVALID_ID) {
-        // auto* win =GetWindow(winImageID);
-        // double op = ((std::sin(Time::GetTimeSec()) + 1) / 2);
-        // win->SetOpacity(op);
+        auto* win =GetWindow(winImageID);
+        double op = ((std::sin(Time::GetTimeSec()) + 1) / 2);
+        win->SetOpacity(op);
         
         Input::SetWindow(winImageID);
         RE::SetWindowRenderer(winImageID);
@@ -305,6 +305,9 @@ void Lunara::OnUpdate() {
 }
 
 void Lunara::OnQuit() {
+    bool isGay = false;
+    if (isGay)
+        isGay = true;
 }
 
 bool MovePolygon() {
