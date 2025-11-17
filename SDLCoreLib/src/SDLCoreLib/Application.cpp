@@ -163,16 +163,15 @@ namespace SDLCore {
     }
 
     bool Application::RemoveWindow(WindowID id) {
-        auto it = std::remove_if(m_windows.begin(), m_windows.end(),
-            [id](const std::unique_ptr<Window>& win) {
-                return win->GetID() == id;
-            });
+        auto it = std::find_if(m_windows.begin(), m_windows.end(),
+            [id](const std::unique_ptr<Window>& win) { return win->GetID() == id; });
 
-        if (it != m_windows.end()) {
-            m_windows.erase(it, m_windows.end());
-            return true;
-        }
-        return false;
+        if (it == m_windows.end())
+            return false;
+
+        (*it)->DestroyWindow();
+        m_windows.erase(it);
+        return true;
     }
 
 

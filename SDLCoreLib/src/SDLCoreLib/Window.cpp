@@ -13,7 +13,8 @@ namespace SDLCore {
 	}
 
 	Window::~Window() {
-		DestroyWindow();
+		// DestroyWindow gets called in Application::RemoveWindow before this destructor gets called
+		// DestroyWindow();
 	}
 
 	WindowID Window::GetID() const {
