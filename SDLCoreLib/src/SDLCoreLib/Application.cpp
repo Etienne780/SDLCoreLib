@@ -182,14 +182,9 @@ namespace SDLCore {
     }
 
     void Application::RemoveAllWindows() {
-        std::vector<WindowID> windowIDs;
-        windowIDs.reserve(m_windows.size());
-
-        for (size_t i = 0; i < m_windows.size(); i++)
-            windowIDs.emplace_back(m_windows[i]->GetID().value);
-
-        for (auto& winIDs : windowIDs)
-            RemoveWindow(winIDs);
+        while (!m_windows.empty()) {
+            RemoveWindow(m_windows.back()->GetID());
+        }
     }
 
     Window* Application::GetWindow(WindowID id) {
