@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <SDL3_mixer/SDL_mixer.h>
 #include <CoreLib/Log.h>
 #include <CoreLib/Algorithm.h>
 
@@ -47,6 +48,11 @@ namespace SDLCore {
             m_cancelErrorMsg = SDL_GetError();
             cancelStart = 2;
         }
+
+        if (!MIX_Init()) {
+            m_cancelErrorMsg = SDL_GetError();
+            cancelStart = 3;
+        }
     }
 
     int Application::Start() {
@@ -72,7 +78,8 @@ namespace SDLCore {
         OnQuit();
 
         Renderer::SetWindowRenderer();
-        m_windows.clear();
+        RemoveAllWindows();
+        MIX_Quit();
         TTF_Quit();
         SDL_Quit();
 
@@ -174,6 +181,16 @@ namespace SDLCore {
         return true;
     }
 
+    void Application::RemoveAllWindows() {
+        std::vector<WindowID> windowIDs;
+        windowIDs.reserve(m_windows.size());
+
+        for (size_t i = 0; i < m_windows.size(); i++)
+            windowIDs.emplace_back(m_windows[i]->GetID().value);
+
+        for (auto& winIDs : windowIDs)
+            RemoveWindow(winIDs);
+    }
 
     Window* Application::GetWindow(WindowID id) {
         if (id.value == SDLCORE_INVALID_ID)

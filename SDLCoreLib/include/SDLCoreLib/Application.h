@@ -77,6 +77,11 @@ namespace SDLCore {
 		*/
 		bool RemoveWindow(WindowID id);
 
+		/*
+		* @brief Removes all window that are currently open
+		*/
+		void RemoveAllWindows();
+
 		/**
 		* @brief Gets a window with a given id
 		* @param id to search for
