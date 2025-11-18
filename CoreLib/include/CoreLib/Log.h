@@ -15,7 +15,7 @@
 class Log {
 private:
     class AsyncLogger;
-
+    
 public:
     // Logging severity levels.
     enum Level : short {
@@ -28,7 +28,7 @@ public:
     using LogCallback = std::function<void(Level LogLevel, const std::string&)>;
     using SubscriberID = size_t;
     /*
-    * Log::Subscribe([](const std::string& msg) {
+    * Log::Subscribe([](Level LogLevel, const std::string& msg) {
     *   std::cout << "(FILE) " << msg << std::endl;
     * });
     */
@@ -55,16 +55,17 @@ public:
     static void ClearLog();
 
     /// Checks whether a specific log level is currently enabled.
-    static bool IsLevelSelected(Level level);
+    static bool IsLogLevelEnabled(Level level);
 
     /**
-     * @brief Enables specific log levels.
-     * All previously set levels will be cleared.
-     * Usage: Log::SetLevel(Log::levelError, Log::levelDebug);
-     */
+    * @brief Enables specific log levels.
+    * All previously set levels will be cleared.
+    * Usage: Log::SetLevel(Log::levelError, Log::levelDebug);
+    */
     template<typename... Args>
     static void SetLevel(Args&&... args) {
-        static_assert((std::is_same_v<std::decay_t<Args>, Log::Level> && ...), "All arguments must be of type Log::Level.");
+        static_assert((std::is_same_v<std::decay_t<Args>, Log::Level> && ...), 
+            "All arguments must be of type Log::Level.");
 
         m_levelError = false;
         m_levelWarning = false;
@@ -90,118 +91,178 @@ public:
     // ------------------------- Logging Methods -------------------------
 
     /**
-     * @brief Logs an error message with format string and arguments.
-     * Requires levelError to be enabled.
-     */
+    * @brief Logs an error message with optional formatting.
+    * @tparam T Type of the format string or first argument (can be string, or const char*).
+    * @tparam Args Additional arguments to format into the message.
+    * @param format Format string or first argument.
+    * @param args Variadic arguments for formatting.
+    */
     template<typename T, typename... Args,
-        typename = std::enable_if_t<
-        std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>
-        >>
-        static void Error(T&& format, Args&&... args) {
-        if (!m_levelError) return;
-        m_print(levelError, "[ERROR]: " + FormatUtils::formatString(std::forward<T>(format), std::forward<Args>(args)...));
+        typename = std::enable_if_t<std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>>>
+    static void Error(T&& format, Args&&... args) {
+        m_printWithPrefix(m_prefixError, levelError, std::forward<T>(format), std::forward<Args>(args)...);
     }
 
-    /// Logs a raw error message composed from arguments, without format string.
+    /**
+    * @brief Logs an error message without formatting.
+    * @tparam Args Variadic arguments of any type, converted to string and joined as a single message separated by ','.
+    * @param args Arguments to print.
+    */
     template<typename... Args>
     static void Error(Args&&... args) {
-        if (!m_levelError) return;
-        m_print(levelError, "[ERROR]: " + FormatUtils::joinArgs(std::forward<Args>(args)...));
+        m_printWithPrefix(m_prefixError, levelError, std::forward<Args>(args)...);
     }
 
-    /// Logs a formatted warning message.
+    /**
+    * @brief Logs a warning message with optional formatting.
+    * @tparam T Type of the format string or first argument (can be string, or const char*).
+    * @tparam Args Additional arguments to format into the message.
+    * @param format Format string or first argument.
+    * @param args Variadic arguments for formatting.
+    */
     template<typename T, typename... Args,
-        typename = std::enable_if_t<
-        std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>
-        >>
-        static void Warn(T&& format, Args&&... args) {
-        if (!m_levelWarning) return;
-        m_print(levelWarning, "[WARNING]: " + FormatUtils::formatString(std::forward<T>(format), std::forward<Args>(args)...));
+        typename = std::enable_if_t<std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>>>
+    static void Warn(T&& format, Args&&... args) {
+        m_printWithPrefix(m_prefixWarn, levelWarning, std::forward<T>(format), std::forward<Args>(args)...);
     }
 
-    /// Logs a raw warning message.
+    /**
+    * @brief Logs a warning message without formatting.
+    * @tparam Args Variadic arguments of any type, converted to string and joined as a single message separated by ','.
+    * @param args Arguments to print.
+    */
     template<typename... Args>
     static void Warn(Args&&... args) {
-        if (!m_levelWarning) return;
-        m_print(levelWarning, "[WARNING]: " + FormatUtils::joinArgs(std::forward<Args>(args)...));
+        m_printWithPrefix(m_prefixWarn, levelWarning, std::forward<Args>(args)...);
     }
 
-    /// Logs an informational message using format string.
+    /**
+    * @brief Logs an informational message with optional formatting.
+    * @tparam T Type of the format string or first argument (can be string, or const char*).
+    * @tparam Args Additional arguments to format into the message.
+    * @param format Format string or first argument.
+    * @param args Variadic arguments for formatting.
+    */
     template<typename T, typename... Args,
-        typename = std::enable_if_t<
-        std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>
-        >>
-        static void Info(T&& format, Args&&... args) {
-        if (!m_levelInfo) return;
-        m_print(levelInfo, "[INFO]: " + FormatUtils::formatString(std::forward<T>(format), std::forward<Args>(args)...));
+        typename = std::enable_if_t<std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>>>
+    static void Info(T&& format, Args&&... args) {
+        m_printWithPrefix(m_prefixInfo, levelInfo, std::forward<T>(format), std::forward<Args>(args)...);
     }
 
-    /// Logs an informational message with argument joining.
+    /**
+    * @brief Logs an informational message without formatting.
+    * @tparam Args Variadic arguments of any type, converted to string and joined as a single message separated by ','.
+    * @param args Arguments to print.
+    */
     template<typename... Args>
     static void Info(Args&&... args) {
-        if (!m_levelInfo) return;
-        m_print(levelInfo, "[INFO]: " + FormatUtils::joinArgs(std::forward<Args>(args)...));
+        m_printWithPrefix(m_prefixInfo, levelInfo, std::forward<Args>(args)...);
     }
 
-    /// Logs a debug message with formatting.
+    /**
+    * @brief Logs a debug message with optional formatting.
+    * @tparam T Type of the format string or first argument (can be string, or const char*).
+    * @tparam Args Additional arguments to format into the message.
+    * @param format Format string or first argument.
+    * @param args Variadic arguments for formatting.
+    */
     template<typename T, typename... Args,
-        typename = std::enable_if_t<
-        std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>
-        >>
-        static void Debug(T&& format, Args&&... args) {
-        if (!m_levelDebug) return;
-        m_print(levelDebug, "[Debug]: " + FormatUtils::formatString(std::forward<T>(format), std::forward<Args>(args)...));
+        typename = std::enable_if_t<std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>>>
+    static void Debug(T&& format, Args&&... args) {
+        m_printWithPrefix(m_prefixDebug, levelDebug, std::forward<T>(format), std::forward<Args>(args)...);
     }
 
-    /// Logs a debug message without formatting.
+    /**
+    * @brief Logs a debug message without formatting.
+    * @tparam Args Variadic arguments of any type, converted to string and joined as a single message separated by ','.
+    * @param args Arguments to print.
+    */
     template<typename... Args>
     static void Debug(Args&&... args) {
-        if (!m_levelDebug) return;
-        m_print(levelDebug, "[Debug]: " + FormatUtils::joinArgs(std::forward<Args>(args)...));
+        m_printWithPrefix(m_prefixDebug, levelDebug, std::forward<Args>(args)...);
     }
-
-    /// Prints a formatted string without log level prefix.
+    
+    /**
+    * @brief Generic print function with formatting.
+    * @tparam T Type of the format string or first argument (can be string, or const char*).
+    * @tparam Args Additional arguments to format into the message.
+    * @param format Format string or first argument.
+    * @param args Variadic arguments for formatting.
+    */
     template<typename T, typename... Args,
-        typename = std::enable_if_t<
-        std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>
-        >>
-        static void Print(T&& format, Args&&... args) {
-        m_print(levelInfo, FormatUtils::formatString(std::forward<T>(format), std::forward<Args>(args)...));
+        typename = std::enable_if_t<std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>>>
+    static void Print(T&& format, Args&&... args) {
+        m_printWithPrefix("", levelInfo, std::forward<T>(format), std::forward<Args>(args)...);
     }
 
-    /// Prints joined arguments without log level prefix.
+    /**
+    * @brief Generic print function without formatting.
+    * @tparam Args Variadic arguments of any type, converted to string and joined as a single message separated by ','.
+    * @param args Arguments to print.
+    */
     template<typename... Args>
     static void Print(Args&&... args) {
-        m_print(levelInfo, FormatUtils::joinArgs(std::forward<Args>(args)...));
+        m_printWithPrefix("", levelInfo, std::forward<Args>(args)...);
     }
 
-    /// Conditionally prints a formatted string based on log level.
+    /**
+    * @brief Generic print function with formatting to a specific log level.
+    * @tparam T Type of the format string or first argument (can be string, or const char*).
+    * @tparam Args Additional arguments to format into the message.
+    * @param level Log level to print the message to.
+    * @param format Format string or first argument.
+    * @param args Variadic arguments for formatting.
+    */
     template<typename T, typename... Args,
-        typename = std::enable_if_t<
-        std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>
-        >>
-        static void Print(Level level, T&& format, Args&&... args) {
-        if (!IsLevelSelected(level)) return;
-        m_print(level, FormatUtils::formatString(std::forward<T>(format), std::forward<Args>(args)...));
+        typename = std::enable_if_t<std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>>>
+    static void Print(Level level, T&& format, Args&&... args) {
+        m_printWithPrefix("", level, std::forward<T>(format), std::forward<Args>(args)...);
     }
 
-    /// Conditionally prints joined arguments based on log level.
+    /**
+    * @brief Generic print function to a specific log level without formatting.
+    * @tparam Args Variadic arguments of any type, converted to string and joined as a single message separated by ','.
+    * @param level Log level to print the message to.
+    * @param args Arguments to print.
+    */
     template<typename... Args>
     static void Print(Level level, Args&&... args) {
-        if (!IsLevelSelected(level)) return;
-        m_print(level, FormatUtils::joinArgs(std::forward<Args>(args)...));
+        m_printWithPrefix("", level, std::forward<Args>(args)...);
     }
 
-    /// Returns a formatted string for reuse (without printing).
+    /**
+    * @brief Returns a formatted string for reuse (without printing) using a format string and arguments.
+    * @tparam T Type of the format string or first argument (can be string, or const char*).
+    * @tparam Args Additional arguments to format into the string.
+    * @param format Format string or first argument.
+    * @param args Variadic arguments for formatting.
+    * @return A string containing the formatted result.
+    */
     template<typename T, typename... Args,
-        typename = std::enable_if_t<
-        std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>
-        >>
-        static std::string GetFormattedString(T&& format, Args&&... args) {
-        return FormatUtils::formatString(std::forward<T>(format), std::forward<Args>(args)...);
+        typename = std::enable_if_t<std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>>>
+    static std::string GetFormattedString(T&& format, Args&&... args) {
+        // check if first arg is nullptr
+        auto safe_format = [&]() -> std::string {
+            if constexpr (std::is_same_v<std::decay_t<T>, std::nullptr_t>) {
+                return "nullptr";
+            }
+            else if constexpr (std::is_convertible_v<T, const char*>) {
+                return format ? std::string(format) : "nullptr";
+            }
+            else {
+                return FormatUtils::toString(std::forward<T>(format));
+            }
+        }();
+
+        return FormatUtils::formatString(safe_format, std::forward<Args>(args)...);
     }
 
-    /// Returns joined arguments as string.
+    /**
+    * @brief Returns a joined string from multiple arguments without any formatting.
+    * @tparam Args Variadic arguments of any type, converted to string and joined as a single message separated by ','.
+    * @param args Arguments to convert and join.
+    * @return A string with all arguments joined (similar to comma-separated or concatenated values).
+    */
     template<typename... Args>
     static std::string GetFormattedString(Args&&... args) {
         return FormatUtils::joinArgs(std::forward<Args>(args)...);
@@ -211,10 +272,15 @@ private:
     Log() = delete;
 
     // Flags to track active log levels.
-    static bool m_levelError;
-    static bool m_levelWarning;
-    static bool m_levelInfo;
-    static bool m_levelDebug;
+    static inline bool m_levelError = true;
+    static inline bool m_levelWarning = true;
+    static inline bool m_levelInfo = true;
+    static inline bool m_levelDebug = true;
+
+    static constexpr const char* m_prefixError =    "[ERROR]: ";
+    static constexpr const char* m_prefixWarn =     "[WARNING]: ";
+    static constexpr const char* m_prefixInfo =     "[INFO]: ";
+    static constexpr const char* m_prefixDebug =    "[DEBUG]: ";
 
     static bool m_saveLogs;
     static std::unique_ptr<AsyncLogger> m_asyncLogger;
@@ -229,10 +295,33 @@ private:
     /// Low-level printer implementation (console output).
     static void m_print(const Level& logLevel, const std::string& message);
 
-    /// Helper for formatted print with extra arguments.
+    /**
+    * @brief Internal helper to print a message with a prefix and formatting, handling nullptr as first argument safely.
+    * @tparam T Type of the first argument (format string or other type).
+    * @tparam Args Additional arguments for formatting.
+    * @param prefix Prefix string (e.g., "[INFO]: ").
+    * @param level Log level of the message.
+    * @param format First argument or format string.
+    * @param args Variadic arguments for formatting.
+    */
+    template<typename T, typename... Args,
+        typename = std::enable_if_t<std::is_convertible_v<T, std::string> || std::is_convertible_v<T, const char*>>>
+    static void m_printWithPrefix(const char* prefix, Level level, T&& format, Args&&... args) {
+        if (!IsLogLevelEnabled(level)) return;
+        m_print(level, std::string(prefix) + GetFormattedString(format, std::forward<Args>(args)...));
+    }
+
+    /**
+    * @brief Internal helper to print a message with a prefix, joining all arguments.
+    * @tparam Args Variadic arguments of any type, converted to string and joined as a single message separated by ','.
+    * @param prefix Prefix string (e.g., "[INFO]: ").
+    * @param level Log level of the message.
+    * @param args Arguments to join into a single message string.
+    */
     template<typename... Args>
-    static void m_print(const Level& logLevel, const std::string& message, Args&&... args) {
-        m_print(logLevel, FormatUtils::formatString(0, message, std::forward<Args>(args)...));
+    static void m_printWithPrefix(const char* prefix, Level level, Args&&... args) {
+        if (!IsLogLevelEnabled(level)) return;
+        m_print(level, std::string(prefix) + GetFormattedString(std::forward<Args>(args)...));
     }
 
     class AsyncLogger {
@@ -242,9 +331,20 @@ private:
         void Log(const std::string& message);
 
     private:
-        //void ProcessQueue();
 
         class Impl;
         std::unique_ptr<Impl> pImpl;
     };
 };
+
+template<>
+static inline std::string FormatUtils::toString<Log::Level>(Log::Level level) {
+    switch (level)
+    {
+    case Log::levelError:   return "Error";
+    case Log::levelWarning: return "Warning";
+    case Log::levelInfo:    return "Info";
+    case Log::levelDebug:   return "Debug";
+    default:                return "UNKNOWN";
+    }
+}

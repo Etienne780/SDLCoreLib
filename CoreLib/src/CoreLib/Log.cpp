@@ -6,13 +6,12 @@
 #include <atomic>
 #include <filesystem>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "CoreLib\Log.h"
 #include "CoreLib\TimeUtils.h"
-
-bool Log::m_levelError = true;
-bool Log::m_levelWarning = true;
-bool Log::m_levelInfo = true;
-bool Log::m_levelDebug = true;
 
 std::vector<Log::Subscriber> Log::m_subscribers;
 Log::SubscriberID Log::m_nextId = 0;
@@ -100,7 +99,26 @@ void Log::AsyncLogger::Log(const std::string& message) {
 }
 
 void Log::ClearLog() {
-    system("cls");
+#ifdef _WIN32
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE) return;
+
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    DWORD count;
+    DWORD cellCount;
+
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) 
+        return;
+    cellCount = csbi.dwSize.X * csbi.dwSize.Y;
+    if (!FillConsoleOutputCharacter(hConsole, (TCHAR)' ', cellCount, { 0,0 }, &count)) 
+        return;
+    if (!FillConsoleOutputAttribute(hConsole, csbi.wAttributes, cellCount, { 0,0 }, &count))
+        return;
+    SetConsoleCursorPosition(hConsole, { 0,0 });
+#else
+    // ANSI Escape Codes for Linux/macOS/Windows 10+
+    std::cout << "\033[2J\033[H" << std::flush;
+#endif
 }
 
 void Log::SaveLogs(const std::string& path) {
@@ -140,12 +158,12 @@ void Log::m_print(const Level& logLevel, const std::string& message) {
     }
 }
 
-bool Log::IsLevelSelected(Level level) {
+bool Log::IsLogLevelEnabled(Level level) {
     switch (level) {
     case Level::levelError: return m_levelError;
     case Level::levelWarning: return m_levelWarning;
     case Level::levelInfo: return m_levelInfo;
     case Level::levelDebug: return m_levelDebug;
-    default: return false;
+    default: return true;
     }
 }

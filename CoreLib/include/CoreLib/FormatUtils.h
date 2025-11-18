@@ -101,10 +101,18 @@ public:
         else if constexpr (std::is_arithmetic_v<T>) {
             return trimTrailingZeros(value);
         }
+        else if constexpr (std::is_same_v<T, nullptr_t>) {
+            return "nullptr";
+        }
         else if constexpr (std::is_same_v<T, const char*>) {
+            if (value == nullptr) {
+                return "nullptr";
+            }
             return std::string(value);
         }
         else if constexpr (std::is_pointer_v<T>) {
+            if (value == nullptr)
+                return "nullptr";
             std::ostringstream oss;
             oss << static_cast<const void*>(value);
             return oss.str();
