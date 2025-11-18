@@ -57,6 +57,9 @@ namespace SDLCore {
 
     int Application::Start() {
         if (cancelStart != 0) {
+            MIX_Quit();
+            TTF_Quit();
+            SDL_Quit();
             Log::Error("SDLCore::Application::Start: {} Could not start SDL error = {}", m_name, m_cancelErrorMsg);
             return cancelStart;
         }
