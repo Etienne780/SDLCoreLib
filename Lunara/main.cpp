@@ -4,8 +4,8 @@
 #include "Lunara.h"
 
 int main() {
-	Lunara lunara;
-	SDLCore::SDLResult result = lunara.Start();
+	Lunara* lunara = new Lunara();
+	SDLCore::SDLResult result = lunara->Start();
 
 	std::string msg = SDLCore::GetError(result);
 	if(result == 0)
@@ -13,5 +13,6 @@ int main() {
 	else 
 		Log::Error(msg);
 
+	delete lunara;
 	return 0;
 }
