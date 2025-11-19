@@ -31,6 +31,7 @@ namespace SDLCore {
 	class IDManager {
 	public:
 		IDManager(IDOrder order = IDOrder::RANDOME);
+		IDManager(unsigned int startCount, IDOrder order = IDOrder::RANDOME);
 		~IDManager() = default;
 
 		bool IsIDFallback();

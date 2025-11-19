@@ -7,7 +7,12 @@
 
 namespace SDLCore {
 
-	IDManager::IDManager(IDOrder order) {
+	IDManager::IDManager(IDOrder order) 
+		: IDManager(0, order) {
+	}
+
+	IDManager::IDManager(unsigned int startCount, IDOrder order) {
+		m_idCounter = startCount;
 		SetIDOrder(order);
 	}
 
