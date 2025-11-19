@@ -38,37 +38,37 @@ namespace SDLCore {
 		void Quit();
 
 		/**
-		 * @brief Adds a new Window instance to the application without creating the underlying SDL window or renderer.
-		 *
-		 * This function allocates and registers a new Window object within the Application, but does not yet
-		 * initialize the SDL window or renderer. It is typically used when the window setup should be controlled
-		 * manually or deferred.
-		 *
-		 * @param idPtr Optional pointer to a WindowID variable that receives the unique ID of the new window.
-		 *              If provided, the ID will automatically be set to SDLCORE_INVALID_ID when the window closes.
-		 * @param name The name/title of the window.
-		 * @param width Desired window width in pixels.
-		 * @param height Desired window height in pixels.
-		 *
-		 * @return Raw pointer to the newly added Window instance, or nullptr if window creation failed.
-		 */
+		* @brief Adds a new Window instance to the application without creating the underlying SDL window or renderer.
+		*
+		* This function allocates and registers a new Window object within the Application, but does not yet
+		* initialize the SDL window or renderer. It is typically used when the window setup should be controlled
+		* manually or deferred.
+		*
+		* @param idPtr Optional pointer to a WindowID variable that receives the unique ID of the new window.
+		*              If provided, the ID will automatically be set to SDLCORE_INVALID_ID when the window closes.
+		* @param name The name/title of the window.
+		* @param width Desired window width in pixels.
+		* @param height Desired window height in pixels.
+		*
+		* @return Raw pointer to the newly added Window instance, or nullptr if window creation failed.
+		*/
 		Window* AddWindow(WindowID* idPtr, std::string name, int width, int height);
 
 		/**
-		 * @brief Creates and fully initializes a new SDL window and renderer.
-		 *
-		 * This function creates a new Window object, generates a unique WindowID, and immediately initializes
-		 * the underlying SDL window and renderer. It also automatically registers an on-close callback that
-		 * invalidates the provided WindowID pointer when the window is closed.
-		 *
-		 * @param idPtr Optional pointer to a WindowID variable that receives the unique ID of the new window.
-		 *              The ID will automatically be set to SDLCORE_INVALID_ID when the window is closed.
-		 * @param name The name/title of the window.
-		 * @param width Desired window width in pixels.
-		 * @param height Desired window height in pixels.
-		 *
-		 * @return Raw pointer to the newly created Window instance, or nullptr if window creation failed.
-		 */
+		* @brief Creates and fully initializes a new SDL window and renderer.
+		*
+		* This function creates a new Window object, generates a unique WindowID, and immediately initializes
+		* the underlying SDL window and renderer. It also automatically registers an on-close callback that
+		* invalidates the provided WindowID pointer when the window is closed.
+		*
+		* @param idPtr Optional pointer to a WindowID variable that receives the unique ID of the new window.
+		*              The ID will automatically be set to SDLCORE_INVALID_ID when the window is closed.
+		* @param name The name/title of the window.
+		* @param width Desired window width in pixels.
+		* @param height Desired window height in pixels.
+		*
+		* @return Raw pointer to the newly created Window instance, or nullptr if window creation failed.
+		*/
 		Window* CreateWindow(WindowID* idPtr, const std::string& name, int width, int height);
 
 		/**
@@ -114,9 +114,8 @@ namespace SDLCore {
 		std::string m_name = "UNKNOWN";
 		Version m_version{ 0, 0, 0 };
 
-		// 0 = ok; 1 = SDL error;
+		// 0 = ok; < 0 error
 		int cancelStart = 0;
-		std::string m_cancelErrorMsg;
 		
 		SDL_Event m_sdlEvent;
 		std::vector<std::unique_ptr<Window>> m_windows;

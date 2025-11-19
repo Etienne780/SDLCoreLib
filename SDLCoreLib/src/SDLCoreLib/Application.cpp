@@ -40,17 +40,17 @@ namespace SDLCore {
 
     void Application::Init() {
         if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-            m_cancelErrorMsg = SDL_GetError();
+            SetError(Log::GetFormattedString("SDLCore::Application: {}", SDL_GetError()));
             cancelStart = 1;
         }
 
         if (!TTF_Init()) {
-            m_cancelErrorMsg = SDL_GetError();
+            SetError(Log::GetFormattedString("SDLCore::Application: {}", SDL_GetError()));
             cancelStart = 2;
         }
 
         if (!MIX_Init()) {
-            m_cancelErrorMsg = SDL_GetError();
+            SetError(Log::GetFormattedString("SDLCore::Application: {}", SDL_GetError()));
             cancelStart = 3;
         }
     }
@@ -60,7 +60,6 @@ namespace SDLCore {
             MIX_Quit();
             TTF_Quit();
             SDL_Quit();
-            Log::Error("SDLCore::Application::Start: {} Could not start SDL error = {}", m_name, m_cancelErrorMsg);
             return cancelStart;
         }
 
