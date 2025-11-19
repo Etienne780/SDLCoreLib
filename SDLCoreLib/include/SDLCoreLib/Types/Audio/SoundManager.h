@@ -1,26 +1,45 @@
 #pragma once
+#include <vector>
 #include <SDL3_mixer/SDL_mixer.h>
 
-namespace SDLCore {
-    /*
-    |Audio - Type	                    | Duration  | Recommendation	        | Reason
-    |------------------------------------------------------------------------------------------------------------
-    |SFX (Sound Effects)                | < 2 s     | predecode = true	        | Lowest latency, minimal RAM usage
-    |Medium-length Effects	            | 2–10 s    | predecode / stream	    | Consider RAM vs. number of simultaneous instances
-    |Background Music / Long Clips      | >10 s     | stream(Decoder)	        | Saves RAM, efficient for large files
-    */
+#include "IDManager.h"
+#include "AudioPlaybackDevice.h"
 
+namespace SDLCore {
+    class Appliaction;
 
     /*
     * plays sounds mixer and Manages tags. static/but not static like application
     * events wenn sound ends
     * manages tag and master Volumn
     */
-    class SoundManager { 
+    class SoundManager {
+        friend class Appliaction;
     public:
+        /*
+        * @brief sets a new audio playback(headphones) device
+        * @param deviceID id of the device. 0 is default systme device
+        */
+        bool SetAudioDevice(AudioPlaybackDeviceID deviceID);
 
     private:
+        SoundManager() = default;
+        ~SoundManager();
+        SoundManager(SoundManager&& s) = delete;
+        SoundManager operator=(SoundManager & s) = delete;
 
+        static inline MIX_Mixer* m_mixer = nullptr;
+        static inline std::vector<AudioPlaybackDevice> m_devices;
+        static inline IDManager m_deviceIDManager{ 1 };
+
+        static bool Init();
+        static void Quit();
+        static void Cleanup();
+
+        /*
+        * @return true on success. Call SDLCore::GetError() for more information
+        */
+        static bool SetDevices();
     };
 
     /*
@@ -29,9 +48,9 @@ namespace SDLCore {
     * 
     * length, shouldLoop, Volumn
     */
-    class SoundClip {
-    friend class SoundManager;
-    };
+    // class SoundClip {
+    // friend class SoundManager;
+    // };
 
     /*
     importnant funcs

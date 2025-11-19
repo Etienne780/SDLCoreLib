@@ -51,8 +51,11 @@ namespace SDLCore {
 
 	struct WindowTag {};
 	struct WindowCallbackTag {};
+	struct AudioPlaybackDeviceTag {};
+
 	using WindowID = SDLCoreID<WindowTag>;
 	using WindowCallbackID = SDLCoreID<WindowCallbackTag>;
+	using AudioPlaybackDeviceID = SDLCoreID<AudioPlaybackDeviceTag>;
 
 	enum class TextureParams : int {
 		NONE = 0,
@@ -87,6 +90,11 @@ static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::Wind
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::WindowCallbackTag>>(SDLCore::WindowCallbackID id) {
+	return FormatUtils::toString(id.value);
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::AudioPlaybackDeviceTag>>(SDLCore::AudioPlaybackDeviceID id) {
 	return FormatUtils::toString(id.value);
 }
 
