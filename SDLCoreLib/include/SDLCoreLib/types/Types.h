@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <SDL3/SDL.h>
+#include <CoreLib/Log.h>
 #include <CoreLib/File.h>
 #include <CoreLib/FormatUtils.h>
 #include <CoreLib/CoreMath.h>

@@ -19,6 +19,8 @@ namespace SDLCore {
     public:
         // ============== Static ==============
 
+        static MIX_Mixer* GetMixer();
+
         /*
         * @brief sets a new audio playback(headphones) device
         * @param deviceID id of the device. 0 is default systme device
@@ -49,6 +51,8 @@ namespace SDLCore {
         MIX_Mixer* m_mixer = nullptr;
         std::vector<AudioPlaybackDevice> m_devices;
         IDManager m_deviceIDManager{ 1 };
+
+        float m_volumeGain = 1.0f;
 
         void Cleanup();
 

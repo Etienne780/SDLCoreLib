@@ -52,6 +52,12 @@ namespace SDLCore {
 		return true;
 	}
 
+	MIX_Mixer* SoundManager::GetMixer() {
+		if (!InstanceExist())
+			return nullptr;
+		return s_soundManager->m_mixer;
+	}
+
 	bool SoundManager::SetAudioDevice(AudioPlaybackDeviceID deviceID) {
 		if (!InstanceExist())
 			return false;
