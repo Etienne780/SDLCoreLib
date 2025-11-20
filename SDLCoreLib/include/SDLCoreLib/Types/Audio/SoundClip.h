@@ -1,4 +1,5 @@
 #pragma once
+#include "Types/Types.h"
 
 namespace SDLCore {
     /*
@@ -14,6 +15,8 @@ namespace SDLCore {
     class SoundClip {
         friend class SoundManager;
     public:
+        SoundClip(const SystemFilePath& filePath);
+        ~SoundClip();
 
     private:
 

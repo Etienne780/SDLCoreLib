@@ -11,16 +11,25 @@ namespace SDLCore {
 	static SoundManager* s_soundManager = nullptr;
 
 	SoundManager::~SoundManager() {
-		Quit();
+		Cleanup();
 	}
 
-	bool SoundManager::Init() {
-		// Destroys old mixer and SoundManager instance
-		Cleanup();
+	#pragma region Static
+
+	bool SoundManager::Init(SDL_AudioDeviceID audio) {
+		// Quit current SoundManager if exist
+		Quit();
 
 		s_soundManager = new SoundManager();
-		m_mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
-		if (!SetDevices())
+		s_soundManager->m_mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
+		if (!s_soundManager->m_mixer) {
+			SetError(Log::GetFormattedString(
+				"SDLCore::SoundManager::Init: Faild to create mixer! {}", 
+				SDL_GetError()));
+			return false;
+		}
+
+		if (!s_soundManager->CreateDevices())
 			return false;
 
 		return true;
@@ -34,36 +43,45 @@ namespace SDLCore {
 		}
 	}
 
-	void SoundManager::Cleanup() {
-		MIX_DestroyMixer(m_mixer);
+	bool SoundManager::InstanceExist() {
+		if (!s_soundManager) {
+			SetError("SDLCore::SoundManager::InstanceExist: No valid instance of SoundManager exists!");
+			return false;
+		}
+
+		return true;
 	}
 
 	bool SoundManager::SetAudioDevice(AudioPlaybackDeviceID deviceID) {
-		Cleanup();
+		if (!InstanceExist())
+			return false;
+
+		s_soundManager->Cleanup();
 		bool result = true;
 
 		SDL_AudioDeviceID targetSDLID = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK;
-
+		auto& devices = s_soundManager->m_devices;
+		auto& mixer = s_soundManager->m_mixer;
 		if (deviceID != 0) {
-			auto it = std::find_if(m_devices.begin(), m_devices.end(),
+			auto it = std::find_if(devices.begin(), devices.end(),
 				[deviceID](const AudioPlaybackDevice& dev) { return dev.GetID() == deviceID; });
 
-			if (it != m_devices.end()) {
+			if (it != devices.end()) {
 				targetSDLID = it->GetSDLID();
 			}
 			else {
 				SetError(Log::GetFormattedString(
-					"SDLCore::SoundManager: Device with id '{}' not found! Using default device",
+					"SDLCore::SoundManager::SetAudioDevice: Device with id '{}' not found! Using default device",
 					deviceID));
 				result = false;
 			}
 		}
 
-		m_mixer = MIX_CreateMixerDevice(targetSDLID, nullptr);
+		mixer = MIX_CreateMixerDevice(targetSDLID, nullptr);
 
-		if (!m_mixer) {
+		if (!mixer) {
 			const std::string err = Log::GetFormattedString(
-				"SDLCore::SoundManager: {}", SDL_GetError());
+				"SDLCore::SoundManager::SetAudioDevice: {}", SDL_GetError());
 
 			if (result)
 				SetError(err);
@@ -76,7 +94,15 @@ namespace SDLCore {
 		return result;
 	}
 
-	bool SoundManager::SetDevices() {
+	#pragma endregion
+
+	#pragma region Member
+
+	void SoundManager::Cleanup() {
+		MIX_DestroyMixer(m_mixer);
+	}
+
+	bool SoundManager::CreateDevices() {
 		int count = 0;
 		SDL_AudioDeviceID* pDevice = SDL_GetAudioPlaybackDevices(&count);
 		
@@ -100,5 +126,7 @@ namespace SDLCore {
 		SDL_free(pDevice);
 		return true;
 	}
+
+	#pragma endregion
 
 }

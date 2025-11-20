@@ -3,6 +3,7 @@
 #include <SDL3_mixer/SDL_mixer.h>
 
 #include "IDManager.h"
+#include "SoundClip.h"
 #include "AudioPlaybackDevice.h"
 
 namespace SDLCore {
@@ -16,11 +17,16 @@ namespace SDLCore {
     class SoundManager {
         friend class Appliaction;
     public:
+        // ============== Static ==============
+
         /*
         * @brief sets a new audio playback(headphones) device
         * @param deviceID id of the device. 0 is default systme device
+        * @return true on success. Call SDLCore::GetError() for more information
         */
-        bool SetAudioDevice(AudioPlaybackDeviceID deviceID);
+        static bool SetAudioDevice(AudioPlaybackDeviceID deviceID);
+
+        static bool PlaySound();
 
     private:
         SoundManager() = default;
@@ -28,18 +34,29 @@ namespace SDLCore {
         SoundManager(SoundManager&& s) = delete;
         SoundManager operator=(SoundManager & s) = delete;
 
-        static inline MIX_Mixer* m_mixer = nullptr;
-        static inline std::vector<AudioPlaybackDevice> m_devices;
-        static inline IDManager m_deviceIDManager{ 1 };
+        // ============== Static ==============
 
-        static bool Init();
+        static bool Init(SDL_AudioDeviceID audio = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
         static void Quit();
-        static void Cleanup();
 
         /*
+        * @biref Checks if a current valid instance of this class exist
+        * @reutrn true if valid instance exists. Call SDLCore::GetError() for more information 
+        */
+        static bool InstanceExist();
+
+        // ============== Member ==============
+        MIX_Mixer* m_mixer = nullptr;
+        std::vector<AudioPlaybackDevice> m_devices;
+        IDManager m_deviceIDManager{ 1 };
+
+        void Cleanup();
+
+        /*
+        * @brief Creates a new list of AudioPlaybackDevice and deletes the old one
         * @return true on success. Call SDLCore::GetError() for more information
         */
-        static bool SetDevices();
+        bool CreateDevices();
     };
 
     /*
