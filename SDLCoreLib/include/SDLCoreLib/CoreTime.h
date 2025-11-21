@@ -16,7 +16,7 @@ namespace SDLCore {
         static uint64_t GetTime();
 
         /**
-        * @brief Gets the current time in milliseconds since application instance creation
+        * @brief Gets the current time in Nanoseconds since application instance creation
         * @return Current time in Nanoseconds
         */
         static uint64_t GetTimeNS();
