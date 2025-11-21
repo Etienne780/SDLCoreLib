@@ -23,9 +23,7 @@ namespace SDLCore {
 		s_soundManager = new SoundManager();
 		s_soundManager->m_mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
 		if (!s_soundManager->m_mixer) {
-			SetError(Log::GetFormattedString(
-				"SDLCore::SoundManager::Init: Faild to create mixer! {}", 
-				SDL_GetError()));
+			SetError("SDLCore::SoundManager::Init: Faild to create mixer! " + std::string(SDL_GetError()));
 			return false;
 		}
 
@@ -86,8 +84,7 @@ namespace SDLCore {
 		mixer = MIX_CreateMixerDevice(targetSDLID, nullptr);
 
 		if (!mixer) {
-			const std::string err = Log::GetFormattedString(
-				"SDLCore::SoundManager::SetAudioDevice: {}", SDL_GetError());
+			const std::string err = "SDLCore::SoundManager::SetAudioDevice: " + std::string(SDL_GetError());
 
 			if (result)
 				SetError(err);
@@ -113,7 +110,7 @@ namespace SDLCore {
 		SDL_AudioDeviceID* pDevice = SDL_GetAudioPlaybackDevices(&count);
 		
 		if (!pDevice) {
-			SetError(Log::GetFormattedString("SDLCore::SoundManager: {}", SDL_GetError()));
+			SetError("SDLCore::SoundManager: " + std::string(SDL_GetError()));
 			SDL_free(pDevice);
 			return false;
 		}

@@ -27,13 +27,19 @@ namespace SDLCore {
         ~SoundClip();
 
     private:
-        MIX_Audio* m_audio = nullptr;
+        static inline constexpr float autoPredecodeThresholdMS = 2000.0f;   // upper bound for PREDECODED
+        static inline constexpr float autoStreamThresholdMS = 10000.0f;  // upper bound for NOT_PREDECODED
+
+        MIX_Audio* m_audio = nullptr;        // für PREDECODED / NOT_PREDECODED
+        SDL_AudioStream* m_stream = nullptr; // für STREAM
+        SoundType m_type = SoundType::AUTO;
         float m_volume = 1.0f;
+        float m_durationMS = 0.0f;
 
         /*
         * @return true on success. Call SDLCore::GetError() for more information
         */
-        static bool LoadSound(const SystemFilePath& path, SoundType type, MIX_Audio*& outAudio);
+        bool LoadSound(const SystemFilePath& path, SoundType type);
     };
 
 }
