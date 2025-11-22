@@ -76,7 +76,7 @@ namespace SDLCore {
 	 * @brief Identifier for an audio clip.
 	 *        Internally stored as an unsigned int.
 	 */
-	using AudioClipID = SDLCoreID<AudioClipTag>;
+	using SoundClipID = SDLCoreID<AudioClipTag>;
 
 	enum class TextureParams : int {
 		NONE = 0,
@@ -120,7 +120,7 @@ static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::Audi
 }
 
 template<>
-static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::AudioClipTag>>(SDLCore::AudioClipID id) {
+static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::AudioClipTag>>(SDLCore::SoundClipID id) {
 	return FormatUtils::toString(id.value);
 }
 
