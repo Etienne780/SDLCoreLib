@@ -36,6 +36,19 @@ namespace SDLCore {
     void SetError(const std::string& msg);
 
     /**
+    * @brief Replace the current error message using a formatted string. (formatting like Log)
+    *
+    * Constructs a formatted message from the provided arguments and
+    * replaces any previously stored error text.
+    *
+    * @param args Variadic arguments forwarded to the formatting function.
+    */
+    template<typename... Args>
+    void SetErrorF(Args&&... args) {
+        SetError(Log::GetFormattedString(std::forward<Args>(args)...));
+    }
+
+    /**
     * @brief Append an additional error message.
     *
     * Appends the given message to the current error text,
@@ -44,5 +57,18 @@ namespace SDLCore {
     * @param msg The message to append.
     */
     void AddError(const std::string& msg);
+
+    /**
+    * @brief Append an additional formatted error message. (formatting like Log)
+    *
+    * Constructs a formatted message from the provided arguments and
+    * appends it to the currently stored error text.
+    *
+    * @param args Variadic arguments forwarded to the formatting function.
+    */
+    template<typename... Args>
+    void AddErrorF(Args&&... args) {
+        AddError(Log::GetFormattedString(std::forward<Args>(args)...));
+    }
 
 }
