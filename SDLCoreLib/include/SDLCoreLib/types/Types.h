@@ -52,10 +52,31 @@ namespace SDLCore {
 	struct WindowTag {};
 	struct WindowCallbackTag {};
 	struct AudioPlaybackDeviceTag {};
+	struct AudioClipTag {};
 
+	/**
+	 * @brief Identifier for a window.
+	 *        Internally stored as an unsigned int.
+	 */
 	using WindowID = SDLCoreID<WindowTag>;
+
+	/**
+	 * @brief Identifier for a window callback.
+	 *        Internally stored as an unsigned int.
+	 */
 	using WindowCallbackID = SDLCoreID<WindowCallbackTag>;
+
+	/**
+	 * @brief Identifier for an audio playback device.
+	 *        Internally stored as an unsigned int.
+	 */
 	using AudioPlaybackDeviceID = SDLCoreID<AudioPlaybackDeviceTag>;
+
+	/**
+	 * @brief Identifier for an audio clip.
+	 *        Internally stored as an unsigned int.
+	 */
+	using AudioClipID = SDLCoreID<AudioClipTag>;
 
 	enum class TextureParams : int {
 		NONE = 0,
@@ -95,6 +116,11 @@ static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::Wind
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::AudioPlaybackDeviceTag>>(SDLCore::AudioPlaybackDeviceID id) {
+	return FormatUtils::toString(id.value);
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::AudioClipTag>>(SDLCore::AudioClipID id) {
 	return FormatUtils::toString(id.value);
 }
 
