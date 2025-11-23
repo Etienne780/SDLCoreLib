@@ -24,8 +24,12 @@ namespace SDLCore {
 		case 3:
 			msg = "Application SDL3_mixer error!\n" + s_errorMsg;
 			break;
+		case 4:
+			msg = "Application SoundManager error!\n" + s_errorMsg;
+			break;
 		default:
 			msg = "Result '" + FormatUtils::toString(result) + "' is Unknon!";
+			break;
 		}
 
 		return msg;

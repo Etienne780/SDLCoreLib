@@ -4,6 +4,7 @@
 #include <CoreLib/Log.h>
 #include <CoreLib/Algorithm.h>
 
+#include "Types/Audio/SoundManager.h"
 #include "Application.h"
 
 namespace SDLCore {
@@ -53,6 +54,11 @@ namespace SDLCore {
             SetError(Log::GetFormattedString("SDLCore::Application: {}", SDL_GetError()));
             cancelStart = 3;
         }
+
+        if (!SoundManager::Init()) {
+            // SetError(GetError()); error is already set
+            cancelStart = 4;
+        }
     }
 
     int Application::Start() {
@@ -81,6 +87,8 @@ namespace SDLCore {
 
         Renderer::SetWindowRenderer();
         RemoveAllWindows();
+
+        SoundManager::Quit();
         MIX_Quit();
         TTF_Quit();
         SDL_Quit();

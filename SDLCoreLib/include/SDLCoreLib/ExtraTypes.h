@@ -1,5 +1,7 @@
 #pragma once
 
-#include "types/Version.h"
-#include "types/Vertex.h"
-#include "types/Texture.h"
+#include "Types/Version.h"
+#include "Types/Vertex.h"
+#include "Types/Texture.h"
+
+#include "Types/Audio/SoundManager.h"

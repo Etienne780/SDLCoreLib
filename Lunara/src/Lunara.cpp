@@ -21,6 +21,7 @@ static SDLCore::WindowID winStrokeID;
 static SDLCore::WindowID winPolygonID;
 static SDLCore::WindowID winImageID;
 static SDLCore::WindowID winTextID;
+static SDLCore::WindowID winSoundID;
 std::vector<MovingRect> movingRects;
 
 std::vector<SDLCore::Vertex> vertices;
@@ -116,7 +117,6 @@ void Lunara::OnStart() {
 
     {
         using namespace SDLCore;
-
         testAction.SetKeyAction({ KeyCode::W, KeyCode::Y, KeyCode::I, KeyCode::F2 });
         testAction.SetMouseAction({ MouseButton::LEFT, MouseButton::MIDDLE, MouseButton::RIGHT });
 
@@ -129,6 +129,7 @@ void Lunara::OnStart() {
     CreateWindow(&winPolygonID, "Polygon", 800, 800);
     CreateWindow(&winImageID, "Image", 800, 800);
     CreateWindow(&winTextID, "Text", 800, 800);
+    CreateWindow(&winSoundID, "Sound", 800, 800);
 
     exampleImage.CreateForWindow(winImageID);
 
@@ -148,12 +149,12 @@ void Lunara::OnStart() {
         vertices.emplace_back(Vector2{ x - size * 0.5f, y + size * 0.5f }, Vector4{ 0, 0, 0, 0 }, Vector2{ 0, 1 });
         vertices.emplace_back(Vector2{ x + size * 0.5f, y + size * 0.5f }, Vector4{ 0, 0, 0, 0 }, Vector2{ 1, 1 });
 
-        velocity = { Vector2(1.0f, 0.4f), Vector2(0.25f, -0.8f), Vector2(-0.4f, 0.9) };
+        velocity = { Vector2(1.0f, 0.4f), Vector2(0.25f, -0.8f), Vector2(-0.4f, 0.9f) };
     }
 
     SetFPSCap(APPLICATION_FPS_UNCAPPED);
 
-    SDLCore::Renderer::SetFont("C:/Users/Etienne Richter/AppData/Roaming/Opera Software/Opera GX Stable/Default/Extensions/igpdmclhhlcpoindmhkhillbfhdgoegm/6.12.0.7_0/assets/b25893558c7f1ad49e5e.ttf");
+    // SDLCore::Renderer::SetFont("C:/Users/Etienne Richter/AppData/Roaming/Opera Software/Opera GX Stable/Default/Extensions/igpdmclhhlcpoindmhkhillbfhdgoegm/6.12.0.7_0/assets/b25893558c7f1ad49e5e.ttf");
     SDLCore::Renderer::SetFontSize(120);
 }
 
@@ -246,7 +247,7 @@ void Lunara::OnUpdate() {
 
     if (winImageID != SDLCORE_INVALID_ID) {
         auto* win =GetWindow(winImageID);
-        double op = ((std::sin(Time::GetTimeSec()) + 1) / 2);
+        float op = static_cast<float>((std::sin(Time::GetTimeSec()) + 1.0) * 0.5);
         win->SetOpacity(op);
         
         Input::SetWindow(winImageID);
@@ -286,10 +287,10 @@ void Lunara::OnUpdate() {
         if (Input::KeyPressed(KeyCode::D)) pos.x -= speed * Time::GetDeltaTime();
 
         std::string msg = "Hello World!";
-        RE::SetColor(0);
-        RE::FillRect(pos.x, pos.y, RE::GetTextWidth(msg), RE::GetTextHeight(msg));
-        RE::SetColor(0, 255, 0);
-        RE::Text(msg, pos.x, pos.y);
+        // RE::SetColor(0);
+        // RE::FillRect(pos.x, pos.y, RE::GetTextWidth(msg), RE::GetTextHeight(msg));
+        // RE::SetColor(0, 255, 0);
+        // RE::Text(msg, pos.x, pos.y);
 
         RE::Present();
 
@@ -297,6 +298,48 @@ void Lunara::OnUpdate() {
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
             RemoveWindow(winTextID);
     }
+
+    if (winSoundID != SDLCORE_INVALID_ID) {
+        Input::SetWindow(winSoundID);
+        RE::SetWindowRenderer(winSoundID);
+        RE::SetColor(45, 87, 32);
+        RE::Clear();
+
+        auto* win = GetWindow(winSoundID);
+        if(win) {
+            Vector2 mousePos = Input::GetMousePosition();
+            Vector2 winSize = win->GetSize();
+            Vector2 size{ 200, 50 };
+            Vector2 pos{ winSize.x * 0.5f - size.x * 0.5f,
+                winSize.y * 0.5f - size.y * 0.5f };
+            
+            bool hover = mousePos.x > pos.x && mousePos.x < (pos.x + size.x) &&
+                        mousePos.y > pos.y && mousePos.y < (pos.y + size.y);
+
+            RE::SetColor(255, 255, 255);
+            RE::FillRect(pos, size);
+            if (hover) {
+                RE::SetColor(100, 150, 255);
+                RE::SetInnerStroke(false);
+                RE::SetStrokeWidth(2);
+                RE::Rect(pos, size);
+
+                if (Input::MouseJustPressed(MouseButton::LEFT)) {
+                    // load sound and play it
+                    // sounds gets destroyed and removed from soundmanager after it finished
+                    SoundClip test("C:/Users/Admin/Downloads/LunaraSounds/sample.mp3");
+                    SoundManager::PlaySound(test);
+                }
+            }
+        }
+
+        RE::Present();
+
+        // needs to be called after using the window. becaus nullptr and so ...
+        if (Input::KeyJustPressed(KeyCode::ESCAPE))
+            RemoveWindow(winSoundID);
+    }
+
     static double lastTime = -1;
     if (lastTime < Time::GetTimeSec()) {
         Log::Print(SDLCore::Time::GetFrameRate());

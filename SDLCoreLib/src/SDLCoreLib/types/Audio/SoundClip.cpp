@@ -1,88 +1,123 @@
 #include "SDLCoreError.h"
+#include "Application.h"
 #include "Types/Audio/SoundManager.h"
 #include "Types/Audio/SoundClip.h"
 
 namespace SDLCore {
 
-	SoundClip::SoundClip(const SystemFilePath& filePath, SoundType type) {
-		if (!File::Exists(filePath)) {
-			Log::Error("SDLCore::SoundClip: Could not create Sound clip! Path '{}' dosent exist!", filePath);
-			return;
-		}
-
-		if (!LoadSound(filePath, type)) {
-			Log::Error(GetError());
-            return;
-		}
+	SoundClip::SoundClip(const SystemFilePath& filePath, SoundType type) 
+        : m_path(filePath) {
+        LoadSound(filePath, type);
 	}
 
 	SoundClip::~SoundClip() {
-	
+        SoundManager::DeletedSound(m_id);
+        idManager.FreeUniqueIdentifier(m_id.value);
 	}
 
+    SoundClipID SoundClip::GetID() const {
+        return m_id;
+    }
+
+    SoundType SoundClip::GetSoundType() const {
+        return m_type;
+    }
+    
+    float SoundClip::GetVolume() const {
+        return m_volume;
+    }
+
+    float SoundClip::GetDurationMS() const {
+        return m_durationMS;
+    }
+
+    float SoundClip::GetDurationSec() const {
+        return m_durationMS / 1000;
+    }
+
+    Sint64 SoundClip::GetNumberOfFrames() const {
+        return m_frameCount;
+    }
+    
+    int SoundClip::GetFrequency() const {
+        return m_frequency;
+    }
+
+    SoundClip* SoundClip::SetVolume(float volume) {
+        m_volume = volume;
+        return this;
+    }
+
     bool SoundClip::LoadSound(const SystemFilePath& path, SoundType type) {
-        MIX_Mixer* mixer = SoundManager::GetMixer();
-        if (!mixer) {
-            AddError("\nSDLCore::SoundClip::LoadSound: Could not load sound! mixer is null");
+        if (!File::Exists(path)) {
+            SetErrorF("SDLCore::SoundClip::LoadSound: Failed to load audio, file '{}' dose not exist!", 
+                path);
             return false;
         }
 
-        MIX_Audio* audio = MIX_LoadAudio(mixer, path.string().c_str(), true);
-        if (!audio) {
-            SetError("SDLCore::SoundClip::LoadSound: Failed to load audio: " + std::string(SDL_GetError()));
+        std::string strPath = path.string();
+        MIX_Audio* tempAudio = MIX_LoadAudio(nullptr, strPath.c_str(), true);
+        if (!tempAudio) {
+            SetError("SDLCore::SoundClip::LoadSound: Failed to load audio!\n" + std::string(SDL_GetError()));
             return false;
         }
 
-        Sint64 frames = MIX_GetAudioDuration(audio);
+        m_frameCount = MIX_GetAudioDuration(tempAudio);
 
         SDL_AudioSpec spec;
-        MIX_GetAudioFormat(audio, &spec);
+        MIX_GetAudioFormat(tempAudio, &spec);
+        m_frequency = spec.freq;
 
         // Convert frames to milliseconds
-        m_durationMS = (double)frames * 1000.0 / spec.freq;
+        if (m_frameCount > 0 && m_frequency > 0)
+            m_durationMS = static_cast<float>(m_frameCount) * 1000.0f / static_cast<float>(m_frequency);
+        else
+            m_durationMS = 0.0f;
 
-        if (frames == MIX_DURATION_UNKNOWN || frames == MIX_DURATION_INFINITE) {
-            // default audio type if frames is unkown
-            if (type == SoundType::AUTO) {
-                type = SoundType::STREAM;
+        MIX_DestroyAudio(tempAudio);
+        tempAudio = nullptr;
+
+        if (type == SoundType::AUTO) {
+            if (m_frameCount == MIX_DURATION_UNKNOWN || m_frameCount == MIX_DURATION_INFINITE) {
+                type = SoundType::NOT_PREDECODED;
+            }
+            else {
+                type = (m_durationMS < autoPredecodeThresholdMS) ? 
+                    SoundType::PREDECODED : SoundType::NOT_PREDECODED;
             }
         }
-        else {
-            if (type == SoundType::AUTO) {
-                if (m_durationMS < autoPredecodeThresholdMS) {
-                    type = SoundType::PREDECODED;
-                }
-                else if (m_durationMS < autoStreamThresholdMS) {
-                    type = SoundType::NOT_PREDECODED;
-                }
-                else {
-                    type = SoundType::STREAM;
-                }
-            }
-        }
-
-        MIX_DestroyAudio(audio);
         
-        if (type == SoundType::STREAM) {
-            SDL_PropertiesID props = SDL_CreateProperties();
-            SDL_SetBooleanProperty(props, MIX_AUDIOPROP_STREAM, true);
-            MIX_PROP_AUDIO_LOAD_CLOSEIO_BOOLEAN
-            MIX_Audio* audio = MIX_LoadAudioWithProperties(mixer, path, props);
-            SDL_AudioStream* stream;
-        }
-        else {
-            bool predecode = (type == SoundType::PREDECODED);
-            audio = MIX_LoadAudio(mixer, path.string().c_str(), predecode);
-        }
-
-        if (!audio) {
-            SetError("Failed to reload audio: " + std::string(SDL_GetError()));
+        bool predecode = (type == SoundType::PREDECODED);
+        if (!CreateStaticAudio(strPath.c_str(), predecode)) {
+            AddError("\nSDLCore::SoundClip::LoadSound: Failed to create static audio!");
             return false;
         }
 
         m_type = type;
-        m_audio = audio;
         return true;
 	}
+
+    bool SoundClip::CreateStaticAudio(const char* path, bool predecode) {
+        MIX_Audio* audio = MIX_LoadAudio(nullptr, path, predecode);
+        if (!audio) {
+            SetErrorF("SDLCore::SoundClip::CreateStaticAudio: Failed to load audio '{}'! \n{}", 
+                path, SDL_GetError());
+            return false;
+        }
+
+        // frees the old id if it exits
+        if (m_id != SDLCORE_INVALID_ID) {
+            idManager.FreeUniqueIdentifier(m_id.value);
+        }
+        m_id = SoundClipID(idManager.GetNewUniqueIdentifier());
+
+        // gives owner ship to Sound manager;
+        if (!SoundManager::CreateSound(m_id, audio)) {
+            AddError("\nSDLCore::SoundClip::CreateStaticAudio: Could not add sound to sound manager!");
+            return false;
+        }
+
+        return true;
+    }
 
 }

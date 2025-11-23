@@ -7,7 +7,11 @@
 #include "AudioPlaybackDevice.h"
 
 namespace SDLCore {
-    class Appliaction;
+    class Application;
+
+    namespace SoundTags {
+        inline constexpr char* DEFAULT = "default";
+    }
 
     /*
     * plays sounds mixer and Manages tags. static/but not static like application
@@ -15,8 +19,11 @@ namespace SDLCore {
     * manages tag and master Volumn
     */
     class SoundManager {
-        friend class Appliaction;
+    friend class SoundClip;
+    friend class Application;
     public:
+        ~SoundManager();
+
         // ============== Static ==============
 
         static MIX_Mixer* GetMixer();
@@ -28,31 +35,107 @@ namespace SDLCore {
         */
         static bool SetAudioDevice(AudioPlaybackDeviceID deviceID);
 
-        static bool PlaySound();
+        /*
+        * Creats (adds) the sound to intern storage
+        */
+        static bool AddSound(const SoundClip& clip, const std::string& tag = SoundTags::DEFAULT);
+        /*
+        * Deletes the internal stored sound (stops the sound)
+        */
+        static bool RemoveSound(const SoundClip& clip);
+        static bool RemoveSound(const SoundClipID& id);
+
+        /*
+        * tags can be stored in the sound tag. if no tags are set the default tag will be used. start/restarts the sound
+        * @return true on success. Call SDLCore::GetError() for more information
+        */
+        static bool PlaySound(const SoundClip& clip, const std::string& tag = SoundTags::DEFAULT);
+        static bool PlayTag(const std::string& tag);
+
+        /*
+        * pauses the sound
+        */
+        static bool PauseSound(const SoundClip& clip);
+        static bool PauseAllSounds();
+        static bool PauseTag(const std::string& tag);
+
+        /*
+        * resumes the paused sound
+        */
+        static bool ResumeSound(const SoundClip& clip);
+        static bool ResumeAllSounds();
+        static bool ResumeTag(const std::string& tag);
+
+        /*
+        * stops the sound
+        */
+        static bool StopSound(const SoundClip& clip, Sint64 fadeOutMS = 0);
+        static bool StopAllSounds(Sint64 fadeOutMS = 0);
+        static bool StopTag(const std::string& tag, Sint64 fadeOutMS = 0);
+
+        static bool SetMasterVolume(float volume);
+        static bool SetTagVolume(const std::string& tag, float volume);
+
+        static bool GetInfo(std::string& outInfo);
 
     private:
         SoundManager() = default;
-        ~SoundManager();
         SoundManager(SoundManager&& s) = delete;
         SoundManager operator=(SoundManager & s) = delete;
+
+        IDManager m_trackIDManager;
+        struct Audio {
+            MIX_Audio* mixAudio = nullptr;
+            AudioTrackID audioTrackID{ SDLCORE_INVALID_ID };
+
+            Audio() = default;
+            Audio(MIX_Audio* audio) 
+                : mixAudio(audio) {}
+        };
+
+        struct AudioTrack {
+            MIX_Track* track = nullptr;
+            float durationMS = 0.0f;
+            Sint64 frameCount = 0;
+            int frequency = 0;
+            std::string tag;
+            bool isDeleted = false;
+
+            AudioTrack() = default;
+            AudioTrack(MIX_Track* _track, const SoundClip& _clip, const std::string& _tag) 
+                : track(_track), durationMS(_clip.GetDurationMS()), 
+                frameCount(_clip.GetNumberOfFrames()), frequency(_clip.GetFrequency()), tag(_tag) {}
+        };
 
         // ============== Static ==============
 
         static bool Init(SDL_AudioDeviceID audio = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
         static void Quit();
 
-        /*
-        * @biref Checks if a current valid instance of this class exist
-        * @reutrn true if valid instance exists. Call SDLCore::GetError() for more information 
+        /**
+        * @brief Checks if a current valid instance of this class exist
+        * @return true if valid instance exists. Call SDLCore::GetError() for more information 
         */
         static bool InstanceExist();
 
+        /*
+        * gets only called internaly from SoundClip class
+        * takes ownership of the given audio
+        */
+        static bool CreateSound(SoundClipID id, MIX_Audio* audio);
+
+        /*
+        * gets only called internaly from SoundClip class
+        * Marks audio as deleted and delets it when its done
+        */
+        static bool DeletedSound(SoundClipID id);
+
         // ============== Member ==============
         MIX_Mixer* m_mixer = nullptr;
+        std::unordered_map<AudioTrackID, AudioTrack> m_audioTracks;// uses audio from m_audios to play sounds
+        std::unordered_map<SoundClipID, Audio> m_audios;// audio gets added from clip
         std::vector<AudioPlaybackDevice> m_devices;
         IDManager m_deviceIDManager{ 1 };
-
-        float m_volumeGain = 1.0f;
 
         void Cleanup();
 
@@ -61,45 +144,15 @@ namespace SDLCore {
         * @return true on success. Call SDLCore::GetError() for more information
         */
         bool CreateDevices();
+
+        AudioTrack* GetAudioTrack(SoundClipID id);
+        AudioTrack* GetAudioTrack(AudioTrackID id);
+        Audio* GetAudio(SoundClipID id);
+
+        bool TryGetMixer(MIX_Mixer*& mixer, const std::string& func);
+        bool CreateAudioTrack(AudioTrack*& audioTrack, const SoundClip& clip, const std::string& tag);
+        void MarkTrackAsDeleted(AudioTrack* audioTrack);
+        void OnTrackStopped(MIX_Track* track);
     };
 
-    /*
-    * loads audio. 
-    * checks audio length and chooses what decode mode chold be choosen. can also be set manul
-    * 
-    * length, shouldLoop, Volumn
-    */
-    // class SoundClip {
-    // friend class SoundManager;
-    // };
-
-    /*
-    importnant funcs
-
-    MIX_Mixer* mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
-    MIX_Track* track = MIX_CreateTrack(mixer);
-    MIX_Audio* sample = MIX_LoadAudio(mixer, "C:/Users/Admin/Downloads/LunaraSounds/sample.mp3", true);
-
-    int reDeCount = 0;
-    int plaDeCount = 0;
-    SDL_AudioDeviceID* reDe = SDL_GetAudioRecordingDevices(&reDeCount);
-    SDL_AudioDeviceID* plaDe = SDL_GetAudioPlaybackDevices(&plaDeCount);
-
-
-    MIX_SetMasterGain(mixer, 1.0f)
-
-    MIX_SetTrackAudio(track, sample)
-    MIX_SetTrackGain(track, 0.25f)
-    SDL_PropertiesID propID = MIX_GetAudioProperties(sample);
-    MIX_PlayTrack(track, propID)
-    MIX_SetTagGain();
-    MIX_TagTrack();
-
-    MIX_PlayAudio(mixer, sample)
-
-    MIX_DestroyTrack(track);
-    MIX_DestroyAudio(sample);
-    MIX_DestroyMixer(mixer);
-
-    */
 }
