@@ -586,7 +586,7 @@ namespace SDLCore::Renderer {
               static_cast<float>(m->atlasWidth),
               static_cast<float>(m->atlasHeight)
             };
-            float d = m->MetricsHeight();
+            float d = static_cast<float>(m->MetricsHeight());
             float res = d * s_fontSize;
 
             SDL_FRect src{
