@@ -6,7 +6,7 @@
 #include <CoreLib/FormatUtils.h>
 #include <CoreLib/CoreMath.h>
 
-inline constexpr unsigned int SDLCORE_INVALID_ID = std::numeric_limits<unsigned int>::max();
+inline constexpr uint32_t SDLCORE_INVALID_ID = std::numeric_limits<uint32_t>::max();
 inline constexpr int APPLICATION_FPS_UNCAPPED = 0;
 inline constexpr int APPLICATION_FPS_VSYNC_ON = -1;
 inline constexpr int APPLICATION_FPS_VSYNC_ADAPTIVE_ON = -2;
@@ -27,17 +27,17 @@ namespace SDLCore {
 
 	template<typename Tag>
 	struct SDLCoreID {
-		unsigned int value = SDLCORE_INVALID_ID;
+		uint32_t value = SDLCORE_INVALID_ID;
 
 		constexpr SDLCoreID() = default;
-		explicit constexpr SDLCoreID(unsigned int v) : value(v) {}
+		explicit constexpr SDLCoreID(uint32_t v) : value(v) {}
 
-		constexpr bool operator==(unsigned int other) const { return value == other; }
-		constexpr bool operator!=(unsigned int other) const { return value != other; }
-		constexpr bool operator<(unsigned int other) const { return value < other; }
-		constexpr bool operator>(unsigned int other) const { return value > other; }
-		constexpr bool operator<=(unsigned int other) const { return value <= other; }
-		constexpr bool operator>=(unsigned int other) const { return value >= other; }
+		constexpr bool operator==(uint32_t other) const { return value == other; }
+		constexpr bool operator!=(uint32_t other) const { return value != other; }
+		constexpr bool operator<(uint32_t other) const { return value < other; }
+		constexpr bool operator>(uint32_t other) const { return value > other; }
+		constexpr bool operator<=(uint32_t other) const { return value <= other; }
+		constexpr bool operator>=(uint32_t other) const { return value >= other; }
 
 		constexpr bool operator==(const SDLCoreID& other) const { return value == other.value; }
 		constexpr bool operator!=(const SDLCoreID& other) const { return value != other.value; }
@@ -99,7 +99,7 @@ namespace std {
 	template<typename Tag>
 	struct hash<SDLCore::SDLCoreID<Tag>> {
 		size_t operator()(const SDLCore::SDLCoreID<Tag>& id) const noexcept {
-			return std::hash<unsigned int>{}(id.value);
+			return std::hash<uint32_t>{}(id.value);
 		}
 	};
 }

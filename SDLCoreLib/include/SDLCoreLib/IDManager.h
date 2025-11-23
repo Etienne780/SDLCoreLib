@@ -1,6 +1,8 @@
 #pragma once
-#include <queue>
-
+#include <map>
+#include <cstdint>
+#include <limits>
+#include <CoreLib/FormatUtils.h>
 
 namespace SDLCore {
 
@@ -31,31 +33,26 @@ namespace SDLCore {
 	class IDManager {
 	public:
 		IDManager(IDOrder order = IDOrder::RANDOME);
-		IDManager(unsigned int startCount, IDOrder order = IDOrder::RANDOME);
+		IDManager(uint32_t startCount, IDOrder order = IDOrder::RANDOME);
 		~IDManager() = default;
 
 		bool IsIDFallback();
 
-		/*
-		* @brief returns a uniqe int id and ENGINE_INVALID_ID if no free id was found
+		/**
+		* @brief returns a unique uint32_t id or SDLCORE_INVALID_ID if none available
 		*/
-		unsigned int GetNewUniqueIdentifier() const;
+		uint32_t GetNewUniqueIdentifier();
 
 		/*
-		* @brief Frees an ID so it can be reused later.
-		*
-		* - The given ID is pushed into the free ID pool (m_freeIDs).
-		* - On the next call to GetNewUniqueIdentifier(), the manager will prefer
-		*   returning IDs from this pool (depending on the current IDOrder mode).
-		* - Use this when an object is destroyed or no longer needs its ID.
+		* @brief Frees an ID so it can be reused later
 		*/
-		void FreeUniqueIdentifier(unsigned int id);
+		void FreeUniqueIdentifier(uint32_t id);
 
 		/*
 		* @brief resets the ID manager
 		* @param sets the start value of the next free id
 		*/
-		void Reset(unsigned int startValue = 0);
+		void Reset(uint32_t startValue = 0);
 
 		/*
 		* @brief Sets the order in which new IDs are returned. Calls Reset on this Element. Default is IDOrder::RANDOME.
@@ -77,17 +74,49 @@ namespace SDLCore {
 		*/
 		void SetIDOrder(IDOrder value);
 
+		/**
+		* @brief Returns the current set of free-ID ranges.
+		*
+		* This function is intended for debug builds only.
+		* When called in non-debug configurations, it emits a warning
+		* and returns an empty static map.
+		*
+		* @return const reference to a map where each entry represents a free ID range:
+		*         - key   = range start
+		*         - value = range end
+		*/
+		const std::map<uint32_t, uint32_t>& DebugGetRanges() const;
+
 	private:
-		mutable unsigned int m_idCounter = 0;
-		mutable bool m_idFallback = false;// gets set to true when the id limit(Integer.Max) is reached.
-		mutable std::queue<unsigned int> m_freeIDs;
+		static inline constexpr uint32_t idLimit = std::numeric_limits<uint32_t>::max();
+
+		// store free id ranges as [start, end] (inclusive)
+		// use std::map keyed by start -> end for fast neighbor lookups and merging
+		std::map<uint32_t, uint32_t> m_rangeFreeIDs;
+
+		uint32_t m_idCounter = 0;
+		bool m_idFallback = false; // becomes true when sequential generation exhausted
 		IDOrder m_order = IDOrder::RANDOME;
 
-		unsigned int GetNewUniqueIdentifierFallback() const;
+		// internal helpers
 
-		unsigned int GetNewUniqueIdentifierRandom() const;
-		unsigned int GetNewUniqueIdentifierAscending() const;
-		unsigned int GetNewUniqueIdentifierDescending() const;
+		uint32_t GetNewUniqueIdentifierFallback();
+		uint32_t GetRangeFreeID();
+
+		uint32_t GetNewUniqueIdentifierRandom();
+		uint32_t GetNewUniqueIdentifierAscending();
+		uint32_t GetNewUniqueIdentifierDescending();
 	};
 
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::IDOrder>(SDLCore::IDOrder order) {
+	switch (order)
+	{
+	case SDLCore::IDOrder::RANDOME:		return "Random";
+	case SDLCore::IDOrder::ASCENDING:	return "Ascending";
+	case SDLCore::IDOrder::DESCENDING:	return "Descending";
+	default:							return "UNKOWN";
+	}
 }
