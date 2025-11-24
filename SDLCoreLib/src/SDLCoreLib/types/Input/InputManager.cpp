@@ -1,6 +1,6 @@
-﻿#include <CoreLib\Log.h>
+﻿#include <CoreLib/Log.h>
 #include "Application.h"
-#include "Input\InputManager.h"
+#include "Types/Input/InputManager.h"
 
 namespace SDLCore {
 

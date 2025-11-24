@@ -1,5 +1,5 @@
 #pragma once
 
-#include "Input/InputTypes.h"
-#include "Input/InputAction.h"
-#include "Input/InputManager.h"
+#include "Types/Input/InputTypes.h"
+#include "Types/Input/InputAction.h"
+#include "Types/Input/InputManager.h"

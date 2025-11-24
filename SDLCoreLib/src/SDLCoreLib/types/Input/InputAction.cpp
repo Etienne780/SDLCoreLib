@@ -1,5 +1,5 @@
 #include <string>
-#include "Input/InputAction.h"
+#include "Types/Input/InputAction.h"
 
 namespace SDLCore {
 	

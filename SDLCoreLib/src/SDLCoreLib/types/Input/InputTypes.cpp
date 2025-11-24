@@ -1,4 +1,4 @@
-#include "Input/InputTypes.h"
+#include "Types/Input/InputTypes.h"
 
 namespace SDLCore {
 
