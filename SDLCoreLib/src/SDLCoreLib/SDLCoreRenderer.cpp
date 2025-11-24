@@ -536,10 +536,32 @@ namespace SDLCore::Render {
             Log::Error("SDLCore::Renderer::Polygon: Cant render polygon, vertices are empty");
             return;
         }
-
+        
         auto sdlVertices = ConvertVertices(vertices, SET_COLOR);
         const int* iData = (indices.size() > 0) ? indices.data() : nullptr;
         if (!SDL_RenderGeometry(renderer.get(), nullptr, sdlVertices.data(), static_cast<int>(vertices.size()), iData, static_cast<int>(indices.size()))) {
+            if (iData) {
+                Log::Error("SDLCore::Renderer::Polygon: Failed to draw polygon(verticesCount: {}, indicesCount: {}): {}", vertices.size(), indices.size(), SDL_GetError());
+            }
+            else {
+                Log::Error("SDLCore::Renderer::Polygon: Failed to draw polygon(verticesCount: {}): {}", vertices.size(), SDL_GetError());
+            }
+        }
+    }
+
+    void Polygon(const SDLCore::Texture& texture, const std::vector<Vertex>& vertices, const std::vector<int>& indices) {
+        auto renderer = GetActiveRenderer("Polygon");
+        if (!renderer)
+            return;
+
+        if (vertices.empty()) {
+            Log::Error("SDLCore::Renderer::Polygon: Cant render polygon, vertices are empty");
+            return;
+        }
+
+        auto sdlVertices = ConvertVertices(vertices, false);
+        const int* iData = (indices.size() > 0) ? indices.data() : nullptr;
+        if (!SDL_RenderGeometry(renderer.get(), texture.GetSDLTexture(s_winID) , sdlVertices.data(), static_cast<int>(vertices.size()), iData, static_cast<int>(indices.size()))) {
             if (iData) {
                 Log::Error("SDLCore::Renderer::Polygon: Failed to draw polygon(verticesCount: {}, indicesCount: {}): {}", vertices.size(), indices.size(), SDL_GetError());
             }

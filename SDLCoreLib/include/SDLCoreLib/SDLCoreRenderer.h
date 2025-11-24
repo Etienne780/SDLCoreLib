@@ -411,6 +411,7 @@ namespace SDLCore::Render {
 	void Point(float x, float y);
 
 	void Polygon(const std::vector<Vertex>& vertices, const std::vector<int>& indices = {});
+	void Polygon(const SDLCore::Texture& texture, const std::vector<Vertex>& vertices, const std::vector<int>& indices = {});
 
 	#pragma endregion
 
