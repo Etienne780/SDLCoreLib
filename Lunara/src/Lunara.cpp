@@ -23,7 +23,6 @@ static SDLCore::WindowID winPolygonID;
 static SDLCore::WindowID winImageID;
 static SDLCore::WindowID winTextID;
 static SDLCore::WindowID winSoundID;
-static SDLCore::WindowID testID;
 
 std::vector<MovingRect> movingRects;
 
@@ -127,13 +126,12 @@ void Lunara::OnStart() {
         Log::Print("Press 'T' to toggle");
     }
     
-    CreateWindow(&testID, "Test", 800, 800);
-    // CreateWindow(&winFillID, "FillRects", 800, 800);
-    // CreateWindow(&winStrokeID, "StrokeRects", 800, 800);
-    // CreateWindow(&winPolygonID, "Polygon", 800, 800);
-    // CreateWindow(&winImageID, "Image", 800, 800);
-    // CreateWindow(&winTextID, "Text", 800, 800);
-    // CreateWindow(&winSoundID, "Sound", 800, 800);
+    CreateWindow(&winFillID, "FillRects", 800, 800);
+    CreateWindow(&winStrokeID, "StrokeRects", 800, 800);
+    CreateWindow(&winPolygonID, "Polygon", 800, 800);
+    CreateWindow(&winImageID, "Image", 800, 800);
+    CreateWindow(&winTextID, "Text", 800, 800);
+    CreateWindow(&winSoundID, "Sound", 800, 800);
 
     exampleImage.CreateForWindow(winImageID);
 
@@ -173,33 +171,6 @@ void Lunara::OnUpdate() {
     float stroke = static_cast<float>(std::sin(timeSec * 2)) * 30.0f;
 
     MoveRects();
-
-    if (testID != SDLCORE_INVALID_ID) {
-        static bool toggleRect = false;
-        static bool toggleRender = false;
-        Input::SetWindow(testID);
-        if (Input::KeyJustPressed(KeyCode::W))
-            toggleRender = !toggleRender;
-
-        if (Input::KeyJustPressed(KeyCode::E))
-            toggleRect = !toggleRect;
-
-        if (toggleRender) {
-            Window* win = GetWindow(testID);
-            Log::Print(win->GetVsync());
-
-            RE::SetWindowRenderer(testID);
-            RE::SetColor(50, 50, 50);
-            RE::Clear();
-
-            if (toggleRect) {
-                RE::SetColor(255, 0, 0);
-                RE::FillRect(50, 50, 100, 100);
-            }
-
-            RE::Present();
-        }
-    }
 
     if (winFillID != SDLCORE_INVALID_ID) {
         Input::SetWindow(winFillID);
@@ -286,34 +257,34 @@ void Lunara::OnUpdate() {
         RE::SetColor(120, 50, 70);
         RE::Clear();
 
-       /* std::vector<Vertex> mrVertecics;
-        std::vector<int> mrIndecies;
-        mrVertecics.reserve(movingRects.size() * 4);
-        mrIndecies.reserve(movingRects.size() * 6);
-        int i = 0;
-        for (auto& mr : movingRects) {
-            mrVertecics.emplace_back(mr.rect.x, mr.rect.y, 255, 255, 255, 255, 0, 0);
-            mrVertecics.emplace_back(mr.rect.x, mr.rect.y + mr.rect.w, 255, 255, 255, 255, 0, 1);
-            mrVertecics.emplace_back(mr.rect.x + mr.rect.z, mr.rect.y + mr.rect.w, 255, 255, 255, 255, 1, 1);
-            mrVertecics.emplace_back(mr.rect.x + mr.rect.z, mr.rect.y, 255, 255, 255, 255, 1, 0);
+       std::vector<Vertex> mrVertecics;
+       std::vector<int> mrIndecies;
+       mrVertecics.reserve(movingRects.size() * 4);
+       mrIndecies.reserve(movingRects.size() * 6);
+       int i = 0;
+       for (auto& mr : movingRects) {
+           mrVertecics.emplace_back(mr.rect.x, mr.rect.y, 255, 255, 255, 255, 0, 0);
+           mrVertecics.emplace_back(mr.rect.x, mr.rect.y + mr.rect.w, 255, 255, 255, 255, 0, 1);
+           mrVertecics.emplace_back(mr.rect.x + mr.rect.z, mr.rect.y + mr.rect.w, 255, 255, 255, 255, 1, 1);
+           mrVertecics.emplace_back(mr.rect.x + mr.rect.z, mr.rect.y, 255, 255, 255, 255, 1, 0);
 
-            int base = i;
-            mrIndecies.push_back(base);
-            mrIndecies.push_back(base + 1);
-            mrIndecies.push_back(base + 2);
+           int base = i;
+           mrIndecies.push_back(base);
+           mrIndecies.push_back(base + 1);
+           mrIndecies.push_back(base + 2);
 
-            mrIndecies.push_back(base);
-            mrIndecies.push_back(base + 2);
-            mrIndecies.push_back(base + 3);
+           mrIndecies.push_back(base);
+           mrIndecies.push_back(base + 2);
+           mrIndecies.push_back(base + 3);
 
-            i += 4;
-        }
+           i += 4;
+       }
 
-        RE::Polygon(mrVertecics.data(), mrVertecics.size(), &exampleImage,
-            mrIndecies.data(), mrIndecies.size());*/
+       RE::Polygon(mrVertecics.data(), mrVertecics.size(), &exampleImage,
+           mrIndecies.data(), mrIndecies.size());
 
-        for (auto& mr : movingRects)
-            RE::Texture(exampleImage, mr.rect.x, mr.rect.y, mr.rect.z, mr.rect.w);
+        // for (auto& mr : movingRects)
+        //     RE::Texture(exampleImage, mr.rect.x, mr.rect.y, mr.rect.z, mr.rect.w);
             // exampleImage.Render(mr.rect.x, mr.rect.y, mr.rect.z, mr.rect.w);
 
         RE::Present();
@@ -323,6 +294,7 @@ void Lunara::OnUpdate() {
             RemoveWindow(winImageID);
     }
 
+    static float frameRate = 0;
     if (winTextID != SDLCORE_INVALID_ID) {
         Input::SetWindow(winTextID);
         RE::SetWindowRenderer(winTextID);
@@ -345,10 +317,17 @@ void Lunara::OnUpdate() {
         if (Input::KeyPressed(KeyCode::D)) pos.x -= speed * Time::GetDeltaTime();
 
         std::string msg = "Hello World!";
+        float textHeight = RE::GetTextHeight(msg);
         RE::SetColor(0);
-        RE::FillRect(pos.x, pos.y, RE::GetTextWidth(msg), RE::GetTextHeight(msg));
+        RE::FillRect(pos.x, pos.y, RE::GetTextWidth(msg), textHeight);
         RE::SetColor(0, 255, 0);
         RE::Text(msg, pos.x, pos.y);
+
+        msg = FormatUtils::toString(frameRate);
+        RE::SetColor(0);
+        RE::FillRect(pos.x, pos.y + textHeight + 10, RE::GetTextWidth(msg), RE::GetTextHeight(msg));
+        RE::SetColor(255);
+        RE::Text(msg, pos.x, pos.y + textHeight + 10);
 
         RE::Present();
 
@@ -385,7 +364,7 @@ void Lunara::OnUpdate() {
                 if (Input::MouseJustPressed(MouseButton::LEFT)) {
                     // load sound and play it
                     // sounds gets destroyed and removed from soundmanager after it finished
-                    SoundClip test("C:/Users/Admin/Downloads/LunaraSounds/sample.mp3");
+                    SoundClip test("C:/Users/ fsd Admin/Downloads/LunaraSounds/sample.mp3");
                     SoundManager::PlaySound(test);
                 }
             }
@@ -400,7 +379,8 @@ void Lunara::OnUpdate() {
 
     static double lastTime = -1;
     if (lastTime < Time::GetTimeSec()) {
-        Log::Print(SDLCore::Time::GetFrameRate());
+        frameRate = SDLCore::Time::GetFrameRate();
+        Log::Print(frameRate);
         lastTime = Time::GetTimeSec() + 0.5;
     }
 }
