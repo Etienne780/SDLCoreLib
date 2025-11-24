@@ -85,7 +85,7 @@ namespace SDLCore {
         }
         OnQuit();
 
-        Renderer::SetWindowRenderer();
+        Render::SetWindowRenderer();
         RemoveAllWindows();
 
         SoundManager::Quit();

@@ -8,7 +8,7 @@
 #include "types/Vertex.h"
 #include "SDLCoreRenderer.h"
 
-namespace SDLCore::Renderer {
+namespace SDLCore::Render {
 
     static std::weak_ptr<SDL_Renderer> s_renderer;
     static WindowID s_winID { SDLCORE_INVALID_ID };
@@ -551,6 +551,36 @@ namespace SDLCore::Renderer {
 
     #pragma endregion
 
+    #pragma region Texture
+
+    void Texture(SDLCore::Texture& texture, float x, float y, float w, float h, const FRect* src) {
+        texture.Render(x, y, w, h, src);
+    }
+
+    void Texture(SDLCore::Texture& texture, const Vector2& pos, float w, float h, const FRect* src) {
+        texture.Render(pos.x, pos.y, w, h, src);
+    }
+
+    void Texture(SDLCore::Texture& texture, float x, float y, const Vector2& size, const FRect* src) {
+        texture.Render(x, y, size.x, size.y, src);
+    }
+
+    void Texture(SDLCore::Texture& texture, const Vector2& pos, const Vector2& size, const FRect* src) {
+        texture.Render(pos.x, pos.y, size.x, size.y, src);
+    }
+
+    void Texture(SDLCore::Texture& texture, const Vector4& transform, const FRect* src) {
+        texture.Render(transform.x, transform.y, transform.z, transform.w, src);
+    }
+
+    void Texture(SDLCore::Texture& texture, const FRect& transform, const FRect* src) {
+        texture.Render(transform.x, transform.y, transform.w, transform.h, src);
+    }
+    
+    #pragma endregion
+
+    #pragma region Text
+    
     void Text(const std::string& text, float x, float y) {
         auto renderer = GetActiveRenderer("Text");
         if (!renderer)
@@ -663,5 +693,7 @@ namespace SDLCore::Renderer {
         }
         return maxH;
     }
+
+    #pragma endregion
 
 }

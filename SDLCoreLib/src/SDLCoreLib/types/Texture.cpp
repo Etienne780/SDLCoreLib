@@ -120,8 +120,8 @@ namespace SDLCore {
         return true;
     }
 
-    void Texture::Render(float x, float y, float w, float h, const SDL_FRect* src) {
-        WindowID currentWinID = Renderer::GetActiveWindowID();
+    void Texture::Render(float x, float y, float w, float h, const FRect* src) {
+        WindowID currentWinID = Render::GetActiveWindowID();
         auto it = m_textures.find(currentWinID);
         if (it == m_textures.end()) {
             if (!CreateForWindow(currentWinID)) {

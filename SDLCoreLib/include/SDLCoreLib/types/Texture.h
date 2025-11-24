@@ -120,7 +120,7 @@ namespace SDLCore {
         * @param h Destination height (defaults to texture height if 0).
         * @param src Optional source rectangle (nullptr = full texture).
         */
-        void Render(float x, float y, float w = 0, float h = 0, const SDL_FRect* src = nullptr);
+        void Render(float x, float y, float w = 0, float h = 0, const FRect* src = nullptr);
 
         /**
         * @brief Updates the pixel data of a dynamic texture.

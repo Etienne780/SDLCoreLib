@@ -12,7 +12,7 @@ namespace SDLCore {
 	class Vertex;
 }
 
-namespace SDLCore::Renderer {
+namespace SDLCore::Render {
 
 	enum class BlendMode {
 		NONE				= SDL_BLENDMODE_NONE,				/**< no blending: dstRGBA = srcRGBA */
@@ -414,6 +414,68 @@ namespace SDLCore::Renderer {
 
 	#pragma endregion
 
+	#pragma region Texture
+
+	/**
+	* @brief Draws a texture to the current bound window.
+	* @param texture The texture that will be drawn.
+	* @param x Destination x-position in pixels.
+	* @param y Destination y-position in pixels.
+	* @param w Destination width in pixels (0 = use texture width).
+	* @param h Destination height in pixels (0 = use texture height).
+	* @param src Optional source rectangle (nullptr = full texture).
+	*/
+	void Texture(SDLCore::Texture& texture, float x, float y, float w = 0, float h = 0, const FRect* src = nullptr);
+
+	/**
+	 * @brief Draws a texture at a 2D position with specified width and height.
+	* @param texture The texture that will be drawn.
+	* @param pos Destination x,y position in pixels.
+	* @param w Destination width in pixels.
+	* @param h Destination height in pixels.
+	* @param src Optional source rectangle (nullptr = full texture).
+	*/
+	void Texture(SDLCore::Texture& texture, const Vector2& pos, float w, float h, const FRect* src = nullptr);
+
+	/**
+	* @brief Draws a texture at a 2D position with a size vector.
+	* @param texture The texture that will be drawn.
+	* @param x Destination x-position in pixels.
+	* @param y Destination y-position in pixels.
+	* @param size Destination size (width = size.x, height = size.y).
+	* @param src Optional source rectangle (nullptr = full texture).
+	*/
+	void Texture(SDLCore::Texture& texture, float x, float y, const Vector2& size, const FRect* src = nullptr);
+
+	/**
+	* @brief Draws a texture at a 2D position with a 2D size vector.
+	* @param texture The texture that will be drawn.
+	* @param pos Destination x,y position in pixels.
+	* @param size Destination size (width = size.x, height = size.y).
+	* @param src Optional source rectangle (nullptr = full texture).
+	*/
+	void Texture(SDLCore::Texture& texture, const Vector2& pos, const Vector2& size, const FRect* src = nullptr);
+
+	/**
+	* @brief Draws a texture using a Vector4 transform (x, y, width, height).
+	* @param texture The texture that will be drawn.
+	* @param transform Destination transform (x, y, width, height).
+	* @param src Optional source rectangle (nullptr = full texture).
+	*/
+	void Texture(SDLCore::Texture& texture, const Vector4& transform, const FRect* src = nullptr);
+
+	/**
+	* @brief Draws a texture using an FRect transform.
+	* @param texture The texture that will be drawn.
+	* @param transform Destination rectangle (x, y, width, height).
+	* @param src Optional source rectangle (nullptr = full texture).
+	*/
+	void Texture(SDLCore::Texture& texture, const FRect& transform, const FRect* src = nullptr);
+
+	#pragma endregion
+
+	#pragma region Text
+	
 	void Text(const std::string& text, float x, float y);
 	void SetFont(std::shared_ptr<Font> font);
 	void SetFont(const SystemFilePath& path);
@@ -423,5 +485,7 @@ namespace SDLCore::Renderer {
 	std::shared_ptr<Font> GetActiveFont();
 	float GetTextWidth(const std::string& text);
 	float GetTextHeight(const std::string& text);
+
+	#pragma endregion
 
 }

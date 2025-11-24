@@ -154,8 +154,8 @@ void Lunara::OnStart() {
 
     SetFPSCap(APPLICATION_FPS_UNCAPPED);
 
-    // SDLCore::Renderer::SetFont("C:/Users/Etienne Richter/AppData/Roaming/Opera Software/Opera GX Stable/Default/Extensions/igpdmclhhlcpoindmhkhillbfhdgoegm/6.12.0.7_0/assets/b25893558c7f1ad49e5e.ttf");
-    SDLCore::Renderer::SetFontSize(120);
+    // SDLCore::Render::SetFont("C:/Users/Etienne Richter/AppData/Roaming/Opera Software/Opera GX Stable/Default/Extensions/igpdmclhhlcpoindmhkhillbfhdgoegm/6.12.0.7_0/assets/b25893558c7f1ad49e5e.ttf");
+    SDLCore::Render::SetFontSize(120);
 }
 
 void Lunara::OnUpdate() {
@@ -163,7 +163,7 @@ void Lunara::OnUpdate() {
         Quit();
 
     using namespace SDLCore;
-    namespace RE = SDLCore::Renderer;
+    namespace RE = SDLCore::Render;
 
     double timeSec = SDLCore::Time::GetTimeSec();
     float stroke = static_cast<float>(std::sin(timeSec * 2)) * 30.0f;
@@ -256,7 +256,8 @@ void Lunara::OnUpdate() {
         RE::Clear();
 
         for (auto& mr : movingRects)
-            exampleImage.Render(mr.rect.x, mr.rect.y, mr.rect.z, mr.rect.w);
+            RE::Texture(exampleImage, mr.rect.x, mr.rect.y, mr.rect.z, mr.rect.w);
+            // exampleImage.Render(mr.rect.x, mr.rect.y, mr.rect.z, mr.rect.w);
 
         RE::Present();
 
