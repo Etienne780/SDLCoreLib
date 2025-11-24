@@ -689,7 +689,7 @@ namespace SDLCore::Render {
         float maxH = 0;
         for (char c : text) {
             if (auto* m = asset->GetGlyphMetrics(c))
-                maxH = std::max(maxH, static_cast<float>(m->atlasHeight));
+                maxH = std::max(maxH, static_cast<float>(m->BearingY()));
         }
         return maxH;
     }
