@@ -35,9 +35,12 @@ project "Lunara"
         runtime "Debug"
         symbols "On"
         buildoptions { "/MTd" }
+    filter {}
 
     filter "configurations:Release"
-        defines { "NDEBUG" }
+        defines { "NDEBUG", "DISABLE_LOGS" }  -- optional für Log-Funktionen
+        kind "WindowedApp"                     -- GUI-App ohne Konsole
         runtime "Release"
         optimize "On"
         buildoptions { "/MT" }
+    filter {}

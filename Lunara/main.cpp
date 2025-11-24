@@ -1,9 +1,10 @@
 #include <CoreLib/Log.h>
-#include <SDLCoreLib/Application.h>
+#include <SDLCoreLib/SDLCore.h>
+#include <SDL3/SDL_main.h>
 
 #include "Lunara.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 	Lunara* lunara = new Lunara();
 	SDLCore::SDLResult result = lunara->Start();
 
