@@ -2,13 +2,18 @@
 #include <CoreLib/Log.h>
 #include <CoreLib/File.h>
 
+#include "Types/Font/Nurom_Bold_ttf.h"
 #include "Types/Font/Font.h"
 
 namespace SDLCore {
 
+	Font::Font(bool useDefaultFont) {
+		SetDefaultFont(useDefaultFont);
+	}
+
 	Font::Font(const SystemFilePath& path, std::vector<float> sizes, size_t cachedSizes)
 		: m_path(path), m_maxFontSizesCached(cachedSizes) {
-
+		CheckFilePath(path);
 		if (m_maxFontSizesCached < sizes.size()) {
 			Log::Warn("SDLCore::Font: The number of predefined font sizes '{}' exceeds the configured cache size '{}' for '{}'. Some sizes may not be cached.",
 				sizes.size(), m_maxFontSizesCached, path.filename());
@@ -23,12 +28,24 @@ namespace SDLCore {
 		CalculateCachedFonts();
 	}
 
-	Font* Font::SelectSize(float size) {
-		if (m_path.empty()) {
-			Log::Warn("SDLCore::Font::SelectSize: Cant select font size '{}', font path is empty!", size);
-			return this;
+	Font::Font(const unsigned char* data, size_t dataSize, std::vector<float> fontSizes, size_t cachedSizes)
+		: m_maxFontSizesCached(cachedSizes), m_loadedFromMem(true) {
+
+		if (m_maxFontSizesCached < fontSizes.size()) {
+			Log::Warn("SDLCore::Font(FromMem): The number of predefined font sizes '{}' exceeds the configured cache size '{}'. Some sizes may not be cached.",
+				fontSizes.size(), m_maxFontSizesCached);
 		}
 
+		for (float size : fontSizes) {
+			if (!CreateFontAssetFromMem(data, dataSize, size)) {
+				Log::Error("SDLCore::Font: Could not create Font with size {}!", size);
+			}
+		}
+
+		CalculateCachedFonts();
+	}
+
+	Font* Font::SelectSize(float size) {
 		if (size <= 0) {
 			Log::Warn("SDLCore::Font::SelectSize: Cant select font size '{}', font path is empty!", size);
 			return this;
@@ -42,7 +59,7 @@ namespace SDLCore {
 			Log::Error("SDLCore::Font::SelectSize: Could not get Font with size '{}'!", size);
 			return this;
 		}
-		
+
 		// is for font caching (LRU)
 		fontAsset->lastUseTick = m_globalAccessCounter;
 		m_globalAccessCounter++;
@@ -58,8 +75,36 @@ namespace SDLCore {
 		return this;
 	}
 
+	Font* Font::SetFontData(const unsigned char* data, size_t dataSize) {
+		m_fontData = data;
+		m_fontDataSize = dataSize;
+		m_path = "";
+		m_loadedFromMem = true;
+		MarkAsValid();
+		return Clear();
+	}
+
 	Font* Font::Setpath(const SystemFilePath& path) {
+		m_fontData = nullptr;
+		m_fontDataSize = 0;
+
 		m_path = path;
+		CheckFilePath(path);
+		m_useDefault = false;
+		m_loadedFromMem = false;
+		MarkAsValid();
+		return Clear();
+	}
+
+	Font* Font::SetDefaultFont(bool active) {
+		m_useDefault = active;
+		if (active) {
+			SetFontData(StaticFont::Fallback_ttf, 
+				StaticFont::Fallback_ttf_len);
+		}
+		else {
+			Setpath("");
+		}
 		return Clear();
 	}
 
@@ -109,15 +154,24 @@ namespace SDLCore {
 
 	// could create multiple fontassets with the same size
 	bool Font::CreateFontAsset(float size) {
-		if (m_path.empty()) 
-			return false;
+		if (!m_loadedFromMem && m_isFilePathInvalidValid) {
+			if (MarkAsInvalid()) {
+				Log::Warn("SDLCore::Font::CreateFontAsset: Could not create font asset for size '{}', used fallback font!", size);
+			}
+			CreateFallbackFontAsset(size);
+			return true;
+		}
 
 		if (size <= 0) {
 			Log::Error("SDLCore::Font::CreateFontAsset: Could not create FontAsset with size '{}', size is equal or less than zero!", size);
 			return false;
 		}
 
-		TTF_Font* font = TTF_OpenFont(m_path.u8string().c_str(), size);
+		if (m_loadedFromMem) {
+			return CreateFontAssetFromMem(m_fontData, m_fontDataSize, size);
+		}
+		
+		TTF_Font* font = TTF_OpenFont(m_path.string().c_str(), size);
 		if (!font) {
 			Log::Error("SDLCore::Font::CreateFontAsset: Could not create FontAsset with size '{}': {}", size, SDL_GetError());
 			return false;
@@ -125,6 +179,32 @@ namespace SDLCore {
 
 		m_fontAssets.emplace_back(font, size);
 		return true;
+	}
+
+	bool Font::CreateFontAssetFromMem(const unsigned char* data, size_t dataSize, float fontSize) {
+		SDL_IOStream* io = SDL_IOFromMem(
+			const_cast<unsigned char*>(data), dataSize
+		);
+
+		if (!io) {
+			Log::Error("SDLCore::Font::CreateFontAssetFromMem: Could not create FontAsset with size '{}', io is nullptr: {}", fontSize, SDL_GetError());
+			return false;
+		}
+
+		TTF_Font* font = TTF_OpenFontIO(io, 1, fontSize);
+		if (!font) {
+			Log::Error("SDLCore::Font::CreateFontAssetFromMem: Could not create FontAsset with size '{}': {}", fontSize, SDL_GetError());
+			return false;
+		}
+
+		m_fontAssets.emplace_back(font, fontSize);
+		return true;
+	}
+
+	bool Font::CreateFallbackFontAsset(float size) {
+		return CreateFontAssetFromMem(
+			StaticFont::Fallback_ttf,
+			StaticFont::Fallback_ttf_len, size);
 	}
 
 	void Font::CalculateCachedFonts() {
@@ -142,6 +222,27 @@ namespace SDLCore {
 			[selectedSize](const FontAsset& asset) { return asset.fontSize == selectedSize; }) == m_fontAssets.end()) {
 			m_selectedSize = -1;
 		}
+	}
+
+	void Font::CheckFilePath(const SystemFilePath& path) {
+		m_isFilePathInvalidValid = (path.empty()|| !File::Exists(path));
+	}
+
+	bool Font::MarkAsInvalid() {
+		bool result = false;
+		if (!m_isInvalid) {
+			if(m_path.empty())
+				Log::Warn("SDLCore::Font: Font is invalid, path was empty!");
+			else
+				Log::Warn("SDLCore::Font: Font '{}' is invalid!", m_path);
+			result = true;
+		}
+		m_isInvalid = true;
+		return result;
+	}
+	
+	void Font::MarkAsValid() {
+		m_isInvalid = false;
 	}
 
 }

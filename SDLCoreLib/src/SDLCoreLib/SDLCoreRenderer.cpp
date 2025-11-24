@@ -20,7 +20,7 @@ namespace SDLCore::Renderer {
     static bool s_innerStroke = true;
 
     // ========== Text ==========
-    std::shared_ptr<SDLCore::Font> s_font = nullptr;
+    std::shared_ptr<SDLCore::Font> s_font = std::make_shared<SDLCore::Font>(true);// loads the default font
     float s_fontSize = 16;
 
     SDL_Renderer* GetActiveRenderer() {
@@ -562,6 +562,8 @@ namespace SDLCore::Renderer {
         }
 
         auto* asset = s_font->GetFontAsset();
+        if (!asset)
+            return;
 
         SDL_Texture* atlas = asset->GetGlyphAtlasTexture(s_winID);
         if (!atlas)
@@ -634,6 +636,9 @@ namespace SDLCore::Renderer {
 
         float width = 0.0f;
         auto* asset = s_font->GetFontAsset();
+        if (!asset)
+            return false;
+
         for (char c : text) {
             if (auto* m = asset->GetGlyphMetrics(c))
                 width += m->advance;
@@ -648,6 +653,9 @@ namespace SDLCore::Renderer {
         }
 
         auto* asset = s_font->GetFontAsset();
+        if (!asset)
+            return false;
+
         float maxH = 0;
         for (char c : text) {
             if (auto* m = asset->GetGlyphMetrics(c))
