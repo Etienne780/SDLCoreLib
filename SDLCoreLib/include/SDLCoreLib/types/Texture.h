@@ -146,8 +146,18 @@ namespace SDLCore {
         Texture* Texture::Reset(TextureParams ignoreMask = TextureParams::NONE);
         
     private:
+        struct SDLTexture {
+            SDL_Texture* tex = nullptr;
+            Uint8 lastR = 0, lastG = 0, lastB = 0;
+
+            SDLTexture() = default;
+            SDLTexture(SDL_Texture* texture) : tex(texture) {
+            }
+        };
+
         SDL_Surface* m_surface = nullptr;
-        std::unordered_map<WindowID, SDL_Texture*> m_textures;
+        std::unordered_map<WindowID, SDLTexture> m_textures;
+
         std::unordered_map<WindowID, WindowCallbackID> m_windowSDLRendererDestroyCallbacks;
 
         int m_width = 0;

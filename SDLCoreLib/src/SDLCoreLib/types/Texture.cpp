@@ -99,7 +99,7 @@ namespace SDLCore {
         
         auto existing = m_textures.find(winID);
         if (existing != m_textures.end()) {
-            SDL_DestroyTexture(existing->second);
+            SDL_DestroyTexture(existing->second.tex);
             m_textures.erase(existing);
         }
         
@@ -116,10 +116,11 @@ namespace SDLCore {
             return false;
         }
 
-        m_textures[winID] = tex;
+        m_textures[winID] = SDLTexture(tex);
         return true;
     }
 
+    #include <CoreTime.h>
     void Texture::Render(float x, float y, float w, float h, const FRect* src) {
         WindowID currentWinID = Render::GetActiveWindowID();
         auto it = m_textures.find(currentWinID);
@@ -133,8 +134,8 @@ namespace SDLCore {
                 return;
         }
 
-        SDL_Texture* tex = it->second;
-        if (!tex)
+        SDLTexture& texture = it->second;
+        if (!texture.tex)
             return;
 
         // Use original texture size if w/h are unspecified
@@ -147,10 +148,16 @@ namespace SDLCore {
             return;
         }
 
-        Uint8 r = static_cast<Uint8>(m_colorTint.x);
-        Uint8 g = static_cast<Uint8>(m_colorTint.y);
-        Uint8 b = static_cast<Uint8>(m_colorTint.z);
-        SDL_SetTextureColorMod(tex, r, g, b);
+        if (texture.lastR != static_cast<Uint8>(m_colorTint.x) ||
+            texture.lastG != static_cast<Uint8>(m_colorTint.y) ||
+            texture.lastB != static_cast<Uint8>(m_colorTint.z)) {
+
+            texture.lastR = static_cast<Uint8>(m_colorTint.x);
+            texture.lastG = static_cast<Uint8>(m_colorTint.y);
+            texture.lastB = static_cast<Uint8>(m_colorTint.z);
+
+            SDL_SetTextureColorMod(texture.tex, texture.lastR, texture.lastG, texture.lastB);
+        }
 
         SDL_FRect dst{ x, y, w, h };
         SDL_FPoint center;
@@ -158,7 +165,7 @@ namespace SDLCore {
         center.y = dst.y + m_center.y * dst.h;
 
         SDL_FlipMode sdlFlip = static_cast<SDL_FlipMode>(m_flip);
-        if (!SDL_RenderTextureRotated(renderer, tex, src, &dst, m_rotation, &center, sdlFlip)) {
+        if (!SDL_RenderTextureRotated(renderer, texture.tex, src, &dst, m_rotation, &center, sdlFlip)) {
             Log::Error("SDLCore::Texture::Render: Failed to render rotated texture: {}", SDL_GetError());
         }
     }
@@ -171,14 +178,14 @@ namespace SDLCore {
         if (it == m_textures.end())
             return;
 
-        if (SDL_UpdateTexture(it->second, nullptr, pixels, pitch))
+        if (SDL_UpdateTexture(it->second.tex, nullptr, pixels, pitch))
             Log::Error("SDLCore::Texture::Update: Failed to update texture for window {}: {}", windowID, SDL_GetError());
     }
 
     void Texture::FreeForWindow(WindowID windowID) {
         auto it = m_textures.find(windowID);
         if (it != m_textures.end()) {
-            SDL_DestroyTexture(it->second);
+            SDL_DestroyTexture(it->second.tex);
             m_textures.erase(it);
         }
 
@@ -265,8 +272,8 @@ namespace SDLCore {
     }
 
     void Texture::Cleanup() {
-        for (auto& [_, tex] : m_textures)
-            SDL_DestroyTexture(tex);
+        for (auto& [_, texture] : m_textures)
+            SDL_DestroyTexture(texture.tex);
         m_textures.clear();
 
         if (m_surface) {
