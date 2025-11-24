@@ -318,7 +318,7 @@ namespace SDLCore {
 		std::vector<WindowCallback> m_onSDLRendererDestroyCallbacks;
 
 		// ======= Renderer properties =======
-		int m_vsync = true;
+		int m_vsync = 0;
 
 		std::shared_ptr<SDL_Window> m_sdlWindow = nullptr;
 		std::shared_ptr<SDL_Renderer> m_sdlRenderer = nullptr;
