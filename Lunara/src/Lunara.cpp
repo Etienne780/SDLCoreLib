@@ -1,5 +1,6 @@
 #include <cmath>
 #include <vector>
+#include <array>
 #include <CoreLib/Math/Vector4.h>
 #include "Lunara.h"
 
@@ -22,6 +23,8 @@ static SDLCore::WindowID winPolygonID;
 static SDLCore::WindowID winImageID;
 static SDLCore::WindowID winTextID;
 static SDLCore::WindowID winSoundID;
+static SDLCore::WindowID testID;
+
 std::vector<MovingRect> movingRects;
 
 std::vector<SDLCore::Vertex> vertices;
@@ -123,13 +126,14 @@ void Lunara::OnStart() {
         Log::Print(testAction);
         Log::Print("Press 'T' to toggle");
     }
-
-    CreateWindow(&winFillID, "FillRects", 800, 800);
-    CreateWindow(&winStrokeID, "StrokeRects", 800, 800);
-    CreateWindow(&winPolygonID, "Polygon", 800, 800);
-    CreateWindow(&winImageID, "Image", 800, 800);
-    CreateWindow(&winTextID, "Text", 800, 800);
-    CreateWindow(&winSoundID, "Sound", 800, 800);
+    
+    CreateWindow(&testID, "Test", 800, 800);
+    // CreateWindow(&winFillID, "FillRects", 800, 800);
+    // CreateWindow(&winStrokeID, "StrokeRects", 800, 800);
+    // CreateWindow(&winPolygonID, "Polygon", 800, 800);
+    // CreateWindow(&winImageID, "Image", 800, 800);
+    // CreateWindow(&winTextID, "Text", 800, 800);
+    // CreateWindow(&winSoundID, "Sound", 800, 800);
 
     exampleImage.CreateForWindow(winImageID);
 
@@ -169,6 +173,33 @@ void Lunara::OnUpdate() {
     float stroke = static_cast<float>(std::sin(timeSec * 2)) * 30.0f;
 
     MoveRects();
+
+    if (testID != SDLCORE_INVALID_ID) {
+        static bool toggleRect = false;
+        static bool toggleRender = false;
+        Input::SetWindow(testID);
+        if (Input::KeyJustPressed(KeyCode::W))
+            toggleRender = !toggleRender;
+
+        if (Input::KeyJustPressed(KeyCode::E))
+            toggleRect = !toggleRect;
+
+        if (toggleRender) {
+            Window* win = GetWindow(testID);
+            Log::Print(win->GetVsync());
+
+            RE::SetWindowRenderer(testID);
+            RE::SetColor(50, 50, 50);
+            RE::Clear();
+
+            if (toggleRect) {
+                RE::SetColor(255, 0, 0);
+                RE::FillRect(50, 50, 100, 100);
+            }
+
+            RE::Present();
+        }
+    }
 
     if (winFillID != SDLCORE_INVALID_ID) {
         Input::SetWindow(winFillID);
@@ -236,7 +267,7 @@ void Lunara::OnUpdate() {
         }
 
         RE::SetColor(currentColor);
-        RE::Polygon(vertices);
+        RE::Polygon(vertices.data(), vertices.size());
 
         RE::Present();
 
@@ -246,14 +277,40 @@ void Lunara::OnUpdate() {
     }
 
     if (winImageID != SDLCORE_INVALID_ID) {
-        auto* win =GetWindow(winImageID);
-        float op = static_cast<float>((std::sin(Time::GetTimeSec()) + 1.0) * 0.5);
-        win->SetOpacity(op);
+        // auto* win = GetWindow(winImageID);
+        // float op = static_cast<float>((std::sin(Time::GetTimeSec()) + 1.0) * 0.5);
+        // win->SetOpacity(op);
         
         Input::SetWindow(winImageID);
         RE::SetWindowRenderer(winImageID);
         RE::SetColor(120, 50, 70);
         RE::Clear();
+
+       /* std::vector<Vertex> mrVertecics;
+        std::vector<int> mrIndecies;
+        mrVertecics.reserve(movingRects.size() * 4);
+        mrIndecies.reserve(movingRects.size() * 6);
+        int i = 0;
+        for (auto& mr : movingRects) {
+            mrVertecics.emplace_back(mr.rect.x, mr.rect.y, 255, 255, 255, 255, 0, 0);
+            mrVertecics.emplace_back(mr.rect.x, mr.rect.y + mr.rect.w, 255, 255, 255, 255, 0, 1);
+            mrVertecics.emplace_back(mr.rect.x + mr.rect.z, mr.rect.y + mr.rect.w, 255, 255, 255, 255, 1, 1);
+            mrVertecics.emplace_back(mr.rect.x + mr.rect.z, mr.rect.y, 255, 255, 255, 255, 1, 0);
+
+            int base = i;
+            mrIndecies.push_back(base);
+            mrIndecies.push_back(base + 1);
+            mrIndecies.push_back(base + 2);
+
+            mrIndecies.push_back(base);
+            mrIndecies.push_back(base + 2);
+            mrIndecies.push_back(base + 3);
+
+            i += 4;
+        }
+
+        RE::Polygon(mrVertecics.data(), mrVertecics.size(), &exampleImage,
+            mrIndecies.data(), mrIndecies.size());*/
 
         for (auto& mr : movingRects)
             RE::Texture(exampleImage, mr.rect.x, mr.rect.y, mr.rect.z, mr.rect.w);
