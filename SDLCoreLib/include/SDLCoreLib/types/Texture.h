@@ -97,7 +97,7 @@ namespace SDLCore {
         * when the window is closed.
         *
         * @param windowID The identifier of the window for which to create the texture.
-        * @return True if the texture was created or replaced successfully, false otherwise.
+        * @return true on success. Call SDLCore::GetError() for more information
         */
         bool CreateForWindow(WindowID windowID);
 
@@ -190,7 +190,7 @@ namespace SDLCore {
         * @param id WindowID to query.
         * @return Pointer to SDL_Texture for that window, or nullptr if none exists.
         */
-        SDL_Texture* GetSDLTexture(WindowID id) const;
+        SDL_Texture* GetSDLTexture(WindowID id);
 
         /**
         * @brief Get the original SDL_Surface of this texture.

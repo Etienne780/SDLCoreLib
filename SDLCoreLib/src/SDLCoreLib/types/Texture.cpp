@@ -236,11 +236,11 @@ namespace SDLCore {
         return m_flip; 
     }
 
-    SDL_Texture* Texture::GetSDLTexture(WindowID id) const {
-        auto it = m_textures.find(id);
-        if (it == m_textures.end())
+    SDL_Texture* Texture::GetSDLTexture(WindowID id) {
+        SDLTexture* texture = GetTexture(id);
+        if (!texture)
             return nullptr;
-        return it->second.tex;
+        return texture->tex;
     }
 
     SDL_Surface* Texture::GetSDLSurface() const {
