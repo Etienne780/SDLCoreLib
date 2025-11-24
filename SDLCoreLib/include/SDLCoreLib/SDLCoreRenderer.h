@@ -431,11 +431,11 @@ namespace SDLCore::Render {
 	 * @brief Draws a texture at a 2D position with specified width and height.
 	* @param texture The texture that will be drawn.
 	* @param pos Destination x,y position in pixels.
-	* @param w Destination width in pixels.
-	* @param h Destination height in pixels.
+	* @param w Destination width in pixels (0 = use texture width).
+	* @param h Destination height in pixels (0 = use texture height).
 	* @param src Optional source rectangle (nullptr = full texture).
 	*/
-	void Texture(SDLCore::Texture& texture, const Vector2& pos, float w, float h, const FRect* src = nullptr);
+	void Texture(SDLCore::Texture& texture, const Vector2& pos, float w = 0, float h = 0, const FRect* src = nullptr);
 
 	/**
 	* @brief Draws a texture at a 2D position with a size vector.
@@ -476,14 +476,56 @@ namespace SDLCore::Render {
 
 	#pragma region Text
 	
+	/**
+	* @brief Draws a string of text at the specified position using the active font.
+	* @param text The text to draw.
+	* @param x X position in pixels.
+	* @param y Y position in pixels.
+	*/
 	void Text(const std::string& text, float x, float y);
+
+	/**
+	* @brief Sets the active font using a shared pointer.
+	* @param font The font to set as active.
+	*/
 	void SetFont(std::shared_ptr<Font> font);
+
+	/**
+	* @brief Sets the active font by loading it from a file path.
+	* @param path Path to the font file.
+	*/
 	void SetFont(const SystemFilePath& path);
+
+	/**
+	* @brief Sets the active font size in pixels.
+	* @param size Font size in pixels. Values less than 0 will be clamped to 0.
+	*/
 	void SetFontSize(float size);
 
+	/**
+	* @brief Retrieves the currently active font size.
+	* @return The size of the active font in pixels.
+	*/
 	float GetActiveFontSize();
+
+	/**
+	* @brief Retrieves the currently active font object.
+	* @return A shared pointer to the active font.
+	*/
 	std::shared_ptr<Font> GetActiveFont();
+
+	/**
+	* @brief Calculates the width of a string when rendered with the active font.
+	* @param text The text string to measure.
+	* @return The width in pixels. Returns 0 if no font is set.
+	*/
 	float GetTextWidth(const std::string& text);
+
+	/**
+	* @brief Calculates the height of a string when rendered with the active font.
+	* @param text The text string to measure.
+	* @return The maximum height in pixels of the characters in the string. Returns 0 if no font is set.
+	*/
 	float GetTextHeight(const std::string& text);
 
 	#pragma endregion
