@@ -9,6 +9,12 @@ namespace SDLCore {
         friend class Application;
 
     public:
+        /*
+        * @brief Gets the current number of frames since application instance creation
+        * @return Current frame count
+        */
+        static uint64_t GetFrameCount();
+
         /**
         * @brief Gets the current time in milliseconds since application instance creation
         * @return Current time in milliseconds

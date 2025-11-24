@@ -4,10 +4,15 @@
 
 namespace SDLCore {
 
+    static uint64_t s_frameCount = 0;
     static uint64_t s_lastTimeNS = 0;
     static uint64_t s_currentTimeNS = 0;
     static double s_deltaTimeSec = 0.0;
     static double s_frameRate = 0.0;
+
+    uint64_t Time::GetFrameCount() {
+        return s_frameCount;
+    }
 
     uint64_t Time::GetTime() {
         return SDL_GetTicks();
@@ -50,6 +55,7 @@ namespace SDLCore {
     }
 
     void Time::Update() {
+        s_frameCount++;
         s_currentTimeNS = GetTimeNS();
         s_deltaTimeSec = static_cast<double>(s_currentTimeNS - s_lastTimeNS) / 1e9; // ns -> s
         s_frameRate = (s_deltaTimeSec > 0.0) ? 1.0 / s_deltaTimeSec : 0.0;
