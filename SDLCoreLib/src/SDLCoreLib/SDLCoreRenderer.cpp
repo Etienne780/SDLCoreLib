@@ -56,6 +56,11 @@ namespace SDLCore::Render {
                     s_activeColor.a / 255.0f
                 };
             }
+            else {
+                v.color.r /= 255.0f;
+                v.color.g /= 255.0f;
+                v.color.b /= 255.0f;
+            }
             dst[i] = v;
         }
     }
