@@ -34,28 +34,36 @@ namespace SDLCore::Render {
         return s_winID;
     }
     
-    static std::vector<SDL_Vertex> ConvertVertices(const std::vector<Vertex>& src, bool setColor = false) {
-        std::vector<SDL_Vertex> dst;
-        dst.reserve(src.size());
-        for (const auto& v : src) {
-            SDL_Vertex sdlV = static_cast<SDL_Vertex>(v);
+    static void ConvertVertices(SDL_Vertex* dst,
+        const Vertex* src,
+        size_t count,
+        float xOffset,
+        float yOffset,
+        float xScale,
+        float yScale,
+        bool setColor)
+    {
+        for (size_t i = 0; i < count; i++) {
+            SDL_Vertex v = static_cast<SDL_Vertex>(src[i]);
+            v.position.x = xOffset + v.position.x * xScale;
+            v.position.y = yOffset + v.position.y * yScale;
+
             if (setColor) {
-                sdlV.color = SDL_FColor{
+                v.color = SDL_FColor{
                     s_activeColor.r / 255.0f,
                     s_activeColor.g / 255.0f,
                     s_activeColor.b / 255.0f,
                     s_activeColor.a / 255.0f
                 };
             }
-            dst.push_back(sdlV);
+            dst[i] = v;
         }
-        return dst;
     }
 
     static std::shared_ptr<SDL_Renderer> GetActiveRenderer(const char* func) {
         auto rendererPtr = s_renderer.lock();
         if (!rendererPtr) {
-            Log::Error("SDLCore::Renderer::{}: Current renderer is null", func);
+            SetErrorF("SDLCore::Renderer::{}: Current renderer is null", func);
         }
         return rendererPtr;
     }
@@ -527,48 +535,71 @@ namespace SDLCore::Render {
         }
     }
 
-    void Polygon(const std::vector<Vertex>& vertices, const std::vector<int>& indices) {
+    bool Polygon(const Vertex* vertices,
+        size_t vertexCount,
+        SDLCore::Texture* texture,
+        const int* indices,
+        size_t indexCount,
+        float xOffset,
+        float yOffset,
+        float scaleX,
+        float scaleY)
+    {
         auto renderer = GetActiveRenderer("Polygon");
         if (!renderer)
-            return;
+            return false;
 
-        if (vertices.empty()) {
-            Log::Error("SDLCore::Renderer::Polygon: Cant render polygon, vertices are empty");
-            return;
+        if (!vertices || vertexCount == 0)
+            return true;
+
+        // Local stack buffer for small meshes (no heap allocation)
+        constexpr size_t STACK_LIMIT = 64;
+        SDL_Vertex stackBuffer[STACK_LIMIT];
+        SDL_Vertex* out = stackBuffer;
+
+        std::vector<SDL_Vertex> heapVertices;
+        if (vertexCount > STACK_LIMIT) {
+            heapVertices.resize(vertexCount);
+            out = heapVertices.data();
         }
-        
-        auto sdlVertices = ConvertVertices(vertices, SET_COLOR);
-        const int* iData = (indices.size() > 0) ? indices.data() : nullptr;
-        if (!SDL_RenderGeometry(renderer.get(), nullptr, sdlVertices.data(), static_cast<int>(vertices.size()), iData, static_cast<int>(indices.size()))) {
-            if (iData) {
-                Log::Error("SDLCore::Renderer::Polygon: Failed to draw polygon(verticesCount: {}, indicesCount: {}): {}", vertices.size(), indices.size(), SDL_GetError());
+
+        ConvertVertices(out,
+            vertices,
+            vertexCount,
+            xOffset,
+            yOffset,
+            scaleX,
+            scaleY,
+            /*setColor*/ texture == nullptr);
+
+        SDL_Texture* tex = nullptr;
+        if (texture) {
+            tex = texture->GetSDLTexture(s_winID);
+        }
+
+        // Index pointer only if valid
+        const int* idx = (indexCount > 0) ? indices : nullptr;
+
+        // Submit geometry to SDL
+        if (!SDL_RenderGeometry(renderer.get(),
+            tex,
+            out,
+            static_cast<int>(vertexCount),
+            idx,
+            static_cast<int>(indexCount)))
+        {
+            if (idx) {
+                SetErrorF("SDLCore::Renderer::Polygon: Failed to draw polygon (vertices={}, indices={}): {}",
+                    vertexCount, indexCount, SDL_GetError());
             }
             else {
-                Log::Error("SDLCore::Renderer::Polygon: Failed to draw polygon(verticesCount: {}): {}", vertices.size(), SDL_GetError());
+                SetErrorF("SDLCore::Renderer::Polygon: Failed to draw polygon (vertices={}): {}",
+                    vertexCount, SDL_GetError());
             }
-        }
-    }
-
-    void Polygon(const SDLCore::Texture& texture, const std::vector<Vertex>& vertices, const std::vector<int>& indices) {
-        auto renderer = GetActiveRenderer("Polygon");
-        if (!renderer)
-            return;
-
-        if (vertices.empty()) {
-            Log::Error("SDLCore::Renderer::Polygon: Cant render polygon, vertices are empty");
-            return;
+            return false;
         }
 
-        auto sdlVertices = ConvertVertices(vertices, false);
-        const int* iData = (indices.size() > 0) ? indices.data() : nullptr;
-        if (!SDL_RenderGeometry(renderer.get(), texture.GetSDLTexture(s_winID) , sdlVertices.data(), static_cast<int>(vertices.size()), iData, static_cast<int>(indices.size()))) {
-            if (iData) {
-                Log::Error("SDLCore::Renderer::Polygon: Failed to draw polygon(verticesCount: {}, indicesCount: {}): {}", vertices.size(), indices.size(), SDL_GetError());
-            }
-            else {
-                Log::Error("SDLCore::Renderer::Polygon: Failed to draw polygon(verticesCount: {}): {}", vertices.size(), SDL_GetError());
-            }
-        }
+        return true;
     }
 
     #pragma endregion

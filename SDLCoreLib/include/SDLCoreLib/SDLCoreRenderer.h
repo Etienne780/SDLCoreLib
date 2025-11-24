@@ -1,5 +1,7 @@
 #pragma once
 #include <memory>
+#include <array>
+#include <vector>
 
 #include <CoreLib/Math/Vector2.h>
 #include <CoreLib/Math/Vector3.h>
@@ -410,8 +412,31 @@ namespace SDLCore::Render {
 	*/
 	void Point(float x, float y);
 
-	void Polygon(const std::vector<Vertex>& vertices, const std::vector<int>& indices = {});
-	void Polygon(const SDLCore::Texture& texture, const std::vector<Vertex>& vertices, const std::vector<int>& indices = {});
+	/**
+	* @brief Renders a polygon using the given vertex array. Rendering is always performed as a triangle list.
+	* @param vertices Pointer to the first vertex element
+	* @param vertexCount Number of vertices
+	* @param texture Optional texture (default nullptr)
+	* @param indices Optional index buffer (default nullptr). If provided, every 3 indices define exactly one triangle.
+	* @param indexCount Number of indices (default 0)
+	* @param xOffset X translation applied to all vertices (default 0.0f)
+	* @param yOffset Y translation applied to all vertices (default 0.0f)
+	* @param scaleX X scale applied to all vertices (default 1.0f)
+	* @param scaleY Y scale applied to all vertices (default 1.0f)
+	* @return true on success. Call SDLCore::GetError() for more information
+	*
+	* @note SDL_RenderGeometry always interprets the provided data as triangles.
+	*       No automatic polygon creation or triangulation is performed.
+	*/
+	bool Polygon(const Vertex* vertices,
+		size_t vertexCount,
+		SDLCore::Texture* texture = nullptr,
+		const int* indices = nullptr,
+		size_t indexCount = 0,
+		float xOffset = 0.0f,
+		float yOffset = 0.0f,
+		float scaleX = 1.0f,
+		float scaleY = 1.0f);
 
 	#pragma endregion
 
