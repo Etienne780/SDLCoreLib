@@ -139,6 +139,8 @@ namespace SDLCore {
         Vector2 GetCenter() const;
         Vector3 GetColorTint() const;
         Flip GetFlip() const;
+        SDL_Texture* GetTexture(WindowID id);
+        SDL_Surface* GetSurface();
 
         /*
         * @param Resets all params to

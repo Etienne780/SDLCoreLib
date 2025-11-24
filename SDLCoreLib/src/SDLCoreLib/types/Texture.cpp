@@ -229,6 +229,17 @@ namespace SDLCore {
         return m_flip; 
     }
 
+    SDL_Texture* Texture::GetTexture(WindowID id) {
+        auto it = m_textures.find(id);
+        if (it == m_textures.end())
+            return nullptr;
+        return it->second.tex;
+    }
+
+    SDL_Surface* Texture::GetSurface() {
+        return m_surface;
+    }
+
     Texture* Texture::Reset(TextureParams ignoreMask) {
         if (!(ignoreMask & TextureParams::ROTATION))
             m_rotation = 0.0f;
