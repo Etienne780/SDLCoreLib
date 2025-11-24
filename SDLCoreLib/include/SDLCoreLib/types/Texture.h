@@ -119,28 +119,84 @@ namespace SDLCore {
         * @param w Destination width (defaults to texture width if 0).
         * @param h Destination height (defaults to texture height if 0).
         * @param src Optional source rectangle (nullptr = full texture).
+        * @return true on success. Call SDLCore::GetError() for more information
         */
-        void Render(float x, float y, float w = 0, float h = 0, const FRect* src = nullptr);
+        bool Render(float x, float y, float w = 0, float h = 0, const FRect* src = nullptr);
 
         /**
         * @brief Updates the pixel data of a dynamic texture.
         * @param windowID The window whose texture should be updated.
         * @param pixels Pointer to pixel data.
         * @param pitch Pitch (bytes per row) of the pixel data.
+        * @param srcRect area of the texture to update
+        * @return true on success. Call SDLCore::GetError() for more information
         */
-        void Update(WindowID windowID, const void* pixels, int pitch);
+        bool Update(WindowID windowID, const void* pixels, int pitch, Rect* rect = nullptr);
 
+        /**
+        * @brief Set the rotation angle for this texture when rendered.
+        * @param rotation Rotation angle in degrees.
+        * @return Pointer to this Texture for chaining.
+        */
         Texture* SetRotation(float rotation);
+
+        /**
+        * @brief Set the center point for rotation and scaling.
+        * @param center Normalized center coordinates (0.0-1.0).
+        * @return Pointer to this Texture for chaining.
+        */
         Texture* SetCenter(const Vector2& center);
+
+        /**
+        * @brief Set an additional color multiplier (tint) for rendering.
+        * @param color RGB values as Vector3, applied multiplicatively to the texture.
+        * @return Pointer to this Texture for chaining.
+        */
         Texture* SetColorTint(const Vector3& color);
+
+        /**
+        * @brief Set the flip mode for rendering this texture.
+        * @param flip Flip mode (none, horizontal, vertical).
+        * @return Pointer to this Texture for chaining.
+        */
         Texture* SetFlip(Flip flip);
 
+        /**
+        * @brief Get the current rotation angle for this texture.
+        * @return Rotation in degrees.
+        */
         float GetRotation() const;
+
+        /**
+        * @brief Get the current rotation/scaling center point.
+        * @return Normalized center coordinates (0.0-1.0).
+        */
         Vector2 GetCenter() const;
+
+        /**
+        * @brief Get the current color tint applied to this texture.
+        * @return RGB values as Vector3.
+        */
         Vector3 GetColorTint() const;
+
+        /**
+        * @brief Get the current flip mode of this texture.
+        * @return Flip mode (none, horizontal, vertical).
+        */
         Flip GetFlip() const;
-        SDL_Texture* GetTexture(WindowID id);
-        SDL_Surface* GetSurface();
+
+        /**
+        * @brief Get the SDL_Texture associated with a specific window.
+        * @param id WindowID to query.
+        * @return Pointer to SDL_Texture for that window, or nullptr if none exists.
+        */
+        SDL_Texture* GetSDLTexture(WindowID id) const;
+
+        /**
+        * @brief Get the original SDL_Surface of this texture.
+        * @return Pointer to SDL_Surface.
+        */
+        SDL_Surface* GetSDLSurface() const;
 
         /*
         * @param Resets all params to
@@ -185,6 +241,11 @@ namespace SDLCore {
         * resetting the object to an uninitialized state.
         */
         void Cleanup();
+
+        /*
+        * @brief trys to get a texture and if it failes creates it
+        */
+        SDLTexture* GetTexture(WindowID id);
 
         /**
         * @brief Internal helper for moving texture resources from another instance.

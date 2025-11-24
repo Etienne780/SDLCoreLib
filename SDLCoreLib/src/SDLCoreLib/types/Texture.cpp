@@ -3,14 +3,18 @@
 
 #include "Application.h"
 #include "SDLCoreRenderer.h"
+#include "SDLCoreError.h"
 #include "types/Texture.h"
 
 namespace SDLCore {
 
+    /*
+    * @return if null call SDLCore::GetError() for more information
+    */
     static SDL_Surface* GenerateFallbackSurface(int width = 32, int height = 32) {
         SDL_Surface* surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGBA8888);
         if (!surface) {
-            Log::Error("Failed to create fallback surface: {}", SDL_GetError());
+            SetErrorF("Failed to create fallback surface: {}", SDL_GetError());
             return nullptr;
         }
         const SDL_PixelFormatDetails* fmt = SDL_GetPixelFormatDetails(surface->format);
@@ -93,7 +97,7 @@ namespace SDLCore {
         Window* win = nullptr;
         auto renderer = GetRenderer(winID, win);
         if (!renderer) {
-            Log::Error("Renderer is null for window {}", winID.value);
+            SetErrorF("Renderer is null for window {}", winID.value);
             return false;
         }
         
@@ -112,7 +116,7 @@ namespace SDLCore {
 
         SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, m_surface);
         if (!tex) {
-            Log::Error("Failed to create texture for window {}: {}", winID.value, SDL_GetError());
+            SetErrorF("Failed to create texture for window {}: {}", winID.value, SDL_GetError());
             return false;
         }
 
@@ -120,23 +124,16 @@ namespace SDLCore {
         return true;
     }
 
-    #include <CoreTime.h>
-    void Texture::Render(float x, float y, float w, float h, const FRect* src) {
+    bool Texture::Render(float x, float y, float w, float h, const FRect* src) {
         WindowID currentWinID = Render::GetActiveWindowID();
-        auto it = m_textures.find(currentWinID);
-        if (it == m_textures.end()) {
-            if (!CreateForWindow(currentWinID)) {
-                Log::Error("SDLCore::Texture::Render: Failed to create texture for active window {}!", currentWinID);
-                return;
-            }
-            it = m_textures.find(currentWinID);
-            if (it == m_textures.end())
-                return;
-        }
+        SDLTexture* texture = GetTexture(currentWinID);;
+        if (!texture)
+            return false;
 
-        SDLTexture& texture = it->second;
-        if (!texture.tex)
-            return;
+        if (!texture->tex) {
+            SetErrorF("SDLCore::Texture::Render: SDL texture from texture of win '{}' is nullptr!", currentWinID);
+            return false;
+        }
 
         // Use original texture size if w/h are unspecified
         if (w <= 0) w = static_cast<float>(m_width);
@@ -144,19 +141,19 @@ namespace SDLCore {
 
         SDL_Renderer* renderer = GetRenderer(currentWinID);
         if (!renderer) {
-            Log::Error("SDLCore::Texture::Render: Failed to render texture, renderer of window '{}' is null!", currentWinID);
-            return;
+            SetErrorF("SDLCore::Texture::Render: Failed to render texture, renderer of window '{}' is null!", currentWinID);
+            return false;
         }
 
-        if (texture.lastR != static_cast<Uint8>(m_colorTint.x) ||
-            texture.lastG != static_cast<Uint8>(m_colorTint.y) ||
-            texture.lastB != static_cast<Uint8>(m_colorTint.z)) {
+        if (texture->lastR != static_cast<Uint8>(m_colorTint.x) ||
+            texture->lastG != static_cast<Uint8>(m_colorTint.y) ||
+            texture->lastB != static_cast<Uint8>(m_colorTint.z)) {
 
-            texture.lastR = static_cast<Uint8>(m_colorTint.x);
-            texture.lastG = static_cast<Uint8>(m_colorTint.y);
-            texture.lastB = static_cast<Uint8>(m_colorTint.z);
+            texture->lastR = static_cast<Uint8>(m_colorTint.x);
+            texture->lastG = static_cast<Uint8>(m_colorTint.y);
+            texture->lastB = static_cast<Uint8>(m_colorTint.z);
 
-            SDL_SetTextureColorMod(texture.tex, texture.lastR, texture.lastG, texture.lastB);
+            SDL_SetTextureColorMod(texture->tex, texture->lastR, texture->lastG, texture->lastB);
         }
 
         SDL_FRect dst{ x, y, w, h };
@@ -165,21 +162,31 @@ namespace SDLCore {
         center.y = dst.y + m_center.y * dst.h;
 
         SDL_FlipMode sdlFlip = static_cast<SDL_FlipMode>(m_flip);
-        if (!SDL_RenderTextureRotated(renderer, texture.tex, src, &dst, m_rotation, &center, sdlFlip)) {
-            Log::Error("SDLCore::Texture::Render: Failed to render rotated texture: {}", SDL_GetError());
+        if (!SDL_RenderTextureRotated(renderer, texture->tex, src, &dst, m_rotation, &center, sdlFlip)) {
+            SetErrorF("SDLCore::Texture::Render: Failed to render texture: {}", SDL_GetError());
+            return false;
         }
+        return true;
     }
 
-    void Texture::Update(WindowID windowID, const void* pixels, int pitch) {
+    bool Texture::Update(WindowID windowID, const void* pixels, int pitch, Rect* rect) {
         if (m_type != Type::DYNAMIC)
-            return;
+            return false;
 
-        auto it = m_textures.find(windowID);
-        if (it == m_textures.end())
-            return;
+        SDLTexture* texture = GetTexture(windowID);
+        if (!texture)
+            return false;
 
-        if (SDL_UpdateTexture(it->second.tex, nullptr, pixels, pitch))
-            Log::Error("SDLCore::Texture::Update: Failed to update texture for window {}: {}", windowID, SDL_GetError());
+        if (!texture->tex) {
+            SetErrorF("SDLCore::Texture::Update: SDL texture from texture of win '{}' is nullptr!", windowID);
+            return false;
+        }
+
+        if (!SDL_UpdateTexture(texture->tex, rect, pixels, pitch)) {
+            SetErrorF("SDLCore::Texture::Update: Failed to update texture for window {}: {}", windowID, SDL_GetError());
+            return false;
+        }
+        return true;
     }
 
     void Texture::FreeForWindow(WindowID windowID) {
@@ -229,14 +236,14 @@ namespace SDLCore {
         return m_flip; 
     }
 
-    SDL_Texture* Texture::GetTexture(WindowID id) {
+    SDL_Texture* Texture::GetSDLTexture(WindowID id) const {
         auto it = m_textures.find(id);
         if (it == m_textures.end())
             return nullptr;
         return it->second.tex;
     }
 
-    SDL_Surface* Texture::GetSurface() {
+    SDL_Surface* Texture::GetSDLSurface() const {
         return m_surface;
     }
 
@@ -302,6 +309,21 @@ namespace SDLCore {
             RemoveSDLRendererDestroyCallbackForWindow(winID);
 
         m_windowSDLRendererDestroyCallbacks.clear();
+    }
+
+    Texture::SDLTexture* Texture::GetTexture(WindowID id) {
+        auto it = m_textures.find(id);
+        if (it == m_textures.end()) {
+            if (!CreateForWindow(id)) {
+                SetErrorF("SDLCore::Texture::GetTexture: Failed to create texture for active window {}!", id);
+                return nullptr;
+            }
+            it = m_textures.find(id);
+            if (it == m_textures.end())
+                return nullptr;
+        }
+
+        return &it->second;
     }
 
     void Texture::MoveFrom(Texture&& other) noexcept {
