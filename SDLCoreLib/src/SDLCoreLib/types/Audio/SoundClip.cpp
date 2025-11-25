@@ -133,9 +133,33 @@ namespace SDLCore {
         return this;
     }
 
-    SoundClip* SoundClip::SetPosition(const Vector2& pos) {
-        m_position = pos;
+    SoundClip* SoundClip::SetPosition(float x, float y) {
+        m_position.Set(x, y);
         SoundManager::ApplyClipParams(*this);
+        return this;
+    }
+
+    SoundClip* SoundClip::SetPosition(const Vector2& pos) {
+        return SetPosition(pos.x, pos.y);
+    }
+
+    SoundClip* SoundClip::Set2D(const Vector2& soundPos,
+        const Vector2& listenerPos,
+        float maxDistance,
+        float maxVolume)
+    {
+        // relative vector between sound and listener
+        Vector2 rel = soundPos - listenerPos;
+
+        float dist = rel.Magnitude();
+        float vol = (1.0f - std::clamp(dist / maxDistance, 0.0f, 1.0f)) * maxVolume;
+        float pan = std::clamp(rel.x / maxDistance, -1.0f, 1.0f);
+        float y = std::clamp(rel.y / maxDistance, -1.0f, 1.0f);
+
+        Log::Print(pan);
+
+        m_volume = vol;
+        SetPosition(pan, y );
         return this;
     }
 

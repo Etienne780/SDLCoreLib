@@ -38,11 +38,11 @@ namespace SDLCore {
         static bool SetAudioDevice(AudioPlaybackDeviceID deviceID);
 
         /*
-        * Creats (adds) the sound to intern storage
+        * Creats (adds) the sound as an audio track to intern storage
         */
         static bool AddSound(const SoundClip& clip, const std::string& tag = SoundTags::DEFAULT);
         /*
-        * Deletes the internal stored sound (stops the sound)
+        * Deletes the internal stored audio track (stops the sound)
         */
         static bool RemoveSound(const SoundClip& clip);
         static bool RemoveSound(const SoundClipID& id);
@@ -74,6 +74,8 @@ namespace SDLCore {
         static bool StopSound(const SoundClip& clip, Sint64 fadeOutMS = 0);
         static bool StopAllSounds(Sint64 fadeOutMS = 0);
         static bool StopTag(const std::string& tag, Sint64 fadeOutMS = 0);
+
+        static bool IsPlaying(const SoundClip& clip);
 
         static bool SetMasterVolume(float volume);
         static bool SetTagVolume(const std::string& tag, float volume);
@@ -118,6 +120,7 @@ namespace SDLCore {
 
             std::string tag;
             bool isDeleted = false;
+            bool isPlaying = false;
 
             AudioTrack() = default;
             AudioTrack(MIX_Track* _track, const SoundClip& _clip, const std::string& _tag) 

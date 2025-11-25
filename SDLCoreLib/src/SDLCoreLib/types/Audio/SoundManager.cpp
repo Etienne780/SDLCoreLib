@@ -109,7 +109,7 @@ namespace SDLCore {
 
 		float newVolume = clip.GetVolume();
 		Vector2 pos = clip.GetPosition();
-		MIX_Point3D mixPoint{ pos.x, pos.y, 0.0f }; // z = 0 for 2D
+		MIX_Point3D mixPoint{ pos.x, 0.0f, pos.y };
 
 		bool result = true;
 
@@ -123,8 +123,7 @@ namespace SDLCore {
 
 		if (audioTrack->position != pos) {
 			audioTrack->position = pos;
-			MIX_Point3D* pointPtr = (pos == Vector2::zero) ? nullptr : &mixPoint;
-			if (!MIX_SetTrack3DPosition(track, pointPtr)) {
+			if (!MIX_SetTrack3DPosition(track, &mixPoint)) {
 				AddErrorF("SDLCore::SoundManager::ApplyClipParams: Failed to set position for clip '{}': {}", clip.GetID(), SDL_GetError());
 				result = false;
 			}
@@ -306,16 +305,12 @@ namespace SDLCore {
 		// dosent have a null check because CreateAudioTrack would return false if track could be created and it would also not be stored in the map
 		MIX_Track* track = audioTrack->track;
 
-		if (!MIX_SetTrackGain(track, clip.GetVolume())) {
-			SetErrorF("SDLCore::SoundManager::PlaySound: Could not set volume for sound '{}'!\n{}", clip.GetID(), SDL_GetError());
-			return false;
-		}
-
 		if (!MIX_PlayTrack(track, 0)) {
 			SetError("SDLCore::SoundManager::PlaySound: Could not play sound!\n" + std::string(SDL_GetError()));
 			return false;
 		}
 
+		audioTrack->isPlaying = true;
 		return true;
 	}
 
@@ -542,6 +537,17 @@ namespace SDLCore {
 		return true;
 	}
 
+	bool SoundManager::IsPlaying(const SoundClip& clip) {
+		if (!InstanceExist())
+			return false;
+
+		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID());
+		if (!audioTrack)
+			return false;
+
+		return audioTrack->isPlaying;
+	}
+
 	bool SoundManager::SetMasterVolume(float volume) {
 		if (!InstanceExist())
 			return false;
@@ -706,10 +712,6 @@ namespace SDLCore {
 			return false;
 		}
 
-		MIX_SetTrackStoppedCallback(track, [](void* u, MIX_Track* t) { 
-				static_cast<SoundManager*>(u)->OnTrackStopped(t); 
-			}, this);
-
 		Audio* audio = GetAudio(clip.GetID());
 		if (!audio) {
 			SetErrorF("SDLCore::SoundManager::CreateAudioTrack: The audio of the given sound clip '{}' was nullptr!", clip.GetID());
@@ -756,6 +758,12 @@ namespace SDLCore {
 		m_audioTracks.emplace(newID, at);
 		audioTrack = &m_audioTracks.at(newID);
 
+		MIX_SetTrackStoppedCallback(track, [](void* u, MIX_Track* t) {
+			if (SoundManager::InstanceExist())
+				static_cast<SoundManager*>(u)->OnTrackStopped(t);
+			}, this);
+
+		ApplyClipParams(audioTrack, clip);
 		return true;
 	}
 
@@ -777,6 +785,7 @@ namespace SDLCore {
 			[track](auto& pair) { return pair.second.track == track; });
 
 		if (it != m_audioTracks.end()) {
+			it->second.isPlaying = false;
 			if (it->second.isDeleted) {
 				m_trackIDManager.FreeUniqueIdentifier(it->first.value);
 				MIX_DestroyTrack(it->second.track);

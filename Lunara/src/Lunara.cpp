@@ -117,7 +117,8 @@ SDLCore::SoundClip test;
 bool MovePolygon();
 void MoveRects();
 void Lunara::OnStart() {
-    test = SDLCore::SoundClip("C:/Users/Admin/Downloads/LunaraSounds/song.mp3");
+    auto path = File::OpenFileDialog("Select a song", File::ConvertFilterString(".mp3"));
+    test = SDLCore::SoundClip(path);
     test.SetVolume(0.2f);
 
     exampleImage = SDLCore::Texture("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png");
@@ -307,12 +308,14 @@ void Lunara::OnUpdate() {
         RE::Clear();
 
         int scrollDir = 0;
+        static float currentTextSize = 32;
         if (Input::GetScrollDir(scrollDir)) {
             float step = 2.0f;
-            float fontsize = RE::GetActiveFontSize() + scrollDir * step;
-            fontsize = std::clamp(fontsize, 6.0f, 144.0f);
-            RE::SetFontSize(fontsize);
+            float fontsize = currentTextSize + scrollDir * step;
+            currentTextSize = std::clamp(fontsize, 6.0f, 144.0f);
+            
         }
+        RE::SetFontSize(currentTextSize);
 
         static Vector2 pos{ 20, 100 };
         float speed = 2;
@@ -347,37 +350,148 @@ void Lunara::OnUpdate() {
         RE::SetColor(45, 87, 32);
         RE::Clear();
 
-        auto* win = GetWindow(winSoundID);
-        if(win) {
-            Vector2 mousePos = Input::GetMousePosition();
-            Vector2 winSize = win->GetSize();
-            Vector2 size{ 200, 50 };
-            Vector2 pos{ winSize.x * 0.5f - size.x * 0.5f,
-                winSize.y * 0.5f - size.y * 0.5f };
-            
-            bool hover = mousePos.x > pos.x && mousePos.x < (pos.x + size.x) &&
-                        mousePos.y > pos.y && mousePos.y < (pos.y + size.y);
-            
-            RE::SetColor(255, 255, 255);
-            RE::FillRect(pos, size);
-            if (hover) {
-                RE::SetColor(100, 150, 255);
-                RE::SetInnerStroke(false);
-                RE::SetStrokeWidth(2);
-                RE::Rect(pos, size);
+        auto PointInRect = [&](const Vector2& p, float x, float y, float w, float h) -> bool {
+            return (p.x > x && p.x <= x + w) && (p.y > y && p.y <= y + h);
+            };
 
-                if (Input::MouseJustPressed(MouseButton::LEFT)) {
-                    // load sound and play it
-                    // sounds gets destroyed and removed from soundmanager after it finished
-                    
+        auto DrawButton = [&](float x, float y, float w, float h) -> bool {
+            Vector4 col = RE::GetActiveColor();
+            bool hover = PointInRect(Input::GetMousePosition(), x, y, w, h);
+            bool pressed = false;
+
+            if (hover) {
+                pressed = Input::MouseJustPressed(MouseButton::LEFT);
+                if (Input::MousePressed(MouseButton::LEFT))
+                    RE::SetColor(col * 0.65f);
+                else
+                    RE::SetColor(col * 0.75f);
+            }
+
+            RE::FillRect(x, y, w, h);
+            RE::SetColor(col);
+            return pressed;
+            };
+
+        auto* win = GetWindow(winSoundID);
+        static bool selectedMode = false; // false = Simple-test, true = 2D audio
+
+        static Vector2 playerPos{ 0, 0 };
+        static Vector2 soundPos{ 0, 0 };
+
+        static bool init2D = false;
+        static bool playing = false;
+
+        if (win) {
+            float halfH = win->GetHeight() * 0.5f;
+            float halfW = win->GetWidth() * 0.5f;
+            float btnW = 200;
+            float btnH = 50;
+
+            // initialize sound source once
+            if (!init2D) {
+                playerPos = { 0, 0 };
+                soundPos = { 0, 0 };
+                init2D = true;
+            }
+
+            // ============ SIMPLE TEST MODE ============
+            if (!selectedMode) {
+                float x = 20;
+                float y = 80;
+                float bw = 220;
+                float bh = 45;
+
+                RE::SetColor(255);
+                if (DrawButton(x, y, bw, bh)) {
+                    SoundManager::PlaySound(test);
+                    playing = true;
+                }
+                RE::SetColor(0);
+                RE::Text("Play sound", x + 10, y + 10);
+
+                RE::SetColor(255);
+                if (DrawButton(x, y + 55, bw, bh)) {
+                    SoundManager::PauseSound(test);
+                }
+                RE::SetColor(0);
+                RE::Text("Pause", x + 10, y + 10 + 55);
+
+                RE::SetColor(255);
+                if (DrawButton(x, y + 110, bw, bh)) {
+                    SoundManager::StopSound(test);
+                    playing = false;
+                }
+                RE::SetColor(0);
+                RE::Text("Stop", x + 10, y + 10 + 110);
+
+                RE::SetColor(255);
+                RE::SetFontSize(24);
+                RE::Text("Simple-test", 10, 10);
+            }
+
+            // ============ 2D AUDIO MODE ============
+            else {
+                // camera follows player
+                Vector2 cam = playerPos;
+
+                // movement
+                float speed = 1.0f * Time::GetDeltaTime();
+                if (Input::KeyPressed(KeyCode::W)) playerPos.y -= speed;
+                if (Input::KeyPressed(KeyCode::S)) playerPos.y += speed;
+                if (Input::KeyPressed(KeyCode::A)) playerPos.x -= speed;
+                if (Input::KeyPressed(KeyCode::D)) playerPos.x += speed;
+
+                Vector2 winSize = win->GetSize();
+                float pw = 40, ph = 40;
+                float sw = 50, sh = 50;
+
+                Vector2 screenPlayer = playerPos - cam + winSize * 0.5f;
+                Vector2 screenSound = soundPos - cam + winSize * 0.5f;
+
+                // draw sound source
+                RE::SetColor(255, 200, 50);
+                RE::FillRect(screenSound.x, screenSound.y, sw, sh);
+
+                // draw player
+                RE::SetColor(0, 200, 255);
+                RE::FillRect(screenPlayer.x, screenPlayer.y, pw, ph);
+
+                test.Set2D(soundPos, playerPos, 800.0f, 0.4f);
+
+                // ensure sound is playing
+                if (!SoundManager::IsPlaying(test)) {
                     SoundManager::PlaySound(test);
                 }
+
+                RE::SetColor(255);
+                RE::SetFontSize(24);
+                RE::Text("2D-Audio", 10, 10);
+            }
+
+            // ========= MODE SELECTION =========
+            RE::SetColor(255);
+            if (DrawButton(halfW - btnW - 2.5f, 0, btnW, btnH))
+                selectedMode = false;
+            if (!selectedMode) {
+                RE::SetColor(100, 150, 200);
+                RE::SetInnerStroke(true);
+                RE::SetStrokeWidth(3);
+                RE::Rect(halfW - btnW - 2.5f, 0, btnW, btnH);
+            }
+
+            RE::SetColor(255);
+            if (DrawButton(halfW + 2.5f, 0, btnW, btnH))
+                selectedMode = true;
+            if (selectedMode) {
+                RE::SetColor(100, 150, 200);
+                RE::SetInnerStroke(true);
+                RE::SetStrokeWidth(3);
+                RE::Rect(halfW + 2.5f, 0, btnW, btnH);
             }
         }
 
         RE::Present();
 
-        // needs to be called after using the window. becaus nullptr and so ...
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
             RemoveWindow(winSoundID);
     }
@@ -385,7 +499,7 @@ void Lunara::OnUpdate() {
     static double lastTime = -1;
     if (lastTime < Time::GetTimeSec()) {
         frameRate = SDLCore::Time::GetFrameRate();
-        Log::Print(frameRate);
+        // Log::Print(frameRate);
         lastTime = Time::GetTimeSec() + 0.5;
     }
 }

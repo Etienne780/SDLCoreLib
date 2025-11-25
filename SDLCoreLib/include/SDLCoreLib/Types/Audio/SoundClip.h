@@ -58,7 +58,18 @@ namespace SDLCore {
         */
         SoundClip* SetVolume(float volume);
 
+        SoundClip* SetPosition(float x, float y);
         SoundClip* SetPosition(const Vector2& pos);
+
+        /**
+        * @brief Sets the 2D position and volume of the sound relative to a listener.
+        * @param soundPos Absolute 2D position of the sound.
+        * @param listenerPos Absolute 2D position of the listener.
+        * @param maxDistance Maximum distance for attenuation.
+        * @param maxVolume Maximum volume (0.0 = silent, 1.0 = full volume).
+        * @return Pointer to this SoundClip.
+        */
+        SoundClip* Set2D(const Vector2& soundPos, const Vector2& listenerPos, float maxDistance = 800.0f, float maxVolume = 1.0f);
 
     private:
         static inline constexpr float autoPredecodeThresholdMS = 2000.0f;   // upper bound for PREDECODED
