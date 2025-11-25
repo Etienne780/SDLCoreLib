@@ -31,7 +31,12 @@ namespace SDLCore {
         *         contain SDLCORE_INVALID_ID. Call SDLCore::GetError() for details.
         */
         SoundClip(const SystemFilePath& path, SoundType type = SoundType::AUTO);
+        SoundClip(const SoundClip& other);
+        SoundClip(SoundClip&& other) noexcept;
         ~SoundClip();
+
+        SoundClip& operator=(const SoundClip& other);
+        SoundClip& operator=(SoundClip&& other) noexcept;
 
         /*
         * @brief Gets the id of this sound object
@@ -51,6 +56,8 @@ namespace SDLCore {
         */
         SoundClip* SetVolume(float volume);
 
+        SoundClip* SetFireForget(bool value);
+
     private:
         static inline constexpr float autoPredecodeThresholdMS = 2000.0f;   // upper bound for PREDECODED
         static inline IDManager idManager{ IDOrder::ASCENDING };
@@ -68,6 +75,8 @@ namespace SDLCore {
         // Audio sample rate in Hz (frames per second).
         // Determines how many frames are played per second.
         int m_frequency = 0;
+        float m_pitch = 0;
+        float m_pan = 0;
 
         /*
         * @return true on success. Call SDLCore::GetError() for more information

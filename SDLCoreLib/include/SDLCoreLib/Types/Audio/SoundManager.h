@@ -87,6 +87,19 @@ namespace SDLCore {
         struct Audio {
             MIX_Audio* mixAudio = nullptr;
             AudioTrackID audioTrackID{ SDLCORE_INVALID_ID };
+            size_t refCount = 0;// if refCount == 0; object can be deleted
+
+            void IncreaseRefCount() {
+                refCount++;
+                Log::Debug("Increased refCount is: {}", refCount);
+            }
+
+            void DecreaseRefCount() {
+                refCount--;
+                if (refCount < 0)
+                    refCount = 0;
+                Log::Debug("Decreased refCount is: {}", refCount);
+            }
 
             Audio() = default;
             Audio(MIX_Audio* audio) 
@@ -94,10 +107,16 @@ namespace SDLCore {
         };
 
         struct AudioTrack {
+            
             MIX_Track* track = nullptr;
             float durationMS = 0.0f;
             Sint64 frameCount = 0;
             int frequency = 0;
+
+            float pitch = 1.0f;   // default pitch
+            float pan = 0.0f;     // -1 .. +1
+            float volume = 1.0f;
+
             std::string tag;
             bool isDeleted = false;
 
@@ -117,6 +136,9 @@ namespace SDLCore {
         * @return true if valid instance exists. Call SDLCore::GetError() for more information 
         */
         static bool InstanceExist();
+
+        static bool AddSoundRef(SoundClipID id);
+        static bool ReleaseSoundRef(SoundClipID id);
 
         /*
         * gets only called internaly from SoundClip class

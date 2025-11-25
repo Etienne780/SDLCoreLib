@@ -1,4 +1,4 @@
-#include <cmath>
+﻿#include <cmath>
 #include <vector>
 #include <array>
 #include <CoreLib/Math/Vector4.h>
@@ -112,9 +112,13 @@ void InputTest() {
     }
 }
 
+SDLCore::SoundClip test;
+
 bool MovePolygon();
 void MoveRects();
 void Lunara::OnStart() {
+   
+    test = SDLCore::SoundClip("C:/Users/Etienne Richter/Downloads/HotelGame/Game-With-Map-Generation/sounds/shoot.wav");
     exampleImage = SDLCore::Texture("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png");
 
     {
@@ -364,8 +368,11 @@ void Lunara::OnUpdate() {
                 if (Input::MouseJustPressed(MouseButton::LEFT)) {
                     // load sound and play it
                     // sounds gets destroyed and removed from soundmanager after it finished
-                    SoundClip test("C:/Users/ fsd Admin/Downloads/LunaraSounds/sample.mp3");
+
                     SoundManager::PlaySound(test);
+
+                    // ich moechte das man ein stellen kann das ein sound auf fire forgett ist 
+                    // also der sound wird abgespielt aber danach direkt vergessen
                 }
             }
         }

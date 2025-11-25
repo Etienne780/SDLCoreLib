@@ -52,9 +52,46 @@ namespace SDLCore {
 		return true;
 	}
 
+	bool SoundManager::AddSoundRef(SoundClipID id) {
+		if (!InstanceExist())
+			return false;
+
+		if (id == SDLCORE_INVALID_ID) {
+			SetError("SDLCore::SoundManager::AddSoundRef: id was invalid!");
+			return false;
+		}
+
+		Audio* audio = s_soundManager->GetAudio(id);
+		if (!audio)
+			return true;
+
+		audio->IncreaseRefCount();
+	}
+
+	bool SoundManager::ReleaseSoundRef(SoundClipID id) {
+		if (!InstanceExist())
+			return false;
+
+		if (id == SDLCORE_INVALID_ID) {
+			SetError("SDLCore::SoundManager::ReleaseSoundRef: id was invalid!");
+			return false;
+		}
+
+		Audio* audio = s_soundManager->GetAudio(id);
+		if (!audio)
+			return true;
+
+		audio->DecreaseRefCount();
+	}
+
 	bool SoundManager::CreateSound(SoundClipID id, MIX_Audio* audio) {
 		if (!InstanceExist())
 			return false;
+
+		if (!audio) {
+			SetError("SDLCore::SoundManager::");
+			return false;
+		}
 
 		auto& audios = s_soundManager->m_audios;
 		auto it = audios.find(id);
@@ -69,6 +106,7 @@ namespace SDLCore {
 		}
 
 		audios[id] = Audio(audio);
+		audios[id].IncreaseRefCount();
 		return true;
 	}
 
@@ -82,12 +120,16 @@ namespace SDLCore {
 			return true;
 
 		auto& a = it->second;
-		AudioTrack* track = s_soundManager->GetAudioTrack(a.audioTrackID);
-		s_soundManager->MarkTrackAsDeleted(track);
+		a.DecreaseRefCount();
+		// delete if there are no refs to this audio
+		if (a.refCount <= 0) {
+			Log::Debug("Delete sound, id: {}", id);
+			AudioTrack* track = s_soundManager->GetAudioTrack(a.audioTrackID);
+			s_soundManager->MarkTrackAsDeleted(track);
 
-		MIX_DestroyAudio(a.mixAudio);
-		audios.erase(it);
-
+			MIX_DestroyAudio(a.mixAudio);
+			audios.erase(it);
+		}
 		return true;
 	}
 

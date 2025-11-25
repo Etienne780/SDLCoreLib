@@ -10,10 +10,105 @@ namespace SDLCore {
         LoadSound(filePath, type);
 	}
 
+    SoundClip::SoundClip(const SoundClip& other) {
+        // copy all trivial member data
+        m_id = other.m_id;
+        m_type = other.m_type;
+        m_path = other.m_path;
+        m_fireForget = other.m_fireForget;
+        m_volume = other.m_volume;
+        m_durationMS = other.m_durationMS;
+        m_frameCount = other.m_frameCount;
+        m_frequency = other.m_frequency;
+        m_pitch = other.m_pitch;
+        m_pan = other.m_pan;
+
+        // increase reference count if valid
+        if (m_id != SDLCORE_INVALID_ID) {
+            SoundManager::AddSoundRef(m_id);
+        }
+    }
+
+    SoundClip::SoundClip(SoundClip&& other) noexcept {
+        // transfer all data
+        m_id = other.m_id;
+        m_type = other.m_type;
+        m_path = std::move(other.m_path);
+        m_fireForget = other.m_fireForget;
+        m_volume = other.m_volume;
+        m_durationMS = other.m_durationMS;
+        m_frameCount = other.m_frameCount;
+        m_frequency = other.m_frequency;
+        m_pitch = other.m_pitch;
+        m_pan = other.m_pan;
+
+        // prevent original from owning the sound
+        other.m_id.value = SDLCORE_INVALID_ID;
+    }
+
 	SoundClip::~SoundClip() {
+        Log::Debug("Delete sound clip");
         SoundManager::DeletedSound(m_id);
         idManager.FreeUniqueIdentifier(m_id.value);
 	}
+
+    SoundClip& SoundClip::operator=(const SoundClip& other)
+    {
+        if (this == &other)
+            return *this;
+
+        // release old id
+        if (m_id != SDLCORE_INVALID_ID) {
+            SoundManager::ReleaseSoundRef(m_id);
+        }
+
+        // copy data
+        m_id = other.m_id;
+        m_type = other.m_type;
+        m_path = other.m_path;
+        m_fireForget = other.m_fireForget;
+        m_volume = other.m_volume;
+        m_durationMS = other.m_durationMS;
+        m_frameCount = other.m_frameCount;
+        m_frequency = other.m_frequency;
+        m_pitch = other.m_pitch;
+        m_pan = other.m_pan;
+
+        // increase refcount
+        if (m_id != SDLCORE_INVALID_ID) {
+            SoundManager::AddSoundRef(m_id);
+        }
+
+        return *this;
+    }
+
+    SoundClip& SoundClip::operator=(SoundClip&& other) noexcept
+    {
+        if (this == &other)
+            return *this;
+
+        // release old id
+        if (m_id != SDLCORE_INVALID_ID) {
+            SoundManager::ReleaseSoundRef(m_id);
+        }
+
+        // take over values
+        m_id = other.m_id;
+        m_type = other.m_type;
+        m_path = std::move(other.m_path);
+        m_fireForget = other.m_fireForget;
+        m_volume = other.m_volume;
+        m_durationMS = other.m_durationMS;
+        m_frameCount = other.m_frameCount;
+        m_frequency = other.m_frequency;
+        m_pitch = other.m_pitch;
+        m_pan = other.m_pan;
+
+        // leave other empty
+        other.m_id.value = SDLCORE_INVALID_ID;
+
+        return *this;
+    }
 
     SoundClipID SoundClip::GetID() const {
         return m_id;
@@ -48,6 +143,11 @@ namespace SDLCore {
         return this;
     }
 
+    SoundClip* SoundClip::SetFireForget(bool value) {
+        m_fireForget = value;
+        return this;
+    }
+
     bool SoundClip::LoadSound(const SystemFilePath& path, SoundType type) {
         if (!File::Exists(path)) {
             SetErrorF("SDLCore::SoundClip::LoadSound: Failed to load audio, file '{}' dose not exist!", 
@@ -58,12 +158,13 @@ namespace SDLCore {
         std::string strPath = path.string();
         MIX_Audio* tempAudio = MIX_LoadAudio(nullptr, strPath.c_str(), true);
         if (!tempAudio) {
-            SetError("SDLCore::SoundClip::LoadSound: Failed to load audio!\n" + std::string(SDL_GetError()));
+            SetErrorF("SDLCore::SoundClip::LoadSound: Failed to load audio '{}'!\n{}", path, std::string(SDL_GetError()));
             return false;
         }
 
         m_frameCount = MIX_GetAudioDuration(tempAudio);
 
+        
         SDL_AudioSpec spec;
         MIX_GetAudioFormat(tempAudio, &spec);
         m_frequency = spec.freq;
@@ -73,7 +174,7 @@ namespace SDLCore {
             m_durationMS = static_cast<float>(m_frameCount) * 1000.0f / static_cast<float>(m_frequency);
         else
             m_durationMS = 0.0f;
-
+        
         MIX_DestroyAudio(tempAudio);
         tempAudio = nullptr;
 
@@ -111,6 +212,8 @@ namespace SDLCore {
         }
         m_id = SoundClipID(idManager.GetNewUniqueIdentifier());
 
+        // m_fireForget
+        // 
         // gives owner ship to Sound manager;
         if (!SoundManager::CreateSound(m_id, audio)) {
             AddError("\nSDLCore::SoundClip::CreateStaticAudio: Could not add sound to sound manager!");
