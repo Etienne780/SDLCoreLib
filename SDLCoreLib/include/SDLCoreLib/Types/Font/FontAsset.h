@@ -41,7 +41,8 @@ namespace SDLCore {
 		SDL_Texture* CreateTextureForWindow(WindowID winID);
 		void FreeTextureForWindow(WindowID winID);
 
-		void RemoveCloseCallbackForWindow(WindowID winID);
+		void RemoveAllWindowCloseCB();
+		void RemoveWindowCloseCB(WindowID winID);
 	};
 
 }

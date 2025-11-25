@@ -47,7 +47,7 @@ namespace SDLCore {
         if (it != m_winIDToGlyphAtlasTexture.end())
             return it->second;
 
-        SDL_Texture* tex =  CreateTextureForWindow(winID);
+        SDL_Texture* tex = CreateTextureForWindow(winID);
         if (!tex) {
             auto* app = Application::GetInstance();
             if (app) {
@@ -65,33 +65,47 @@ namespace SDLCore {
         return tex;
     }
 
-	void FontAsset::MoveFrom(FontAsset&& other) noexcept {
-		if (this == &other) return;
-		Cleanup();
+    void FontAsset::MoveFrom(FontAsset&& other) noexcept {
+        if (this == &other) return;
 
-		this->fontSize = other.fontSize;
-		this->lastUseTick = other.lastUseTick;
-		this->ttfFont = other.ttfFont;
-		this->glyphAtlasSurf = other.glyphAtlasSurf;
-        this->m_charToGlypeMetrics = std::move(other.m_charToGlypeMetrics);
-        this->m_winIDToGlyphAtlasTexture = std::move(other.m_winIDToGlyphAtlasTexture);
-        this->m_winIDToWinCallbackID = std::move(other.m_winIDToWinCallbackID);
-		other.fontSize = 0;
-		other.lastUseTick = 0;
-		other.ttfFont = nullptr;
-		other.glyphAtlasSurf = nullptr;
+        Cleanup();
+
+        fontSize = other.fontSize;
+        lastUseTick = other.lastUseTick;
+        ttfFont = other.ttfFont;
+        glyphAtlasSurf = other.glyphAtlasSurf;
+        m_charToGlypeMetrics = std::move(other.m_charToGlypeMetrics);
+
+        m_winIDToGlyphAtlasTexture = std::move(other.m_winIDToGlyphAtlasTexture);
+        auto* app = Application::GetInstance();
+        for (auto& [winID, cbID] : other.m_winIDToWinCallbackID) {
+            if (auto* win = app ? app->GetWindow(winID) : nullptr) {
+                win->RemoveOnSDLRendererDestroy(cbID);
+
+                m_winIDToWinCallbackID[winID] = win->AddOnSDLRendererDestroy(
+                    [this, winID]() { FreeTextureForWindow(winID); }
+                );
+            }
+        }
+
+        other.fontSize = 0;
+        other.lastUseTick = 0;
+        other.ttfFont = nullptr;
+        other.glyphAtlasSurf = nullptr;
         other.m_charToGlypeMetrics.clear();
         other.m_winIDToGlyphAtlasTexture.clear();
         other.m_winIDToWinCallbackID.clear();
-	}
+    }
 
 	void FontAsset::Cleanup() {
         for (auto& [_, tex] : m_winIDToGlyphAtlasTexture)
             SDL_DestroyTexture(tex);
+
+        RemoveAllWindowCloseCB();
+
         m_charToGlypeMetrics.clear();
         m_winIDToGlyphAtlasTexture.clear();
-        m_winIDToWinCallbackID.clear();
-        
+
 		if (glyphAtlasSurf)
 			SDL_DestroySurface(glyphAtlasSurf);
 		if (ttfFont)
@@ -225,10 +239,16 @@ namespace SDLCore {
             m_winIDToWinCallbackID[winID] = win->AddOnSDLRendererDestroy([this, winID]() { FreeTextureForWindow(winID); });
         }
 
+        Log::Debug("winIDCB: {};", m_winIDToWinCallbackID);
+
         return texture;
     }
 
     void FontAsset::FreeTextureForWindow(WindowID winID) {
+        // prevents from calling sdl funcs if app is closing
+        if (Application::IsQuit())
+            return;
+
         auto* app = Application::GetInstance();
         if (!app)
             return;
@@ -250,14 +270,28 @@ namespace SDLCore {
         }
     }
 
-    void FontAsset::RemoveCloseCallbackForWindow(WindowID winID) {
+    void FontAsset::RemoveAllWindowCloseCB() {
+        auto* app = Application::GetInstance();
+        if (!app) {
+            m_winIDToWinCallbackID.clear();
+            return;
+        }
+
+        for (auto [winID, cbID] : m_winIDToWinCallbackID) {
+            if (auto* win = app->GetWindow(winID))
+                win->RemoveOnSDLRendererDestroy(cbID);
+        }
+        m_winIDToWinCallbackID.clear();
+    }
+
+    void FontAsset::RemoveWindowCloseCB(WindowID winID) {
         auto itCallback = m_winIDToWinCallbackID.find(winID);
         if (itCallback == m_winIDToWinCallbackID.end())
             return;
 
         if (auto* app = Application::GetInstance()) {
             if (auto* win = app->GetWindow(winID)) {
-                win->RemoveOnClose(itCallback->second);
+                win->RemoveOnSDLRendererDestroy(itCallback->second);
             }
         }
 
