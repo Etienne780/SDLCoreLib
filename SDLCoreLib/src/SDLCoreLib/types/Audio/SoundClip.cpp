@@ -131,6 +131,14 @@ namespace SDLCore {
         return m_frequency;
     }
 
+    float SoundClip::GetPitch() const {
+        return m_pitch;
+    }
+    
+    float SoundClip::GetPan() const {
+        return m_pan;
+    }
+
     SoundClip* SoundClip::SetVolume(float volume) {
         m_volume = volume;
         return this;

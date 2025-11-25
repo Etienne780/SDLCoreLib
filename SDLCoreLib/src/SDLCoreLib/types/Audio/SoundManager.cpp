@@ -84,6 +84,66 @@ namespace SDLCore {
 		audio->DecreaseRefCount();
 	}
 
+	bool SoundManager::ApplyClipParams(const SoundClip& clip) {
+		if (!InstanceExist())
+			return false;
+
+		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID());
+		return ApplyClipParams(audioTrack, clip);
+	}
+
+	bool SoundManager::ApplyClipParams(AudioTrack* audioTrack, const SoundClip& clip) {
+		if (!InstanceExist())
+			return false;
+
+		if (!audioTrack) {
+			SetErrorF("SDLCore::SoundManager::ApplyClipParams: Could not apply clip '{}' params, AudioTrack is nullptr!", clip.GetID());
+			return false;
+		}
+
+		MIX_Track* track = audioTrack->track;
+		if (!track) {
+			SetErrorF("SDLCore::SoundManager::ApplyClipParams: AudioTrack '{}' has invalid MIX_Track (nullptr)!", clip.GetID());
+			return false;
+		}
+
+		// Fetch current target values from the clip
+		float newVolume = clip.GetVolume();
+		float newPitch = clip.GetPitch();
+		float newPan = clip.GetPan();
+		bool result = true;
+
+		// --- Volume ---
+		if (audioTrack->volume != newVolume) {
+			audioTrack->volume = newVolume;
+			if (!MIX_SetTrackGain(track, newVolume)) {
+				SetErrorF("SDLCore::SoundManager::ApplyClipParams: Failed to set volume for clip '{}': {}", clip.GetID(), SDL_GetError());
+				result = false;
+			}
+		}
+
+		// MIX_SetTrackFrequencyRatio();
+		// --- Pitch ---
+		if (audioTrack->pitch != newPitch) {
+			audioTrack->pitch = newPitch;
+			if (!MIX_SetTrackPitch(track, newPitch)) {
+				AddErrorF("SDLCore::SoundManager::ApplyClipParams: Failed to set pitch for clip '{}': {}", clip.GetID(), SDL_GetError());
+				result = false;
+			}
+		}
+
+		// --- Pan ---
+		if (audioTrack->pan != newPan) {
+			audioTrack->pan = newPan;
+			if (!MIX_SetTrackPanning(track, newPan, 1.0f - newPan)) {
+				AddErrorF("SDLCore::SoundManager::ApplyClipParams: Failed to set pan for clip '{}': {}", clip.GetID(), SDL_GetError());
+				result = false;
+			}
+		}
+
+		return result;
+	}
+
 	bool SoundManager::CreateSound(SoundClipID id, MIX_Audio* audio) {
 		if (!InstanceExist())
 			return false;

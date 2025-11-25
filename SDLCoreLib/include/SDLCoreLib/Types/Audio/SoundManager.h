@@ -108,7 +108,6 @@ namespace SDLCore {
         };
 
         struct AudioTrack {
-            
             MIX_Track* track = nullptr;
             float durationMS = 0.0f;
             Sint64 frameCount = 0;
@@ -140,6 +139,12 @@ namespace SDLCore {
 
         static bool AddSoundRef(SoundClipID id);
         static bool ReleaseSoundRef(SoundClipID id);
+
+        /*
+        * @brief applys params like volume and pitch of clip to its corresponding audiotrack
+        */
+        static bool ApplyClipParams(const SoundClip& clip);
+        static bool ApplyClipParams(AudioTrack* audioTrack, const SoundClip& clip);
 
         /*
         * gets only called internaly from SoundClip class

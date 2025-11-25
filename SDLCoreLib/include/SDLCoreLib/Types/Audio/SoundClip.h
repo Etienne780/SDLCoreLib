@@ -50,6 +50,8 @@ namespace SDLCore {
         float GetDurationSec() const;
         Sint64 GetNumberOfFrames() const;
         int GetFrequency() const;
+        float GetPitch() const;
+        float GetPan() const;
 
         /*
         * @brief 0 is muted and 1 is the default
