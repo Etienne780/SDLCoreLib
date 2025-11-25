@@ -339,8 +339,8 @@ SystemFilePath File::SelectFolderDialog(const std::string& title, const SystemFi
     return result ? SystemFilePath(result) : SystemFilePath{};
 }
 
-SystemFilePath File::OpenFileDialog(const std::string& title, const char* filter) {
-    return OpenFileDialog(title, filter, {});
+SystemFilePath File::OpenFileDialog(const std::string& title, std::string filter) {
+    return OpenFileDialog(title, filter.c_str(), {});
 }
 
 SystemFilePath File::OpenFileDialog(const std::string& title, const char* filter, const SystemFilePath& defaultPath) {

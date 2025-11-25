@@ -242,7 +242,7 @@ public:
     * @param filter A null-separated C-string defining file filters. See tinyfiledialogs documentation for details, or use File::ConvertFilterString().
     * @return std::string The full path of the selected file, or empty string if cancelled.
     */
-    static SystemFilePath OpenFileDialog(const std::string& title, const char* filter = "All Files\0*.*\0");
+    static SystemFilePath OpenFileDialog(const std::string& title, std::string filter = "All Files\0*.*\0");
 
     /**
     * @brief Opens a native file selection dialog with optional filter and default directory.
@@ -264,7 +264,7 @@ public:
     * @param defaultPath Optional initial path. If empty, the system default is used.
     * @return SystemFilePath The selected file path, or empty path if cancelled.
     */
-    static SystemFilePath OpenFileDialog(const std::string& title, const char* filter = nullptr, const SystemFilePath& defaultPath = {});
+    static SystemFilePath OpenFileDialog(const std::string& title, const char* filter, const SystemFilePath& defaultPath);
 
     /**
     * @brief Opens a native "Save File" dialog with an optional file filter.
