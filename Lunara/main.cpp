@@ -4,7 +4,7 @@
 
 #include "Lunara.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 	Lunara* lunara = new Lunara();
 	SDLCore::SDLResult result = lunara->Start();
 
