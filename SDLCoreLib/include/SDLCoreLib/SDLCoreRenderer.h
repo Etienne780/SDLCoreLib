@@ -187,6 +187,12 @@ namespace SDLCore::Render {
 
 	#pragma region Color
 
+	/*
+	* @brief Gets the current active color
+	* @return current active color
+	*/
+	Vector4 GetColor();
+
 	/**
 	* @brief Sets the current drawing color using RGBA values.
 	* 

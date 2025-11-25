@@ -259,7 +259,11 @@ namespace SDLCore::Render {
         }
     }
 
-#pragma region Color
+    #pragma region Color
+
+    Vector4 GetColor() {
+        return Vector4(s_activeColor.r, s_activeColor.g, s_activeColor.b, s_activeColor.a);
+    }
 
     void SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
         auto renderer = GetActiveRenderer("SetColor");
@@ -704,8 +708,9 @@ namespace SDLCore::Render {
 
     void SetFontSize(float size) {
         s_fontSize = std::max(size, 0.0f);
-        if (s_font)
-            s_font->SelectSize(s_fontSize);
+        if (!s_font)
+            s_font = std::make_shared<SDLCore::Font>(true);// loads the default font
+        s_font->SelectSize(s_fontSize);
     }
 
     float GetActiveFontSize() {
