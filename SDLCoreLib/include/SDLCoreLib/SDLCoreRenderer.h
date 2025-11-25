@@ -191,7 +191,7 @@ namespace SDLCore::Render {
 	* @brief Gets the current active color
 	* @return current active color
 	*/
-	Vector4 GetColor();
+	Vector4 GetActiveColor();
 
 	/**
 	* @brief Sets the current drawing color using RGBA values.

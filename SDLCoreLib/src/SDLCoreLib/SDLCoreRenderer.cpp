@@ -261,7 +261,7 @@ namespace SDLCore::Render {
 
     #pragma region Color
 
-    Vector4 GetColor() {
+    Vector4 GetActiveColor() {
         return Vector4(s_activeColor.r, s_activeColor.g, s_activeColor.b, s_activeColor.a);
     }
 
