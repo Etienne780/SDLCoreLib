@@ -110,7 +110,7 @@ namespace SDLCore {
 		return true;
 	}
 
-	bool SoundManager::DeletedSound(SoundClipID id) {
+	bool SoundManager::DeleteSound(SoundClipID id) {
 		if (!InstanceExist())
 			return false;
 
@@ -123,7 +123,6 @@ namespace SDLCore {
 		a.DecreaseRefCount();
 		// delete if there are no refs to this audio
 		if (a.refCount <= 0) {
-			Log::Debug("Delete sound, id: {}", id);
 			AudioTrack* track = s_soundManager->GetAudioTrack(a.audioTrackID);
 			s_soundManager->MarkTrackAsDeleted(track);
 
@@ -161,9 +160,7 @@ namespace SDLCore {
 				targetSDLID = it->GetSDLID();
 			}
 			else {
-				SetError(Log::GetFormattedString(
-					"SDLCore::SoundManager::SetAudioDevice: Device with id '{}' not found! Using default device",
-					deviceID));
+				SetErrorF("SDLCore::SoundManager::SetAudioDevice: Device with id '{}' not found! Using default device", deviceID);
 				result = false;
 			}
 		}
@@ -222,18 +219,41 @@ namespace SDLCore {
 		return true;
 	}
 
-	bool SoundManager::PlaySound(const SoundClip& clip, const std::string& tag) {
+	bool SoundManager::PlaySound(const SoundClip& clip, bool onShoot, const std::string& tag) {
 		if (!InstanceExist())
 			return false;
 
-		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID());
+		Audio* audio = s_soundManager->GetAudio(clip.GetID());
+		if (!audio) {
+			SetErrorF("SDLCore::SoundManager::PlaySound: Could not get audio '{}', audio was nullptr!", clip.GetID());
+			return false;
+		}
+		
+		AudioTrack* audioTrack = nullptr;
+		if (!onShoot) {
+			audioTrack = s_soundManager->GetAudioTrack(clip.GetID());
 
-		// create audio track if it was not found
-		if (!audioTrack) {
+			// create audio track if it was not found
+			if (!audioTrack) {
+				if (!s_soundManager->CreateAudioTrack(audioTrack, clip, tag)) {
+					return false;
+				}
+			}
+		}
+		else {
+			// onShoot == true
 			if (!s_soundManager->CreateAudioTrack(audioTrack, clip, tag)) {
 				return false;
 			}
+
+			if (!audioTrack) {
+				SetErrorF("SDLCore::SoundManager::PlaySound: Could not create AudioTrack for on shoot audio '{}'!", clip.GetID());
+				return false;
+			}
+
+			audioTrack->isDeleted = true;
 		}
+
 		// dosent have a null check because CreateAudioTrack would return false if track could be created and it would also not be stored in the map
 		MIX_Track* track = audioTrack->track;
 
@@ -585,7 +605,7 @@ namespace SDLCore {
 	SoundManager::AudioTrack* SoundManager::GetAudioTrack(SoundClipID id) {
 		Audio* audio = GetAudio(id);
 		if (!audio) {
-			SetError("SDLCore::SoundManager::GetAudioTrack(SoundClipID): Could not get track, audio was nullptr!");
+			SetErrorF("SDLCore::SoundManager::GetAudioTrack(SoundClipID): Could not get track, audio ID '{}', audio was nullptr!", id);
 			return nullptr;
 		}
 

@@ -15,7 +15,6 @@ namespace SDLCore {
         m_id = other.m_id;
         m_type = other.m_type;
         m_path = other.m_path;
-        m_fireForget = other.m_fireForget;
         m_volume = other.m_volume;
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
@@ -34,7 +33,6 @@ namespace SDLCore {
         m_id = other.m_id;
         m_type = other.m_type;
         m_path = std::move(other.m_path);
-        m_fireForget = other.m_fireForget;
         m_volume = other.m_volume;
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
@@ -47,13 +45,11 @@ namespace SDLCore {
     }
 
 	SoundClip::~SoundClip() {
-        Log::Debug("Delete sound clip");
-        SoundManager::DeletedSound(m_id);
+        SoundManager::DeleteSound(m_id);
         idManager.FreeUniqueIdentifier(m_id.value);
 	}
 
-    SoundClip& SoundClip::operator=(const SoundClip& other)
-    {
+    SoundClip& SoundClip::operator=(const SoundClip& other) {
         if (this == &other)
             return *this;
 
@@ -66,7 +62,6 @@ namespace SDLCore {
         m_id = other.m_id;
         m_type = other.m_type;
         m_path = other.m_path;
-        m_fireForget = other.m_fireForget;
         m_volume = other.m_volume;
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
@@ -82,8 +77,7 @@ namespace SDLCore {
         return *this;
     }
 
-    SoundClip& SoundClip::operator=(SoundClip&& other) noexcept
-    {
+    SoundClip& SoundClip::operator=(SoundClip&& other) noexcept {
         if (this == &other)
             return *this;
 
@@ -96,7 +90,6 @@ namespace SDLCore {
         m_id = other.m_id;
         m_type = other.m_type;
         m_path = std::move(other.m_path);
-        m_fireForget = other.m_fireForget;
         m_volume = other.m_volume;
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
@@ -140,11 +133,6 @@ namespace SDLCore {
 
     SoundClip* SoundClip::SetVolume(float volume) {
         m_volume = volume;
-        return this;
-    }
-
-    SoundClip* SoundClip::SetFireForget(bool value) {
-        m_fireForget = value;
         return this;
     }
 
@@ -212,8 +200,6 @@ namespace SDLCore {
         }
         m_id = SoundClipID(idManager.GetNewUniqueIdentifier());
 
-        // m_fireForget
-        // 
         // gives owner ship to Sound manager;
         if (!SoundManager::CreateSound(m_id, audio)) {
             AddError("\nSDLCore::SoundClip::CreateStaticAudio: Could not add sound to sound manager!");

@@ -356,7 +356,7 @@ void Lunara::OnUpdate() {
             
             bool hover = mousePos.x > pos.x && mousePos.x < (pos.x + size.x) &&
                         mousePos.y > pos.y && mousePos.y < (pos.y + size.y);
-
+            
             RE::SetColor(255, 255, 255);
             RE::FillRect(pos, size);
             if (hover) {
@@ -368,11 +368,8 @@ void Lunara::OnUpdate() {
                 if (Input::MouseJustPressed(MouseButton::LEFT)) {
                     // load sound and play it
                     // sounds gets destroyed and removed from soundmanager after it finished
-
-                    SoundManager::PlaySound(test);
-
-                    // ich moechte das man ein stellen kann das ein sound auf fire forgett ist 
-                    // also der sound wird abgespielt aber danach direkt vergessen
+                    
+                    SoundManager::PlaySound(test, SOUND_ON_SHOOT);
                 }
             }
         }

@@ -56,8 +56,6 @@ namespace SDLCore {
         */
         SoundClip* SetVolume(float volume);
 
-        SoundClip* SetFireForget(bool value);
-
     private:
         static inline constexpr float autoPredecodeThresholdMS = 2000.0f;   // upper bound for PREDECODED
         static inline IDManager idManager{ IDOrder::ASCENDING };

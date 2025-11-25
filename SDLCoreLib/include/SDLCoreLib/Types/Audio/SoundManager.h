@@ -13,6 +13,8 @@ namespace SDLCore {
         inline constexpr char* DEFAULT = "default";
     }
 
+    inline constexpr bool SOUND_ON_SHOOT = true;
+
     /*
     * plays sounds mixer and Manages tags. static/but not static like application
     * events wenn sound ends
@@ -49,7 +51,7 @@ namespace SDLCore {
         * tags can be stored in the sound tag. if no tags are set the default tag will be used. start/restarts the sound
         * @return true on success. Call SDLCore::GetError() for more information
         */
-        static bool PlaySound(const SoundClip& clip, const std::string& tag = SoundTags::DEFAULT);
+        static bool PlaySound(const SoundClip& clip, bool onShoot = false, const std::string& tag = SoundTags::DEFAULT);
         static bool PlayTag(const std::string& tag);
 
         /*
@@ -87,22 +89,21 @@ namespace SDLCore {
         struct Audio {
             MIX_Audio* mixAudio = nullptr;
             AudioTrackID audioTrackID{ SDLCORE_INVALID_ID };
+            bool fireAndForget = false;
             size_t refCount = 0;// if refCount == 0; object can be deleted
 
             void IncreaseRefCount() {
                 refCount++;
-                Log::Debug("Increased refCount is: {}", refCount);
             }
 
             void DecreaseRefCount() {
                 refCount--;
                 if (refCount < 0)
                     refCount = 0;
-                Log::Debug("Decreased refCount is: {}", refCount);
             }
 
             Audio() = default;
-            Audio(MIX_Audio* audio) 
+            Audio(MIX_Audio* audio)
                 : mixAudio(audio) {}
         };
 
@@ -150,7 +151,7 @@ namespace SDLCore {
         * gets only called internaly from SoundClip class
         * Marks audio as deleted and delets it when its done
         */
-        static bool DeletedSound(SoundClipID id);
+        static bool DeleteSound(SoundClipID id);
 
         // ============== Member ==============
         MIX_Mixer* m_mixer = nullptr;
