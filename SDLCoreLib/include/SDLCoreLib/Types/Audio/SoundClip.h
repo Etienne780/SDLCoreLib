@@ -1,4 +1,5 @@
 #pragma once
+#include <CoreLib/Math/Vector2.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include "Types/Types.h"
 
@@ -50,13 +51,14 @@ namespace SDLCore {
         float GetDurationSec() const;
         Sint64 GetNumberOfFrames() const;
         int GetFrequency() const;
-        float GetPitch() const;
-        float GetPan() const;
+        Vector2 GetPosition() const;
 
         /*
         * @brief 0 is muted and 1 is the default
         */
         SoundClip* SetVolume(float volume);
+
+        SoundClip* SetPosition(const Vector2& pos);
 
     private:
         static inline constexpr float autoPredecodeThresholdMS = 2000.0f;   // upper bound for PREDECODED
@@ -75,8 +77,7 @@ namespace SDLCore {
         // Audio sample rate in Hz (frames per second).
         // Determines how many frames are played per second.
         int m_frequency = 0;
-        float m_pitch = 0;
-        float m_pan = 0;
+        Vector2 m_position;
 
         /*
         * @return true on success. Call SDLCore::GetError() for more information

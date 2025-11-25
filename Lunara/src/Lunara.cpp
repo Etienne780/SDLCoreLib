@@ -117,8 +117,9 @@ SDLCore::SoundClip test;
 bool MovePolygon();
 void MoveRects();
 void Lunara::OnStart() {
-   
-    test = SDLCore::SoundClip("C:/Users/Etienne Richter/Downloads/HotelGame/Game-With-Map-Generation/sounds/shoot.wav");
+    test = SDLCore::SoundClip("C:/Users/Admin/Downloads/LunaraSounds/song.mp3");
+    test.SetVolume(0.2f);
+
     exampleImage = SDLCore::Texture("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png");
 
     {
@@ -369,7 +370,7 @@ void Lunara::OnUpdate() {
                     // load sound and play it
                     // sounds gets destroyed and removed from soundmanager after it finished
                     
-                    SoundManager::PlaySound(test, SOUND_ON_SHOOT);
+                    SoundManager::PlaySound(test);
                 }
             }
         }

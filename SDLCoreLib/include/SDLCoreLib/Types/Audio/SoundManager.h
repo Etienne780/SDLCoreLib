@@ -113,9 +113,8 @@ namespace SDLCore {
             Sint64 frameCount = 0;
             int frequency = 0;
 
-            float pitch = 1.0f;   // default pitch
-            float pan = 0.0f;     // -1 .. +1
             float volume = 1.0f;
+            Vector2 position;
 
             std::string tag;
             bool isDeleted = false;

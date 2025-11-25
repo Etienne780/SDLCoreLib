@@ -19,8 +19,6 @@ namespace SDLCore {
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
         m_frequency = other.m_frequency;
-        m_pitch = other.m_pitch;
-        m_pan = other.m_pan;
 
         // increase reference count if valid
         if (m_id != SDLCORE_INVALID_ID) {
@@ -37,8 +35,6 @@ namespace SDLCore {
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
         m_frequency = other.m_frequency;
-        m_pitch = other.m_pitch;
-        m_pan = other.m_pan;
 
         // prevent original from owning the sound
         other.m_id.value = SDLCORE_INVALID_ID;
@@ -66,8 +62,6 @@ namespace SDLCore {
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
         m_frequency = other.m_frequency;
-        m_pitch = other.m_pitch;
-        m_pan = other.m_pan;
 
         // increase refcount
         if (m_id != SDLCORE_INVALID_ID) {
@@ -94,8 +88,6 @@ namespace SDLCore {
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
         m_frequency = other.m_frequency;
-        m_pitch = other.m_pitch;
-        m_pan = other.m_pan;
 
         // leave other empty
         other.m_id.value = SDLCORE_INVALID_ID;
@@ -131,16 +123,19 @@ namespace SDLCore {
         return m_frequency;
     }
 
-    float SoundClip::GetPitch() const {
-        return m_pitch;
-    }
-    
-    float SoundClip::GetPan() const {
-        return m_pan;
+    Vector2 SoundClip::GetPosition() const {
+        return m_position;
     }
 
     SoundClip* SoundClip::SetVolume(float volume) {
         m_volume = volume;
+        SoundManager::ApplyClipParams(*this);
+        return this;
+    }
+
+    SoundClip* SoundClip::SetPosition(const Vector2& pos) {
+        m_position = pos;
+        SoundManager::ApplyClipParams(*this);
         return this;
     }
 

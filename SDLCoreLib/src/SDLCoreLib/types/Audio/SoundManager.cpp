@@ -107,13 +107,12 @@ namespace SDLCore {
 			return false;
 		}
 
-		// Fetch current target values from the clip
 		float newVolume = clip.GetVolume();
-		float newPitch = clip.GetPitch();
-		float newPan = clip.GetPan();
+		Vector2 pos = clip.GetPosition();
+		MIX_Point3D mixPoint{ pos.x, pos.y, 0.0f }; // z = 0 for 2D
+
 		bool result = true;
 
-		// --- Volume ---
 		if (audioTrack->volume != newVolume) {
 			audioTrack->volume = newVolume;
 			if (!MIX_SetTrackGain(track, newVolume)) {
@@ -122,21 +121,11 @@ namespace SDLCore {
 			}
 		}
 
-		// MIX_SetTrackFrequencyRatio();
-		// --- Pitch ---
-		if (audioTrack->pitch != newPitch) {
-			audioTrack->pitch = newPitch;
-			if (!MIX_SetTrackPitch(track, newPitch)) {
-				AddErrorF("SDLCore::SoundManager::ApplyClipParams: Failed to set pitch for clip '{}': {}", clip.GetID(), SDL_GetError());
-				result = false;
-			}
-		}
-
-		// --- Pan ---
-		if (audioTrack->pan != newPan) {
-			audioTrack->pan = newPan;
-			if (!MIX_SetTrackPanning(track, newPan, 1.0f - newPan)) {
-				AddErrorF("SDLCore::SoundManager::ApplyClipParams: Failed to set pan for clip '{}': {}", clip.GetID(), SDL_GetError());
+		if (audioTrack->position != pos) {
+			audioTrack->position = pos;
+			MIX_Point3D* pointPtr = (pos == Vector2::zero) ? nullptr : &mixPoint;
+			if (!MIX_SetTrack3DPosition(track, pointPtr)) {
+				AddErrorF("SDLCore::SoundManager::ApplyClipParams: Failed to set position for clip '{}': {}", clip.GetID(), SDL_GetError());
 				result = false;
 			}
 		}
