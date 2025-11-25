@@ -2,21 +2,21 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <list>
+#include <set>
+#include <map>
 #include <type_traits>
 #include <algorithm>
 #include <cctype>
 #include <optional>
 #include <cstdlib>
-
 #include <cmath>
 
 class FormatUtils {
 public:
-
     template<typename T>
     static std::optional<T> stringToNumber(const std::string& str) {
         static_assert(std::is_arithmetic<T>::value, "stringToNumber requires arithmetic types");
-
         try {
             if constexpr (std::is_integral<T>::value) {
                 return static_cast<T>(std::stoll(str));
@@ -48,28 +48,25 @@ public:
             return str;
 
         str.erase(str.find_last_not_of('0') + 1, std::string::npos);
-
         if (!str.empty() && str.back() == '.') {
             str.pop_back();
         }
-
         return str;
     }
 
     static std::string toUpperCase(std::string string) {
         std::transform(string.begin(), string.end(), string.begin(),
             [](unsigned char c) { return std::toupper(c); });
-
         return string;
     }
 
     static std::string toLowerCase(std::string string) {
         std::transform(string.begin(), string.end(), string.begin(),
             [](unsigned char c) { return std::tolower(c); });
-
         return string;
     }
 
+    // Array overload
     template<typename T, std::size_t N>
     static std::string arrayToString(const T(&arr)[N]) {
         std::ostringstream result;
@@ -83,16 +80,19 @@ public:
         return result.str();
     }
 
+    // Pair overload
+    template<typename T1, typename T2>
+    static std::string toString(const std::pair<T1, T2>& p) {
+        return "{" + toString(p.first) + ": " + toString(p.second) + "}";
+    }
+
+    // C-style string
     template<std::size_t N>
     static std::string toString(const char(&arr)[N]) {
         return std::string(arr);
     }
 
-    /*
-    * Example specification:
-    * template<>
-    * static inline std::string FormatUtils::toString<Vector2>(Vector2 value) { return value.ToString(); }
-    */
+    // Base toString for generic types
     template<typename T>
     static std::string toString(T value) {
         if constexpr (std::is_same_v<T, bool>) {
@@ -105,20 +105,28 @@ public:
             return "nullptr";
         }
         else if constexpr (std::is_same_v<T, const char*>) {
-            if (value == nullptr) {
-                return "nullptr";
-            }
-            return std::string(value);
+            return value ? std::string(value) : "nullptr";
         }
         else if constexpr (std::is_pointer_v<T>) {
-            if (value == nullptr)
-                return "nullptr";
+            if (!value) return "nullptr";
             std::ostringstream oss;
             oss << static_cast<const void*>(value);
             return oss.str();
         }
         else if constexpr (std::is_same_v<T, std::string>) {
             return value;
+        }
+        else if constexpr (is_iterable<T>::value) { // Generic container support
+            std::ostringstream oss;
+            oss << "[";
+            bool first = true;
+            for (const auto& item : value) {
+                if (!first) oss << ", ";
+                oss << toString(item);
+                first = false;
+            }
+            oss << "]";
+            return oss.str();
         }
         else {
             static_assert(always_false<T>::value, "Unsupported type for toString");
@@ -135,21 +143,30 @@ public:
         return joinArgsImpl(separator, std::forward<Args>(args)...);
     }
 
-    /// Base case for formatString – returns unchanged format string.
     static std::string formatString(const std::string& format) {
         return format;
     }
 
-    /// Recursively formats a string by replacing each "{}" with corresponding argument.
     template<typename T, typename... Args>
     static std::string formatString(const std::string& format, T&& value, Args&&... args) {
         return formatStringImpl(0, format, std::forward<T>(value), std::forward<Args>(args)...);
     }
+
 private:
-    FormatUtils();
+    FormatUtils() {}
 
     template<typename T>
     struct always_false : std::false_type {};
+
+    // Trait to detect iterable containers
+    template<typename T, typename = void>
+    struct is_iterable : std::false_type {};
+
+    template<typename T>
+    struct is_iterable<T, std::void_t<
+        decltype(std::begin(std::declval<T>())),
+        decltype(std::end(std::declval<T>()))
+        >> : std::true_type {};
 
     template<typename... Args>
     static std::string joinArgsImpl(const std::string& separator, Args&&... args) {
@@ -183,7 +200,6 @@ private:
         return result;
     }
 
-    /// Base case for formatStringImpl – returns remaining format unchanged.
     static std::string formatStringImpl(int, const std::string& format) {
         return format;
     }
