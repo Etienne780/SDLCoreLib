@@ -91,17 +91,20 @@ namespace SDLCore {
         struct Audio {
             MIX_Audio* mixAudio = nullptr;
             AudioTrackID audioTrackID{ SDLCORE_INVALID_ID };
+            std::unordered_map<SoundClipID, Audio> subSounds;
             bool fireAndForget = false;
             size_t refCount = 0;// if refCount == 0; object can be deleted
 
             void IncreaseRefCount() {
                 refCount++;
+                Log::Print("Increase: New Ref Count: {}", refCount);
             }
 
             void DecreaseRefCount() {
                 refCount--;
                 if (refCount < 0)
                     refCount = 0;
+                Log::Print("Decrease: New Ref Count: {}", refCount);
             }
 
             Audio() = default;
@@ -164,6 +167,7 @@ namespace SDLCore {
         MIX_Mixer* m_mixer = nullptr;
         std::unordered_map<AudioTrackID, AudioTrack> m_audioTracks;// uses audio from m_audios to play sounds
         std::unordered_map<SoundClipID, Audio> m_audios;// audio gets added from clip
+        std::unordered_map<SoundClipID, SoundClipID> m_subAudio;// map from sub sound to sound
         std::vector<AudioPlaybackDevice> m_devices;
         IDManager m_deviceIDManager{ 1 };
 
@@ -175,7 +179,7 @@ namespace SDLCore {
         */
         bool CreateDevices();
 
-        AudioTrack* GetAudioTrack(SoundClipID id);
+        AudioTrack* GetAudioTrack(SoundClipID id, SoundClipID subID);
         AudioTrack* GetAudioTrack(AudioTrackID id);
         Audio* GetAudio(SoundClipID id);
 

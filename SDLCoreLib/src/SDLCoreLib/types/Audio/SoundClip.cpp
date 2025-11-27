@@ -13,6 +13,7 @@ namespace SDLCore {
     SoundClip::SoundClip(const SoundClip& other) {
         // copy all trivial member data
         m_id = other.m_id;
+        m_subID = other.m_subID;
         m_type = other.m_type;
         m_path = other.m_path;
         m_volume = other.m_volume;
@@ -29,6 +30,7 @@ namespace SDLCore {
     SoundClip::SoundClip(SoundClip&& other) noexcept {
         // transfer all data
         m_id = other.m_id;
+        m_subID = other.m_subID;
         m_type = other.m_type;
         m_path = std::move(other.m_path);
         m_volume = other.m_volume;
@@ -56,6 +58,7 @@ namespace SDLCore {
 
         // copy data
         m_id = other.m_id;
+        m_subID = other.m_subID;
         m_type = other.m_type;
         m_path = other.m_path;
         m_volume = other.m_volume;
@@ -82,6 +85,7 @@ namespace SDLCore {
 
         // take over values
         m_id = other.m_id;
+        m_subID = other.m_subID;
         m_type = other.m_type;
         m_path = std::move(other.m_path);
         m_volume = other.m_volume;
@@ -95,8 +99,32 @@ namespace SDLCore {
         return *this;
     }
 
+    SoundClip SoundClip::CreateSubSound() const {
+        if (IsSubSound()) {
+            Log::Warn("SDLCore::SoundClip::CreateSubSound: Can only create sub sound of NONE sub sound!");
+            return *this;
+        }
+
+        if (m_id == SDLCORE_INVALID_ID) {
+            Log::Warn("SDLCore::SoundClip::CreateSubSound: Can only create sub sounds of a valid sound!");
+            return *this;
+        }
+
+        SoundClip subSound = *this;// need to check what this does
+        subSound.m_subID = SoundClipID(idManager.GetNewUniqueIdentifier());
+        return subSound;
+    }
+
+    bool SoundClip::IsSubSound() const {
+        return (m_subID != SDLCORE_INVALID_ID);
+    }
+
     SoundClipID SoundClip::GetID() const {
         return m_id;
+    }
+
+    SoundClipID SoundClip::GetSubID() const {
+        return m_subID;
     }
 
     SoundType SoundClip::GetSoundType() const {
@@ -156,7 +184,7 @@ namespace SDLCore {
         float pan = std::clamp(rel.x / maxDistance, -1.0f, 1.0f);
         float y = std::clamp(rel.y / maxDistance, -1.0f, 1.0f);
 
-        Log::Print(pan);
+        //Log::Print(pan);
 
         m_volume = vol;
         SetPosition(pan, y );

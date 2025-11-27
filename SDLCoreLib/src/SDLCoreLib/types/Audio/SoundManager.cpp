@@ -88,7 +88,7 @@ namespace SDLCore {
 		if (!InstanceExist())
 			return false;
 
-		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID());
+		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID(), clip.GetSubID());
 		return ApplyClipParams(audioTrack, clip);
 	}
 
@@ -232,7 +232,7 @@ namespace SDLCore {
 		if (!InstanceExist())
 			return false;
 
-		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID());
+		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID(), clip.GetSubID());
 
 		// create audio track if it was not found
 		if (!audioTrack) {
@@ -271,46 +271,40 @@ namespace SDLCore {
 		if (!InstanceExist())
 			return false;
 
-		Audio* audio = s_soundManager->GetAudio(clip.GetID());
-		if (!audio) {
-			SetErrorF("SDLCore::SoundManager::PlaySound: Could not get audio '{}', audio was nullptr!", clip.GetID());
-			return false;
-		}
-		
-		AudioTrack* audioTrack = nullptr;
+		AudioTrack* outAudioTrack = nullptr;
 		if (!onShoot) {
-			audioTrack = s_soundManager->GetAudioTrack(clip.GetID());
+			outAudioTrack = s_soundManager->GetAudioTrack(clip.GetID(), clip.GetSubID());
 
 			// create audio track if it was not found
-			if (!audioTrack) {
-				if (!s_soundManager->CreateAudioTrack(audioTrack, clip, tag)) {
+			if (!outAudioTrack) {
+				if (!s_soundManager->CreateAudioTrack(outAudioTrack, clip, tag)) {
 					return false;
 				}
 			}
 		}
 		else {
 			// onShoot == true
-			if (!s_soundManager->CreateAudioTrack(audioTrack, clip, tag)) {
+			if (!s_soundManager->CreateAudioTrack(outAudioTrack, clip, tag)) {
 				return false;
 			}
 
-			if (!audioTrack) {
+			if (!outAudioTrack) {
 				SetErrorF("SDLCore::SoundManager::PlaySound: Could not create AudioTrack for on shoot audio '{}'!", clip.GetID());
 				return false;
 			}
 
-			audioTrack->isDeleted = true;
+			outAudioTrack->isDeleted = true;
 		}
 
 		// dosent have a null check because CreateAudioTrack would return false if track could be created and it would also not be stored in the map
-		MIX_Track* track = audioTrack->track;
+		MIX_Track* track = outAudioTrack->track;
 
 		if (!MIX_PlayTrack(track, 0)) {
 			SetError("SDLCore::SoundManager::PlaySound: Could not play sound!\n" + std::string(SDL_GetError()));
 			return false;
 		}
 
-		audioTrack->isPlaying = true;
+		outAudioTrack->isPlaying = true;
 		return true;
 	}
 
@@ -334,7 +328,7 @@ namespace SDLCore {
 		if (!InstanceExist())
 			return false;
 
-		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID());
+		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID(), clip.GetSubID());
 		if (!audioTrack) {
 			SetErrorF("SDLCore::SoundManager::PauseSound: Could not pause Sound '{}', audio track of sound was not found!", clip.GetID());
 			return false;
@@ -388,7 +382,7 @@ namespace SDLCore {
 		if (!InstanceExist())
 			return false;
 
-		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID());
+		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID(), clip.GetSubID());
 		if (!audioTrack) {
 			SetErrorF("SDLCore::SoundManager::ResumeSound: Could not resume Sound '{}', audio track of sound was not found!", clip.GetID());
 			return false;
@@ -443,7 +437,7 @@ namespace SDLCore {
 		if (!InstanceExist())
 			return false;
 
-		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID());
+		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID(), clip.GetSubID());
 		if (!audioTrack) {
 			SetErrorF("SDLCore::SoundManager::StopSound: Could not stop Sound '{}', audio track of sound was not found!", clip.GetID());
 			return false;
@@ -541,7 +535,7 @@ namespace SDLCore {
 		if (!InstanceExist())
 			return false;
 
-		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID());
+		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID(), clip.GetSubID());
 		if (!audioTrack)
 			return false;
 
@@ -657,14 +651,26 @@ namespace SDLCore {
 		return true;
 	}
 
-	SoundManager::AudioTrack* SoundManager::GetAudioTrack(SoundClipID id) {
+	SoundManager::AudioTrack* SoundManager::GetAudioTrack(SoundClipID id, SoundClipID subID) {
 		Audio* audio = GetAudio(id);
 		if (!audio) {
 			SetErrorF("SDLCore::SoundManager::GetAudioTrack(SoundClipID): Could not get track, audio ID '{}', audio was nullptr!", id);
 			return nullptr;
 		}
+		AudioTrackID trackID = audio->audioTrackID;
 
-		return GetAudioTrack(audio->audioTrackID);
+		// if a sub sound is set
+		if (subID != SDLCORE_INVALID_ID) {
+			auto& subSounds = audio->subSounds;
+			auto it = subSounds.find(subID);
+			// if AudioTrack of sub sound not found return null
+			if (it == subSounds.end())
+				return nullptr;
+			// set track id to sub sound track id
+			trackID = it->second.audioTrackID;
+		}
+
+		return GetAudioTrack(trackID);
 	}
 
 	SoundManager::AudioTrack* SoundManager::GetAudioTrack(AudioTrackID id) {
@@ -748,11 +754,24 @@ namespace SDLCore {
 
 		AudioTrackID newID = AudioTrackID(m_trackIDManager.GetNewUniqueIdentifier());
 
-		// mark old track with this audio as deleted
-		AudioTrack* t = GetAudioTrack(audio->audioTrackID);
-		MarkTrackAsDeleted(t);
-		// set the id of the new track
-		audio->audioTrackID = newID;
+		if (clip.IsSubSound()) {
+			auto& subSound = audio->subSounds;
+			auto it = subSound.find(clip.GetSubID());
+			if (it != subSound.end()) {
+				AudioTrack* t = GetAudioTrack(it->second.audioTrackID);
+				MarkTrackAsDeleted(t);
+			}
+			Audio subAudio;
+			subAudio.audioTrackID = newID;
+			subSound[clip.GetSubID()] = subAudio;
+		}
+		else {
+			// mark old track with this audio as deleted
+			AudioTrack* t = GetAudioTrack(audio->audioTrackID);
+			MarkTrackAsDeleted(t);
+			// set the id of the new track
+			audio->audioTrackID = newID;
+		}
 
 		AudioTrack at{ track, clip, tag };
 		m_audioTracks.emplace(newID, at);

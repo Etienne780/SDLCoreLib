@@ -5,10 +5,20 @@
 
 namespace SDLCore {
     /*
+    * @Note
+    * I don like the structure of sub sounds. It should exist a soundID and a 
+    * sound handle id. The sound id is a map fom id -> MIX_Audio* and a soundID can be
+    * created with a SoundID. 
+    * The SoundManager could than play a SoundClip object that contains a SoundHandelID 
+    * and a SoundID. The SoundID is for what to play and the SoundHandelID is for 
+    * how, like volume, position, ...
+    */
+
+    /*
     |Audio - Type	                    | Duration  | Recommendation	        | Reason
     |------------------------------------------------------------------------------------------------------------
     |SFX (Sound Effects)                | < 2 s     | PREDECODED	            | Lowest latency, minimal RAM usage
-    |Medium-length Effects	            | >2 s    | NOT_PREDECODED	        | Consider RAM vs. number of simultaneous instances
+    |Medium-length Effects	            | > 2 s     | NOT_PREDECODED	        | Consider RAM vs. number of simultaneous instances
     */
 
     class SoundManager;
@@ -39,11 +49,16 @@ namespace SDLCore {
         SoundClip& operator=(const SoundClip& other);
         SoundClip& operator=(SoundClip&& other) noexcept;
 
+        SoundClip CreateSubSound() const;
+
+        bool IsSubSound() const;
+
         /*
         * @brief Gets the id of this sound object
         * @return SoundClipID of this object
         */
         SoundClipID GetID() const;
+        SoundClipID GetSubID() const;
         SoundType GetSoundType() const;
 
         float GetVolume() const;
@@ -76,6 +91,7 @@ namespace SDLCore {
         static inline IDManager idManager{ IDOrder::ASCENDING };
 
         SoundClipID m_id{ SDLCORE_INVALID_ID };
+        SoundClipID m_subID{ SDLCORE_INVALID_ID };
         SoundType m_type = SoundType::AUTO;
         SystemFilePath m_path;
         float m_volume = 0.5f;

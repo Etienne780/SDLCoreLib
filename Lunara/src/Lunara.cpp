@@ -112,14 +112,19 @@ void InputTest() {
     }
 }
 
-SDLCore::SoundClip test;
+SDLCore::SoundClip testSound;
+SDLCore::SoundClip testSound2D_1;
+SDLCore::SoundClip testSound2D_2;
 
 bool MovePolygon();
 void MoveRects();
 void Lunara::OnStart() {
     auto path = File::OpenFileDialog("Select a song", File::ConvertFilterString(".mp3"));
-    test = SDLCore::SoundClip(path);
-    test.SetVolume(0.2f);
+    testSound = SDLCore::SoundClip(path);
+    testSound.SetVolume(0.2f);
+
+    testSound2D_1 = testSound.CreateSubSound();
+    testSound2D_2 = testSound.CreateSubSound();
 
     exampleImage = SDLCore::Texture("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png");
 
@@ -376,7 +381,8 @@ void Lunara::OnUpdate() {
         static bool selectedMode = false; // false = Simple-test, true = 2D audio
 
         static Vector2 playerPos{ 0, 0 };
-        static Vector2 soundPos{ 0, 0 };
+        static Vector2 soundPos_1{ 0, 0 };
+        static Vector2 soundPos_2{ 0, 0 };
 
         static bool init2D = false;
         static bool playing = false;
@@ -390,7 +396,8 @@ void Lunara::OnUpdate() {
             // initialize sound source once
             if (!init2D) {
                 playerPos = { 0, 0 };
-                soundPos = { 0, 0 };
+                soundPos_1 = { 500, 0 };
+                soundPos_2 = { -500, 0 };
                 init2D = true;
             }
 
@@ -403,7 +410,7 @@ void Lunara::OnUpdate() {
 
                 RE::SetColor(255);
                 if (DrawButton(x, y, bw, bh)) {
-                    SoundManager::PlaySound(test);
+                    SoundManager::PlaySound(testSound);
                     playing = true;
                 }
                 RE::SetColor(0);
@@ -411,14 +418,14 @@ void Lunara::OnUpdate() {
 
                 RE::SetColor(255);
                 if (DrawButton(x, y + 55, bw, bh)) {
-                    SoundManager::PauseSound(test);
+                    SoundManager::PauseSound(testSound);
                 }
                 RE::SetColor(0);
                 RE::Text("Pause", x + 10, y + 10 + 55);
 
                 RE::SetColor(255);
                 if (DrawButton(x, y + 110, bw, bh)) {
-                    SoundManager::StopSound(test);
+                    SoundManager::StopSound(testSound);
                     playing = false;
                 }
                 RE::SetColor(0);
@@ -446,26 +453,36 @@ void Lunara::OnUpdate() {
                 float sw = 50, sh = 50;
 
                 Vector2 screenPlayer = playerPos - cam + winSize * 0.5f;
-                Vector2 screenSound = soundPos - cam + winSize * 0.5f;
+                Vector2 screenSound_1 = soundPos_1 - cam + winSize * 0.5f;
+                Vector2 screenSound_2 = soundPos_2 - cam + winSize * 0.5f;
 
                 // draw sound source
                 RE::SetColor(255, 200, 50);
-                RE::FillRect(screenSound.x, screenSound.y, sw, sh);
+                RE::FillRect(screenSound_1.x - sw/2, screenSound_1.y - sh/2, sw, sh);
+                RE::FillRect(screenSound_2.x - sw/2, screenSound_2.y - sh/2, sw, sh);
 
                 // draw player
                 RE::SetColor(0, 200, 255);
-                RE::FillRect(screenPlayer.x, screenPlayer.y, pw, ph);
+                RE::FillRect(screenPlayer.x - pw/2, screenPlayer.y - ph/2, pw, ph);
 
-                test.Set2D(soundPos, playerPos, 800.0f, 0.4f);
+                testSound2D_1.Set2D(screenSound_1, playerPos, 800.0f, 0.4f);
+                testSound2D_2.Set2D(screenSound_2, playerPos, 800.0f, 0.4f);
 
-                // ensure sound is playing
-                if (!SoundManager::IsPlaying(test)) {
-                    SoundManager::PlaySound(test);
+                if (Input::MouseJustPressed(MouseButton::LEFT)) {
+                    if (!SoundManager::IsPlaying(testSound2D_1)) {
+                        SoundManager::StopSound(testSound2D_2);
+                        SoundManager::PlaySound(testSound2D_1);
+                    }
+                    else {
+                        SoundManager::StopSound(testSound2D_1);
+                        SoundManager::PlaySound(testSound2D_2);
+                    }
                 }
 
                 RE::SetColor(255);
                 RE::SetFontSize(24);
                 RE::Text("2D-Audio", 10, 10);
+                RE::Text(Log::GetFormattedString("Current Song {}{}", (SoundManager::IsPlaying(testSound2D_1) ? "Sound 1" : ""), (SoundManager::IsPlaying(testSound2D_2) ? "Sound 2" : "")), 10, 10 + RE::GetTextHeight("2D-Audio") + 5);
             }
 
             // ========= MODE SELECTION =========
