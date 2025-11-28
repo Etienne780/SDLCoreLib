@@ -21,11 +21,11 @@ public:
     float w = 0; ///< W component of the vector
 
     Vector4(); ///< Default constructor initializes to (0, 0, 0, 0)
-    Vector4(float value);
-    Vector4(float x, float y, float z, float w);
-    Vector4(const Vector2& vec, float z, float w);
-    Vector4(const Vector2& a, const Vector2& b);
-    Vector4(const Vector3& vec, float w);
+    explicit Vector4(float value);
+    explicit Vector4(float x, float y, float z, float w);
+    explicit Vector4(const Vector2& vec, float z, float w);
+    explicit Vector4(const Vector2& a, const Vector2& b);
+    explicit Vector4(const Vector3& vec, float w);
 
     /**
      * @brief Converts the vector to a string representation.

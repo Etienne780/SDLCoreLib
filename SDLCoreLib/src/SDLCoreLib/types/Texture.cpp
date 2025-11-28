@@ -252,7 +252,7 @@ namespace SDLCore {
     }
 
     Vector3 Texture::GetColorTint() const { 
-        return m_colorTint; 
+        return Vector3(m_colorTint);
     }
 
     Texture::Flip Texture::GetFlip() const { 
@@ -275,10 +275,10 @@ namespace SDLCore {
             m_rotation = 0.0f;
 
         if (!(ignoreMask & TextureParams::CENTER))
-            m_center = { 0.0f, 0.0f };
+            m_center = Vector2(0.0f, 0.0f);
 
         if (!(ignoreMask & TextureParams::COLOR_TINT))
-            m_colorTint = { 1.0f, 1.0f, 1.0f };
+            m_colorTint = Vector4(1.0f);
 
         if (!(ignoreMask & TextureParams::FLIP))
             m_flip = Flip::NONE;
@@ -328,7 +328,7 @@ namespace SDLCore {
         for (auto& [winID, _] : m_windowSDLRendererDestroyCallbacks)
             windowIDs.push_back(winID);
 
-        for (auto winID : windowIDs)
+        for (auto& winID : windowIDs)
             RemoveSDLRendererDestroyCallbackForWindow(winID);
 
         m_windowSDLRendererDestroyCallbacks.clear();

@@ -27,10 +27,10 @@ public:
     float z = 0; ///< Z component of the vector
 
     Vector3();
-    Vector3(float value);
-    Vector3(float x, float y, float z);
-    Vector3(const Vector2& vec, float z);
-    Vector3(const Vector4& vec);
+    explicit Vector3(float value);
+    explicit Vector3(float x, float y, float z);
+    explicit Vector3(const Vector2& vec, float z);
+    explicit Vector3(const Vector4& vec);
 
     /**
      * @brief Converts the vector to a string representation.

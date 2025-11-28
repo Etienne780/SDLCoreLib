@@ -24,10 +24,10 @@ public:
     float y = 0; ///< Y component of the vector
 
     Vector2();
-    Vector2(float value);
-    Vector2(float x, float y);
-    Vector2(const Vector3& vec);
-    Vector2(const Vector4& vec);
+    explicit Vector2(float value);
+    explicit Vector2(float x, float y);
+    explicit Vector2(const Vector3& vec);
+    explicit Vector2(const Vector4& vec);
 
     /**
     * @brief Converts the vector to a string representation.
