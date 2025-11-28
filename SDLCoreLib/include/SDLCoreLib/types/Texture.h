@@ -148,11 +148,75 @@ namespace SDLCore {
         Texture* SetCenter(const Vector2& center);
 
         /**
-        * @brief Set an additional color multiplier (tint) for rendering.
-        * @param color RGB values as Vector3, applied multiplicatively to the texture.
+        * @brief Sets a color tint using full RGBA components.
+        *
+        * Applies a multiplicative color tint to the texture. All components are
+        * expected in the range [0, 255]. The tint is applied during rendering.
+        *
+        * @param r Red component of the tint.
+        * @param g Green component of the tint.
+        * @param b Blue component of the tint.
+        * @param a Alpha component of the tint.
+        * @return Pointer to this Texture for chaining.
+        */
+        Texture* SetColorTint(float r, float g, float b, float a);
+
+        /**
+        * @brief Sets a color tint using RGB components, full opacity assumed.
+        *
+        * Applies a multiplicative color tint with full alpha (255).
+        *
+        * @param r Red component of the tint.
+        * @param g Green component of the tint.
+        * @param b Blue component of the tint.
+        * @return Pointer to this Texture for chaining.
+        */
+        Texture* SetColorTint(float r, float g, float b);
+
+        /**
+        * @brief Sets a brightness tint with independent alpha control.
+        *
+        * Applies a uniform brightness value to all color channels and uses the
+        * provided alpha value.
+        *
+        * @param brightness Brightness applied to R, G, and B equally.
+        * @param a Alpha component of the tint.
+        * @return Pointer to this Texture for chaining.
+        */
+        Texture* SetColorTint(float brightness, float a);
+
+        /**
+        * @brief Sets a brightness tint with full opacity.
+        *
+        * Applies a uniform brightness value to all color channels with alpha fixed
+        * to 255.
+        *
+        * @param brightness Brightness applied to R, G, and B equally.
+        * @return Pointer to this Texture for chaining.
+        */
+        Texture* SetColorTint(float brightness);
+
+        /**
+        * @brief Sets a color tint using an RGB vector.
+        *
+        * Applies a multiplicative tint defined by the vector components to the
+        * texture. Alpha defaults to 255.
+        *
+        * @param color RGB color values as Vector3.
         * @return Pointer to this Texture for chaining.
         */
         Texture* SetColorTint(const Vector3& color);
+
+        /**
+        * @brief Sets a color tint using an RGBA vector.
+        *
+        * Applies a multiplicative tint defined by the vector components to the
+        * texture, including alpha.
+        *
+        * @param color RGBA color values as Vector4.
+        * @return Pointer to this Texture for chaining.
+        */
+        Texture* SetColorTint(const Vector4& color);
 
         /**
         * @brief Set the flip mode for rendering this texture.
@@ -206,7 +270,7 @@ namespace SDLCore {
     private:
         struct SDLTexture {
             SDL_Texture* tex = nullptr;
-            Uint8 lastR = 0, lastG = 0, lastB = 0;
+            Uint8 lastR = 0, lastG = 0, lastB = 0, lastA = 0;
 
             SDLTexture() = default;
             SDLTexture(SDL_Texture* texture) : tex(texture) {
@@ -222,7 +286,7 @@ namespace SDLCore {
         int m_height = 0;
         float m_rotation = 0.0f;
         Vector2 m_center { 0.0f, 0.0f };
-        Vector3 m_colorTint { 255.0f, 255.0f, 255.0f };
+        Vector4 m_colorTint { 255.0f, 255.0f, 255.0f, 255.0f };
         Flip m_flip = Flip::NONE;
         Type m_type = Type::STATIC;
 

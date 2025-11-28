@@ -147,13 +147,16 @@ namespace SDLCore {
 
         if (texture->lastR != static_cast<Uint8>(m_colorTint.x) ||
             texture->lastG != static_cast<Uint8>(m_colorTint.y) ||
-            texture->lastB != static_cast<Uint8>(m_colorTint.z)) {
+            texture->lastB != static_cast<Uint8>(m_colorTint.z) ||
+            texture->lastA != static_cast<Uint8>(m_colorTint.w)) {
 
             texture->lastR = static_cast<Uint8>(m_colorTint.x);
             texture->lastG = static_cast<Uint8>(m_colorTint.y);
             texture->lastB = static_cast<Uint8>(m_colorTint.z);
+            texture->lastA = static_cast<Uint8>(m_colorTint.w);
 
             SDL_SetTextureColorMod(texture->tex, texture->lastR, texture->lastG, texture->lastB);
+            SDL_SetTextureAlphaMod(texture->tex, texture->lastA);
         }
 
         SDL_FRect dst{ x, y, w, h };
@@ -210,9 +213,29 @@ namespace SDLCore {
         return this;
     }
 
-    Texture* Texture::SetColorTint(const Vector3& color) {
-        m_colorTint = color;
+    Texture* Texture::SetColorTint(float r, float g, float b, float a) {
+        m_colorTint.Set(r, g, b, a);
         return this;
+    }
+
+    Texture* Texture::SetColorTint(float r, float g, float b) {
+        return SetColorTint(r, g, b, 255.0f);
+    }
+
+    Texture* Texture::SetColorTint(float bright, float a) {
+        return SetColorTint(bright, bright, bright, a);
+    }
+
+    Texture* Texture::SetColorTint(float bright) {
+        return SetColorTint(bright, bright, bright, 255.0f);
+    }
+
+    Texture* Texture::SetColorTint(const Vector3& color) {
+        return SetColorTint(color.x, color.y, color.z, 255.0f);
+    }
+
+    Texture* Texture::SetColorTint(const Vector4& color) {
+        return SetColorTint(color.x, color.y, color.z, color.w);
     }
 
     Texture* Texture::SetFlip(Flip flip) {

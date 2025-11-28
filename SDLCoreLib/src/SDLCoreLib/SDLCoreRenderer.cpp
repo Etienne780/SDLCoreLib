@@ -665,6 +665,7 @@ namespace SDLCore::Render {
             s_activeColor.r, 
             s_activeColor.g, 
             s_activeColor.b);
+        SDL_SetTextureAlphaMod(atlas, s_activeColor.a);
 
         float penX = x;
         float penY = y;
