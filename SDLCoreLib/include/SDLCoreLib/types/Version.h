@@ -14,23 +14,23 @@ namespace SDLCore {
 	class Version {
 	public:
 		Version() = default;
-		Version(unsigned int version);
-		Version(unsigned int major, unsigned int minor);
-		Version(unsigned int major, unsigned int minor, unsigned int patch);
+		Version(uint32_t version);
+		Version(uint32_t major, uint32_t minor);
+		Version(uint32_t major, uint32_t minor, uint32_t patch);
 
 		std::string ToString() const;
 
 		VersionType GetVersionType() const;
-		unsigned int GetVersion() const;
-		unsigned int GetMajor() const;
-		unsigned int GetMinor() const;
-		unsigned int GetPatch() const;
+		uint32_t GetVersion() const;
+		uint32_t GetMajor() const;
+		uint32_t GetMinor() const;
+		uint32_t GetPatch() const;
 
 	private:
 		VersionType m_versionType = VersionType::SINGLE_COMPONENT;
-		unsigned int m_major = 0;
-		unsigned int m_minor = 0;
-		unsigned int m_patch = 0;
+		uint32_t m_major = 0;
+		uint32_t m_minor = 0;
+		uint32_t m_patch = 0;
 	};
 
 }
