@@ -66,6 +66,7 @@ namespace SDLCore {
 			return true;
 
 		audio->IncreaseRefCount();
+		return true;
 	}
 
 	bool SoundManager::ReleaseSoundRef(SoundClipID id) {
@@ -82,6 +83,7 @@ namespace SDLCore {
 			return true;
 
 		audio->DecreaseRefCount();
+		return true;
 	}
 
 	bool SoundManager::ApplyClipParams(const SoundClip& clip) {
