@@ -239,8 +239,6 @@ namespace SDLCore {
             m_winIDToWinCallbackID[winID] = win->AddOnSDLRendererDestroy([this, winID]() { FreeTextureForWindow(winID); });
         }
 
-        Log::Debug("winIDCB: {};", m_winIDToWinCallbackID);
-
         return texture;
     }
 
