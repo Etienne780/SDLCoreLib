@@ -14,6 +14,22 @@
 
 class FormatUtils {
 public:
+    /*
+    The toString method can be extended to support custom data types.
+    By providing a template specialization, FormatUtils::toString can
+    handle additional user-defined types.
+
+    The Log class internally relies on FormatUtils::toString to convert
+    its input parameters, so custom specializations are automatically
+    used there as well.
+
+    Example:
+    template<>
+    static inline std::string FormatUtils::toString<Vector2>(Vector2 vec) {
+        return vec.ToString();
+    }
+    */
+
     template<typename T>
     static std::optional<T> stringToNumber(const std::string& str) {
         static_assert(std::is_arithmetic<T>::value, "stringToNumber requires arithmetic types");
