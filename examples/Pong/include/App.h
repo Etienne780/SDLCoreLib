@@ -31,5 +31,8 @@ private:
 	int m_paddleLeftScore = 0;
 	int m_paddleRightScore = 0;
 
+	float m_fpsCounter = 0;
+	int m_fps = 0;
+
 	bool IsPointInRect(Vector2 point, float x, float y, float w, float h);
 };

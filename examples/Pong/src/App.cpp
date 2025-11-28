@@ -6,7 +6,6 @@
 
 App::App()
     : Application("Pong", SDLCore::Version(1, 0)) {
-    SetFPSCap(APPLICATION_FPS_VSYNC_ON);
 }
 
 void App::OnStart() {
@@ -16,6 +15,8 @@ void App::OnStart() {
     m_paddleRightScore = 0;
     SetCountDown(4);
     
+    SetFPSCap(APPLICATION_FPS_UNCAPPED);
+
     auto* win = CreateWindow(&m_winID, GetName(), m_winWidth, m_winHeight);
     win->SetResizable(false);
 }
@@ -120,6 +121,20 @@ void App::Render() {
     }
 
     // ================= UI =================
+    // FPS
+    m_fpsCounter -= SDLCore::Time::GetDeltaTimeSec();
+    if (m_fpsCounter <= 0) {
+        m_fpsCounter = 1;
+        m_fps = static_cast<int>(SDLCore::Time::GetFrameRate());
+    }
+
+    std::string strFPS = FormatUtils::formatString("FPS: {}", m_fps);
+    RE::SetColor(0, 150);
+    RE::FillRect(0, 0, 150, 32);
+    RE::SetColor(255);
+    RE::SetFontSize(24);
+    RE::Text(strFPS, 10, 10);
+    
     // Border
     RE::SetColor(100);
     RE::SetInnerStroke(true);
@@ -185,9 +200,9 @@ void App::Render() {
         float a = (255 / m_startCountDown) * m_startCounter;
         std::string msg = "W/S = Move left paddle";
         RE::SetFontSize(32);
-        RE::SetColor(255, a);
-        RE::Text(msg, 20, 20);
-        RE::Text("O/L = Move right paddle", 20, 20 + RE::GetTextHeight(msg) + 7);
+        RE::SetColor(255, static_cast<Uint8>(a));
+        RE::Text(msg, 20, 40);
+        RE::Text("O/L = Move right paddle", 20, 40 + RE::GetTextHeight(msg) + 7);
     }
 
     // Pause
