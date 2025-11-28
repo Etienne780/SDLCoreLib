@@ -449,12 +449,13 @@ void Lunara::OnUpdate() {
                 if (Input::KeyPressed(KeyCode::D)) playerPos.x += speed;
 
                 Vector2 winSize = win->GetSize();
+                Vector2 halfWinSize = winSize * 0.5f;
                 float pw = 40, ph = 40;
                 float sw = 50, sh = 50;
 
-                Vector2 screenPlayer = playerPos - cam + winSize * 0.5f;
-                Vector2 screenSound_1 = soundPos_1 - cam + winSize * 0.5f;
-                Vector2 screenSound_2 = soundPos_2 - cam + winSize * 0.5f;
+                Vector2 screenPlayer = playerPos - cam + halfWinSize;
+                Vector2 screenSound_1 = soundPos_1 - cam + halfWinSize;
+                Vector2 screenSound_2 = soundPos_2 - cam + halfWinSize;
 
                 // draw sound source
                 RE::SetColor(255, 200, 50);
@@ -465,8 +466,8 @@ void Lunara::OnUpdate() {
                 RE::SetColor(0, 200, 255);
                 RE::FillRect(screenPlayer.x - pw/2, screenPlayer.y - ph/2, pw, ph);
 
-                testSound2D_1.Set2D(screenSound_1, playerPos, 800.0f, 0.4f);
-                testSound2D_2.Set2D(screenSound_2, playerPos, 800.0f, 0.4f);
+                testSound2D_1.Set2D(soundPos_1, playerPos, 800.0f, 0.4f);
+                testSound2D_2.Set2D(soundPos_2, playerPos, 800.0f, 0.4f);
 
                 if (Input::MouseJustPressed(MouseButton::LEFT)) {
                     if (!SoundManager::IsPlaying(testSound2D_1)) {

@@ -184,8 +184,6 @@ namespace SDLCore {
         float pan = std::clamp(rel.x / maxDistance, -1.0f, 1.0f);
         float y = std::clamp(rel.y / maxDistance, -1.0f, 1.0f);
 
-        //Log::Print(pan);
-
         m_volume = vol;
         SetPosition(pan, y );
         return this;
