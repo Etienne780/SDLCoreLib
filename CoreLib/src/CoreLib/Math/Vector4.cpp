@@ -4,7 +4,7 @@
 #include "CoreLib\Math\Vector2.h"
 #include "CoreLib\Math\Vector3.h"
 #include "CoreLib\Math\Matrix.h"
-#include "CoreLib\Math\MathUtils.h"
+#include "CoreLib\Math\MathUtil.h"
 #include "CoreLib\FormatUtils.h"
 
 #include "CoreLib\Math\Vector4.h"

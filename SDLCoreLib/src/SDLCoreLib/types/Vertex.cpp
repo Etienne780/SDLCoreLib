@@ -1,4 +1,4 @@
-#include <CoreLib/Math/MathUtils.h>
+#include <CoreLib/Math/MathUtil.h>
 #include "types/Vertex.h"
 
 namespace SDLCore {
