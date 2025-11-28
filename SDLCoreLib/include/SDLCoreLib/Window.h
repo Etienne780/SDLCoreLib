@@ -24,6 +24,7 @@ namespace SDLCore {
 	friend class Application;
 	public:
 		using Callback = std::function<void()>;
+		using WinCallback = std::function<void(Window& win)>;
 
 		~Window();
 
@@ -252,7 +253,7 @@ namespace SDLCore {
 		* @param cb The function or lambda to call on window close.
 		* @return A unique WindowCallbackID that can be used to remove the callback later.
 		*/
-		WindowCallbackID AddOnClose(Callback&& cb);
+		WindowCallbackID AddOnWindowClose(Callback&& cb);
 
 		/**
 		* @brief Removes a previously registered close callback.
@@ -263,11 +264,52 @@ namespace SDLCore {
 		* @param id The unique ID of the callback to remove.
 		* @return Pointer to this Window to allow method chaining.
 		*/
-		Window* RemoveOnClose(WindowCallbackID id);
+		Window* RemoveOnWindowClose(WindowCallbackID id);
 
+		/**
+		* @brief Subscribes a callback triggered when the SDL renderer of this window is destroyed.
+		*
+		* The callback is invoked when the underlying SDL_Renderer is about to be released.
+		* Multiple callbacks can be registered.
+		*
+		* @param cb The function or lambda to execute on SDL renderer destruction.
+		* @return A unique WindowCallbackID used to remove the callback later.
+		*/
 		WindowCallbackID AddOnSDLRendererDestroy(Callback&& cb);
 
+		/**
+		* @brief Removes a previously registered SDL-renderer-destroy callback.
+		*
+		* Use the WindowCallbackID returned from AddOnSDLRendererDestroy to remove a specific entry.
+		* If the ID is invalid or the callback was already removed, no action is performed.
+		*
+		* @param id The unique identifier of the callback to remove.
+		* @return Pointer to this Window for method chaining.
+		*/
 		Window* RemoveOnSDLRendererDestroy(WindowCallbackID id);
+
+		/**
+		* @brief Subscribes a callback triggered when the window is resized.
+		*
+		* The callback is called whenever the window's size changes, providing the ability
+		* to react to layout adjustments, viewport updates, or related handling.
+		* Multiple callbacks can be registered.
+		*
+		* @param cb The function or lambda to execute on window resize.
+		* @return A unique WindowCallbackID used to remove the callback later.
+		*/
+		WindowCallbackID AddOnWindowResize(WinCallback&& cb);
+
+		/**
+		* @brief Removes a previously registered window-resize callback.
+		*
+		* Use the WindowCallbackID returned from AddOnWindowResize to remove a specific entry.
+		* If the ID is invalid or already removed, the function performs no action.
+		*
+		* @param id The unique identifier of the callback to remove.
+		* @return Pointer to this Window for method chaining.
+		*/
+		Window* RemoveOnWindowResize(WindowCallbackID id);
 
 		// ======= Properties that require window recreation =======
 
@@ -279,11 +321,12 @@ namespace SDLCore {
 		Window(Window&&) = delete;
 		Window& operator=(Window&&) = delete;
 		
+		template<typename CBType>
 		struct WindowCallback {
 			WindowCallbackID id;
-			Callback cb;
+			CBType cb;
 
-			WindowCallback(WindowCallbackID _id, Callback _cb) 
+			WindowCallback(WindowCallbackID _id, CBType _cb)
 				: id(_id), cb(_cb) {
 			}
 		};
@@ -314,8 +357,9 @@ namespace SDLCore {
 		float m_opacity = 1;
 
 		IDManager m_callbackIDManager;
-		std::vector<WindowCallback> m_onCloseCallbacks;
-		std::vector<WindowCallback> m_onSDLRendererDestroyCallbacks;
+		std::vector<WindowCallback<Callback>> m_onCloseCallbacks;
+		std::vector<WindowCallback<Callback>> m_onSDLRendererDestroyCallbacks;
+		std::vector<WindowCallback<WinCallback>> m_onWinResizeCallbacks;
 
 		// ======= Renderer properties =======
 		int m_vsync = 0;
@@ -323,36 +367,48 @@ namespace SDLCore {
 		std::shared_ptr<SDL_Window> m_sdlWindow = nullptr;
 		std::shared_ptr<SDL_Renderer> m_sdlRenderer = nullptr;
 
-		/**
-		* @brief Adds a callback to the given callback list and returns a unique ID for it.
-		*
-		* The callback will be stored in the vector and can later be invoked using CallCallbacks().
-		* @param callbacks The vector of callbacks to which the new callback should be added.
-		* @param cb The callback function to add.
-		* @return WindowCallbackID A unique identifier for the added callback.
-		*/
-		WindowCallbackID AddCallback(std::vector<WindowCallback>& callbacks, Callback cb);
-		
-		/**
-		* @brief Removes a callback from the given callback list by its unique ID.
-		*
-		* The callback identifier is released back to the internal ID manager.
-		* @param callbacks The vector of callbacks from which the callback should be removed.
-		* @param id The unique ID of the callback to remove.
-		* @return true if a callback was actually removed, false if no matching callback was found.
-		*/
-		bool RemoveCallback(std::vector<WindowCallback>& callbacks, WindowCallbackID id);
+		// Adds a callback of arbitrary type CBType
+		// CBType must match the type stored in the corresponding vector
+		template<typename CBType>
+		WindowCallbackID AddCallback(std::vector<WindowCallback<CBType>>& callbacks, CBType cb) {
+			WindowCallbackID id{ m_callbackIDManager.GetNewUniqueIdentifier() };
+			callbacks.emplace_back(id, std::move(cb));
+			return id;
+		}
 
-		/**
-		* @brief Invokes all callbacks in the given callback list.
-		*
-		* Each callback that is valid (non-null) will be executed in the order they appear in the vector.
-		* @param callbacks The vector of callbacks to call.
-		*/
-		void CallCallbacks(const std::vector<WindowCallback>& callbacks);
+		// Removes a callback by ID from a vector of WindowCallback<CBType>
+		template<typename CBType>
+		bool RemoveCallback(std::vector<WindowCallback<CBType>>& callbacks,
+			WindowCallbackID id) {
+			size_t preSize = callbacks.size();
+
+			callbacks.erase(
+				std::remove_if(callbacks.begin(), callbacks.end(),
+					[id](const WindowCallback<CBType>& wc) {
+						return wc.id == id;
+					}),
+				callbacks.end()
+			);
+
+			m_callbackIDManager.FreeUniqueIdentifier(id.value);
+			return preSize != callbacks.size();
+		}
+
+		// Calls all callbacks and forwards arbitrary arguments to them
+		template<typename CBType, typename... Args>
+		void CallCallbacks(const std::vector<WindowCallback<CBType>>& callbacks, Args&&... args) {
+			for (auto& windowCallback : callbacks) {
+				// Check that the callback is valid
+				if (windowCallback.cb) {
+					// Forward all parameters to the callback
+					windowCallback.cb(std::forward<Args>(args)...);
+				}
+			}
+		}
 
 		void CallOnClose();
 		void CallOnSDLRendererDestroy();
+		void CallOnWindowResize();
 		
 		/**
 		* @brief Gets SDL window flags based on current settings

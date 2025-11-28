@@ -123,37 +123,17 @@ namespace SDLCore {
 		return m_sdlRenderer;
 	}
 
-	WindowCallbackID Window::AddCallback(std::vector<WindowCallback>& callbacks, Callback cb) {
-		WindowCallbackID id{ m_callbackIDManager.GetNewUniqueIdentifier() };
-		callbacks.emplace_back(id, std::move(cb));
-		return id;
-	}
-
-	bool Window::RemoveCallback(std::vector<WindowCallback>& callbacks, WindowCallbackID id) {
-		size_t preSize = callbacks.size();
-		callbacks.erase(
-			std::remove_if(callbacks.begin(), callbacks.end(),
-				[id](const WindowCallback& wc) { return wc.id == id; }),
-			callbacks.end()
-		);
-
-		m_callbackIDManager.FreeUniqueIdentifier(id.value);
-		return preSize != callbacks.size();
-	}
-
-	void Window::CallCallbacks(const std::vector<WindowCallback>& callbacks) {
-		for (auto& windowCallback : callbacks) {
-			if (windowCallback.cb)
-				windowCallback.cb();
-		}
-	}
-
 	void Window::CallOnClose() {
 		CallCallbacks(m_onCloseCallbacks);
 	}
 
 	void Window::CallOnSDLRendererDestroy() {
 		CallCallbacks(m_onSDLRendererDestroyCallbacks);
+	}
+
+	void Window::CallOnWindowResize() {
+		PollSize();
+		CallCallbacks(m_onWinResizeCallbacks, *this);
 	}
 
 	SDL_WindowFlags Window::GetWindowFlags() {
@@ -341,23 +321,33 @@ namespace SDLCore {
 		return this;
 	}
 
-	WindowCallbackID Window::AddOnClose(Callback&& cb) {
-		return AddCallback(m_onCloseCallbacks, std::move(cb));
+	WindowCallbackID Window::AddOnWindowClose(Callback&& cb) {
+		return AddCallback<Callback>(m_onCloseCallbacks, std::move(cb));
 	}
 
-	Window* Window::RemoveOnClose(WindowCallbackID id) {
-		if (!RemoveCallback(m_onCloseCallbacks, id))
+	Window* Window::RemoveOnWindowClose(WindowCallbackID id) {
+		if (!RemoveCallback<Callback>(m_onCloseCallbacks, id))
 			Log::Warn("SDLCore::Window::RemoveOnClose: No callback found with ID '{}', nothing was removed.", id);
 		return this;
 	}
 
 	WindowCallbackID Window::AddOnSDLRendererDestroy(Callback&& cb) {
-		return AddCallback(m_onSDLRendererDestroyCallbacks, std::move(cb));
+		return AddCallback<Callback>(m_onSDLRendererDestroyCallbacks, std::move(cb));
 	}
 
 	Window* Window::RemoveOnSDLRendererDestroy(WindowCallbackID id) {
-		if (!RemoveCallback(m_onSDLRendererDestroyCallbacks, id))
+		if (!RemoveCallback<Callback>(m_onSDLRendererDestroyCallbacks, id))
 			Log::Warn("SDLCore::Window::RemoveOnSDLRendererDestroy: No callback found with ID '{}', nothing was removed.", id);
+		return this;
+	}
+
+	WindowCallbackID Window::AddOnWindowResize(WinCallback&& cb) {
+		return AddCallback<WinCallback>(m_onWinResizeCallbacks, std::move(cb));
+	}
+
+	Window* Window::RemoveOnWindowResize(WindowCallbackID id) {
+		if (!RemoveCallback<WinCallback>(m_onWinResizeCallbacks, id))
+			Log::Warn("SDLCore::Window::RemoveOnWindowResize: No callback found with ID '{}', nothing was removed.", id);
 		return this;
 	}
 

@@ -130,6 +130,10 @@ namespace SDLCore {
             m_windowsToClose.push_back(window->GetID());
             break;
 
+        case SDL_EVENT_WINDOW_RESIZED:
+            window->CallOnWindowResize();
+                break;
+
         default:
             break;
         }
@@ -162,7 +166,7 @@ namespace SDLCore {
 
         if (idPtr) {
             *idPtr = newID;
-            win->AddOnClose([idPtr]() { idPtr->value = SDLCORE_INVALID_ID; });
+            win->AddOnWindowClose([idPtr]() { idPtr->value = SDLCORE_INVALID_ID; });
         }
 
         return win.get();
