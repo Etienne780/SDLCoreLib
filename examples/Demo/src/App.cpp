@@ -395,9 +395,9 @@ void App::OnUpdate() {
 
             // initialize sound source once
             if (!init2D) {
-                playerPos = { 0, 0 };
-                soundPos_1 = { 500, 0 };
-                soundPos_2 = { -500, 0 };
+                playerPos = Vector2(0, 0);
+                soundPos_1 = Vector2(500, 0);
+                soundPos_2 = Vector2(- 500, 0);
                 init2D = true;
             }
 
