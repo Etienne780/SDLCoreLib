@@ -24,7 +24,7 @@ public:
     Vector4(float value);
     Vector4(float x, float y, float z, float w);
     Vector4(const Vector2& vec, float z, float w);
-    Vector4(const Vector2& vec, const Vector2& otherVec);
+    Vector4(const Vector2& a, const Vector2& b);
     Vector4(const Vector3& vec, float w);
 
     /**

@@ -24,7 +24,7 @@ Vector4::Vector4(const Vector2& vec, float z, float w)
     : x(vec.x), y(vec.y), z(z), w(w) {
 }
 Vector4::Vector4(const Vector2& a, const Vector2& b) 
-    : x(a.x), y(b.y), z(b.x), w(b.y) {
+    : x(a.x), y(a.y), z(b.x), w(b.y) {
 }
 Vector4::Vector4(const Vector3& vec, float w) 
     : x(vec.x), y(vec.y), z(vec.z), w(w) {
