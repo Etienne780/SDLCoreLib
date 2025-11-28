@@ -235,6 +235,13 @@ namespace SDLCore::Render {
 	/**
 	* @brief Sets the current drawing color using RGB values.
 	* @param rgb Color components in the range 0–255.
+	* @param a Alpha component in the range 0-255.
+	*/
+	void SetColor(const Vector3& rgb, float a);
+
+	/**
+	* @brief Sets the current drawing color using RGB values.
+	* @param rgb Color components in the range 0–255.
 	*/
 	void SetColor(const Vector3& rgb);
 

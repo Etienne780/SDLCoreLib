@@ -291,6 +291,10 @@ namespace SDLCore::Render {
         SetColor(static_cast<Uint8>(rgba.x), static_cast<Uint8>(rgba.y), static_cast<Uint8>(rgba.z), static_cast<Uint8>(rgba.w));
     }
 
+    void SetColor(const Vector3& rgb, float a) {
+        SetColor(static_cast<Uint8>(rgb.x), static_cast<Uint8>(rgb.y), static_cast<Uint8>(rgb.z), static_cast<Uint8>(a));
+    }
+
     void SetColor(const Vector3& rgb) {
         SetColor(static_cast<Uint8>(rgb.x), static_cast<Uint8>(rgb.y), static_cast<Uint8>(rgb.z), 255);
     }
