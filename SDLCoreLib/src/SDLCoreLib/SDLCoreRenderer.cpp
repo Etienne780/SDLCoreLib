@@ -507,7 +507,10 @@ namespace SDLCore::Render {
         for (int i = 0; i < 4; ++i) {
             quad[i].position.x = verts[i].x;
             quad[i].position.y = verts[i].y;
-            quad[i].color = SDL_FColor{ static_cast<float>(r), static_cast<float>(g), static_cast<float>(b), static_cast<float>(a) };
+            quad[i].color = SDL_FColor{ static_cast<float>(r) / 255, 
+                static_cast<float>(g) / 255, 
+                static_cast<float>(b) / 255, 
+                static_cast<float>(a) / 255 };
         }
 
         int indices[6] = { 0, 1, 2, 2, 3, 0 };
