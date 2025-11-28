@@ -1,4 +1,4 @@
-project "Lunara"
+project "Pong"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
@@ -39,7 +39,7 @@ project "Lunara"
 
     filter "configurations:Release"
         defines { "NDEBUG", "DISABLE_LOGS" }  -- optional für Log-Funktionen
-        kind "WindowedApp"                     -- GUI-App ohne Konsole
+        kind "WindowedApp"                     -- GUI-App without Console
         runtime "Release"
         optimize "On"
         buildoptions { "/MT" }

@@ -2,10 +2,10 @@
 #include <vector>
 #include <array>
 #include <CoreLib/Math/Vector4.h>
-#include "Lunara.h"
+#include "Demo.h"
 
-Lunara::Lunara()
-    : Application("Lunara", SDLCore::Version(1, 0)) {
+Demo::Demo()
+    : Application("Demo", SDLCore::Version(1, 0)) {
 }
 
 struct MovingRect {
@@ -118,8 +118,8 @@ SDLCore::SoundClip testSound2D_2;
 
 bool MovePolygon();
 void MoveRects();
-void Lunara::OnStart() {
-    auto path = File::OpenFileDialog("Select a song", File::ConvertFilterString(".mp3"));
+void Demo::OnStart() {
+    auto path = File::OpenFileDialog("Select a song", File::ConvertFilterString(".mp3, .wav"));
     testSound = SDLCore::SoundClip(path);
     testSound.SetVolume(0.2f);
 
@@ -171,7 +171,7 @@ void Lunara::OnStart() {
     SDLCore::Render::SetFontSize(120);
 }
 
-void Lunara::OnUpdate() {
+void Demo::OnUpdate() {
     if (GetWindowCount() <= 0) 
         Quit();
 
@@ -522,7 +522,7 @@ void Lunara::OnUpdate() {
     }
 }
 
-void Lunara::OnQuit() {
+void Demo::OnQuit() {
     bool isGay = false;
     if (isGay)
         isGay = true;

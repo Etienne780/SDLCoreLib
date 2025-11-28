@@ -6,7 +6,7 @@ workspace "Game"
         "Release" 
     }
 
-    startproject "Lunara"
+    startproject "Demo"
 
 --------------------------------------------------------
 -- Helper function for consistent directory structure
@@ -27,12 +27,26 @@ function SetTargetAndObjDirs(projectName)
     filter {}
 end
 
---------------------------------------------------------
--- Include projects
---------------------------------------------------------
-include "CoreLib"
-include "SDLCoreLib"
-include "Lunara"
+------------------------------------
+-- Libraries Includes
+------------------------------------
+group "Libraries"
+    include "CoreLib"
+    include "SDLCoreLib"
+
+
+------------------------------------
+-- Examples Includes
+------------------------------------
+group "Examples"
+    include "examples/Demo"
+    include "examples/Tetris"
+    include "examples/Pong"
+
+
+-- Restore default group
+group ""
+
 
 --------------------------------------------------------
 -- Custom clean action

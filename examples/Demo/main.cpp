@@ -2,11 +2,11 @@
 #include <SDLCoreLib/SDLCore.h>
 #include <SDL3/SDL_main.h>
 
-#include "Lunara.h"
+#include "Demo.h"
 
 int main(int argc, char* argv[]) {
-	Lunara* lunara = new Lunara();
-	SDLCore::SDLResult result = lunara->Start();
+	Demo* demo = new Demo();
+	SDLCore::SDLResult result = demo->Start();
 
 	std::string msg = SDLCore::GetError(result);
 	if(result == 0)
@@ -14,6 +14,6 @@ int main(int argc, char* argv[]) {
 	else 
 		Log::Error(msg);
 
-	delete lunara;
+	delete demo;
 	return 0;
 }
