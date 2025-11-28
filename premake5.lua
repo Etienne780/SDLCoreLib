@@ -12,18 +12,20 @@ workspace "Game"
 -- Helper function for consistent directory structure
 --------------------------------------------------------
 function SetTargetAndObjDirs(projectName)
+    local root = _MAIN_SCRIPT_DIR
+
     -- Executables and DLLs
-    targetdir("../build/bin/" .. projectName .. "/%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}")
+    targetdir(root .. "/build/bin/" .. projectName .. "/%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}")
 
     -- Intermediate build files
-    objdir("../build/intermediates/" .. projectName .. "/%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}")
+    objdir(root .. "/build/intermediates/" .. projectName .. "/%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}")
 
     
     --------------------------------------------------------
     -- Automatically move all .lib files to centralized folder
     --------------------------------------------------------
     filter "kind:StaticLib"
-        targetdir("../build/lib/" .. projectName .. "/%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}")
+        targetdir(root .. "/build/lib/" .. projectName .. "/%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}")
     filter {}
 end
 
