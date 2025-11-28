@@ -1,9 +1,9 @@
 #pragma once
 #include <SDLCoreLib/SDLCore.h>
 
-class Tetris : public SDLCore::Application {
+class App : public SDLCore::Application {
 public:
-	Tetris();
+	App();
 	
 	void OnStart() override;
 	void OnUpdate() override;

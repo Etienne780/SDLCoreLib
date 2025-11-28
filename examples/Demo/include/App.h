@@ -1,14 +1,14 @@
 #pragma once
 #include <SDLCoreLib/SDLCore.h>
 
-class Pong : public SDLCore::Application {
+class App : public SDLCore::Application {
 public:
-	Pong();
+	App();
 	
 	void OnStart() override;
 	void OnUpdate() override;
 	void OnQuit() override;
 	
 private:
-	SDLCore::WindowID m_winID;
+	
 };

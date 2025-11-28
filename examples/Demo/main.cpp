@@ -2,11 +2,11 @@
 #include <SDLCoreLib/SDLCore.h>
 #include <SDL3/SDL_main.h>
 
-#include "Demo.h"
+#include "App.h"
 
 int main(int argc, char* argv[]) {
-	Demo* demo = new Demo();
-	SDLCore::SDLResult result = demo->Start();
+	App* app = new App();
+	SDLCore::SDLResult result = app->Start();
 
 	std::string msg = SDLCore::GetError(result);
 	if(result == 0)
@@ -14,6 +14,6 @@ int main(int argc, char* argv[]) {
 	else 
 		Log::Error(msg);
 
-	delete demo;
+	delete app;
 	return 0;
 }

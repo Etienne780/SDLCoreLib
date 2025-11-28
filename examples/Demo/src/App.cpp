@@ -2,9 +2,9 @@
 #include <vector>
 #include <array>
 #include <CoreLib/Math/Vector4.h>
-#include "Demo.h"
+#include "App.h"
 
-Demo::Demo()
+App::App()
     : Application("Demo", SDLCore::Version(1, 0)) {
 }
 
@@ -118,7 +118,7 @@ SDLCore::SoundClip testSound2D_2;
 
 bool MovePolygon();
 void MoveRects();
-void Demo::OnStart() {
+void App::OnStart() {
     auto path = File::OpenFileDialog("Select a song", File::ConvertFilterString(".mp3, .wav"));
     testSound = SDLCore::SoundClip(path);
     testSound.SetVolume(0.2f);
@@ -171,7 +171,7 @@ void Demo::OnStart() {
     SDLCore::Render::SetFontSize(120);
 }
 
-void Demo::OnUpdate() {
+void App::OnUpdate() {
     if (GetWindowCount() <= 0) 
         Quit();
 
@@ -522,7 +522,7 @@ void Demo::OnUpdate() {
     }
 }
 
-void Demo::OnQuit() {
+void App::OnQuit() {
     bool isGay = false;
     if (isGay)
         isGay = true;

@@ -2,19 +2,19 @@
 #include <vector>
 #include <array>
 #include <CoreLib/Math/Vector4.h>
-#include "Tetris.h"
+#include "App.h"
 
-Tetris::Tetris()
+App::App()
     : Application("Tetris", SDLCore::Version(1, 0)) {
 }
 
-void Tetris::OnStart() {
+void App::OnStart() {
     CreateWindow(&m_winID, "Tetris", 800, 800);
 }
 
-void Tetris::OnUpdate() {
+void App::OnUpdate() {
    
 }
 
-void Tetris::OnQuit() {
+void App::OnQuit() {
 }

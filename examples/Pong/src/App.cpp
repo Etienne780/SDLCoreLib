@@ -2,18 +2,18 @@
 #include <vector>
 #include <array>
 #include <CoreLib/Math/Vector4.h>
-#include "Pong.h"
+#include "App.h"
 
-Pong::Pong()
+App::App()
     : Application("Pong", SDLCore::Version(1, 0)) {
 }
 
-void Pong::OnStart() {
+void App::OnStart() {
     CreateWindow(&m_winID, "Pong", 800, 800);
 }
 
-void Pong::OnUpdate() {
+void App::OnUpdate() {
 }
 
-void Pong::OnQuit() {
+void App::OnQuit() {
 }
