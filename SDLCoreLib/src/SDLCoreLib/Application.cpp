@@ -214,6 +214,15 @@ namespace SDLCore {
         return m_windows.size();
     }
 
+
+    std::string Application::GetName() const {
+        return m_name;
+    }
+
+    Version Application::GetVersion() const {
+        return m_version;
+    }
+
     void Application::SetFPSCap(int value) {
         if (value < -2)
             value = APPLICATION_FPS_UNCAPPED;

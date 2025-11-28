@@ -89,7 +89,16 @@ namespace SDLCore {
 		*/
 		Window* GetWindow(WindowID id);
 
+		/*
+		* @brief Gets the current amount of windows owned by this application
+		* @return Amount of windows
+		*/
 		size_t GetWindowCount() const;
+
+		/**/
+		std::string GetName() const;
+
+		Version GetVersion() const;
 
 		/**
 		* @brief Sets the application's frame rate cap or VSync mode.
