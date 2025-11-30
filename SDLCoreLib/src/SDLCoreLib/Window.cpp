@@ -170,7 +170,10 @@ namespace SDLCore {
 
 		SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
 		SDL_SetWindowAspectRatio(m_sdlWindow.get(), m_minAspectRatio, m_maxAspectRatio);
-		
+
+		SDL_SetWindowMinimumSize(m_sdlWindow.get(), static_cast<int>(m_minSize.x), static_cast<int>(m_minSize.y));
+		SDL_SetWindowMaximumSize(m_sdlWindow.get(), static_cast<int>(m_maxSize.x), static_cast<int>(m_maxSize.y));
+
 		SDL_SetWindowPosition(m_sdlWindow.get(), 
 			(m_positionX == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionX,
 			(m_positionY == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionY);
@@ -214,7 +217,7 @@ namespace SDLCore {
 		if (!m_sdlWindow)
 			return;
 
-		auto now = Time::GetTime();
+		auto now = Time::GetFrameCount();
 		if (m_positionFetchedTime == now)
 			return;
 
@@ -226,7 +229,7 @@ namespace SDLCore {
 		if (!m_sdlWindow)
 			return;
 
-		auto now = Time::GetTime();
+		auto now = Time::GetFrameCount();
 		if (m_sizeFetchedTime == now)
 			return;
 
@@ -347,16 +350,47 @@ namespace SDLCore {
 	}
 
 	Window* Window::SetAspectRatio(float minAspectRatio, float maxAspectRatio) {
-		if (minAspectRatio < 0 && minAspectRatio)
+		if (minAspectRatio < 0)
 			minAspectRatio = 1;
-		if (maxAspectRatio < 0 && maxAspectRatio)
+		if (maxAspectRatio < 0)
 			maxAspectRatio = 1;
 
 		m_minAspectRatio = minAspectRatio;
 		m_maxAspectRatio = maxAspectRatio;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowAspectRatio(m_sdlWindow.get(), minAspectRatio, maxAspectRatio);
+			SDL_SetWindowAspectRatio(m_sdlWindow.get(), m_minAspectRatio, m_maxAspectRatio);
+		}
+		return this;
+	}
+
+	Window* Window::SetWindowMinMaxSize(int minSizeX, int minSizeY, int maxSizeX, int maxSizeY) {
+		SetWindowMinSize(minSizeX, minSizeY);
+		return SetWindowMaxSize(maxSizeX, maxSizeY);
+	}
+
+	Window* Window::SetWindowMinSize(int minSizeX, int minSizeY) {
+		if (minSizeX < 0)
+			minSizeX = 1;
+		if (minSizeY < 0)
+			minSizeY = 1;
+
+		m_minSize.Set(static_cast<float>(minSizeX), static_cast<float>(minSizeY));
+		if (m_sdlWindow) {
+			SDL_SetWindowMinimumSize(m_sdlWindow.get(), minSizeX, minSizeY);
+		}
+		return this;
+	}
+		
+	Window* Window::SetWindowMaxSize(int maxSizeX, int maxSizeY) {
+		if (maxSizeX < 0)
+			maxSizeX = 1;
+		if (maxSizeY < 0)
+			maxSizeY = 1;
+
+		m_maxSize.Set(static_cast<float>(maxSizeX), static_cast<float>(maxSizeY));
+		if (m_sdlWindow) {
+			SDL_SetWindowMaximumSize(m_sdlWindow.get(), maxSizeX, maxSizeY);
 		}
 		return this;
 	}

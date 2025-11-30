@@ -256,6 +256,32 @@ namespace SDLCore {
 		Window* SetAspectRatio(float minAspectRatio, float maxAspectRatio);
 
 		/**
+		* @brief Sets both minimum and maximum allowed window size
+		* @param minSizeX Minimum width in pixels (0 disables the limit)
+		* @param minSizeY Minimum height in pixels (0 disables the limit)
+		* @param maxSizeX Maximum width in pixels (0 disables the limit)
+		* @param maxSizeY Maximum height in pixels (0 disables the limit)
+		* @return Pointer to this window (for chaining)
+		*/
+		Window* SetWindowMinMaxSize(int minSizeX, int minSizeY, int maxSizeX, int maxSizeY);
+
+		/**
+		* @brief Sets the minimum allowed window size
+		* @param minSizeX Minimum width in pixels (0 disables the limit)
+		* @param minSizeY Minimum height in pixels (0 disables the limit)
+		* @return Pointer to this window (for chaining)
+		*/
+		Window* SetWindowMinSize(int minSizeX, int minSizeY);
+
+		/**
+		* @brief Sets the maximum allowed window size
+		* @param maxSizeX Maximum width in pixels (0 disables the limit)
+		* @param maxSizeY Maximum height in pixels (0 disables the limit)
+		* @return Pointer to this window (for chaining)
+		*/
+		Window* SetWindowMaxSize(int maxSizeX, int maxSizeY);
+
+		/**
 		* @brief Subscribes a callback to be called when this window object is destryoed.
 		*
 		* The callback will be stored internally and invoked when the window object is destroyed
@@ -391,8 +417,8 @@ namespace SDLCore {
 		mutable int m_positionY = -1;	// < dosent get update automaticly
 		mutable int m_width = 1;		// < dosent get update automaticly
 		mutable int m_height = 1;		// < dosent get update automaticly
-		mutable Uint64 m_positionFetchedTime = 0;
-		mutable Uint64 m_sizeFetchedTime = 0;
+		mutable uint64_t m_positionFetchedTime = 0;
+		mutable uint64_t m_sizeFetchedTime = 0;
 
 		bool m_resizable = true;
 		bool m_alwaysOnTop = false;
@@ -401,6 +427,8 @@ namespace SDLCore {
 		float m_opacity = 1;
 		float m_minAspectRatio = 0;
 		float m_maxAspectRatio = 0;
+		Vector2 m_minSize{ 0, 0 };
+		Vector2 m_maxSize{ 0, 0 };
 
 		IDManager m_callbackIDManager;
 		std::vector<WindowCallback<Callback>> m_onDestroyCallbacks;
