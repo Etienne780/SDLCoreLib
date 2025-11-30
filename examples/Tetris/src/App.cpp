@@ -13,7 +13,6 @@ void App::OnStart() {
 }
 
 void App::OnUpdate() {
-   
 }
 
 void App::OnQuit() {
