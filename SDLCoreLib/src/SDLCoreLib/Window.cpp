@@ -15,6 +15,7 @@ namespace SDLCore {
 	Window::~Window() {
 		// DestroyWindow gets called in Application::RemoveWindow before this destructor gets called
 		// DestroyWindow();
+		CallOnDestroy();
 	}
 
 	WindowID Window::GetID() const {
@@ -64,11 +65,14 @@ namespace SDLCore {
 	}
 
 	void Window::CreateWindow() {
+		if (m_sdlWindow) {
+			DestroyWindow();
+		}
+
 		if (m_width < 0) m_width = 0;
 		if (m_height < 0) m_height = 0;
 
 		SDL_Window* rawWindow = SDL_CreateWindow(m_name.c_str(), m_width, m_height, GetWindowFlags());
-
 		if (!rawWindow) {
 			Log::Error("SDLCore::Window::CreateWindow: Failed to create window '{}': {}", m_name, SDL_GetError());
 			return;
@@ -79,7 +83,7 @@ namespace SDLCore {
 	}
 
 	void Window::DestroyWindow() {
-		CallOnClose();
+		CallOnSDLWindowClose();
 		DestroyRenderer();
 		if (m_sdlWindow) {
 			SDL_DestroyWindow(m_sdlWindow.get());
@@ -88,6 +92,15 @@ namespace SDLCore {
 	}
 
 	void Window::CreateRenderer() {
+		if (m_sdlRenderer) {
+			DestroyRenderer();
+		}
+		
+		if (!m_sdlWindow) {
+			Log::Error("SDLCore::Window::CreateRenderer: Renderer creation failed on window '{}', SDL window dident exist to create a renderer for!", m_name);
+			return;
+		}
+
 		SDL_Renderer* rawRenderer = SDL_CreateRenderer(m_sdlWindow.get(), nullptr);
 		if (!rawRenderer) {
 			Log::Error("SDLCore::Window::CreateRenderer: Renderer creation failed on window '{}': {}", m_name, SDL_GetError());
@@ -123,8 +136,12 @@ namespace SDLCore {
 		return m_sdlRenderer;
 	}
 
-	void Window::CallOnClose() {
-		CallCallbacks(m_onCloseCallbacks);
+	void Window::CallOnDestroy() {
+		CallCallbacks(m_onDestroyCallbacks);
+	}
+
+	void Window::CallOnSDLWindowClose() {
+		CallCallbacks(m_onSDLWindowCloseCallbacks);
 	}
 
 	void Window::CallOnSDLRendererDestroy() {
@@ -292,7 +309,6 @@ namespace SDLCore {
 		if (m_sdlWindow) {
 			SDL_SetWindowAlwaysOnTop(m_sdlWindow.get(), m_alwaysOnTop);
 		}
-
 		return this;
 	}
 
@@ -321,13 +337,23 @@ namespace SDLCore {
 		return this;
 	}
 
-	WindowCallbackID Window::AddOnWindowClose(Callback&& cb) {
-		return AddCallback<Callback>(m_onCloseCallbacks, std::move(cb));
+	WindowCallbackID Window::AddOnDestroy(Callback&& cb) {
+		return AddCallback<Callback>(m_onDestroyCallbacks, std::move(cb));
 	}
 
-	Window* Window::RemoveOnWindowClose(WindowCallbackID id) {
-		if (!RemoveCallback<Callback>(m_onCloseCallbacks, id))
-			Log::Warn("SDLCore::Window::RemoveOnClose: No callback found with ID '{}', nothing was removed.", id);
+	Window* Window::RemoveOnDestroy(WindowCallbackID id) {
+		if (!RemoveCallback<Callback>(m_onDestroyCallbacks, id))
+			Log::Warn("SDLCore::Window::RemoveOnDestroy: No callback found with ID '{}', nothing was removed.", id);
+		return this;
+	}
+
+	WindowCallbackID Window::AddOnSDLWindowClose(Callback&& cb) {
+		return AddCallback<Callback>(m_onSDLWindowCloseCallbacks, std::move(cb));
+	}
+
+	Window* Window::RemoveOnSDLWindowClose(WindowCallbackID id) {
+		if (!RemoveCallback<Callback>(m_onSDLWindowCloseCallbacks, id))
+			Log::Warn("SDLCore::Window::RemoveOnSDLWindowClose: No callback found with ID '{}', nothing was removed.", id);
 		return this;
 	}
 
