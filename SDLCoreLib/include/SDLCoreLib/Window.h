@@ -239,7 +239,7 @@ namespace SDLCore {
 
 		/**
 		* @brief Sets a fixed aspect ratio for the window
-		* @param aspectRatio Desired aspect ratio (width / height), must be greater than 0
+		* @param aspectRatio Desired aspect ratio (width / height), 0 to disable
 		* @return Pointer to this window (for chaining)
 		*/
 		Window* SetAspectRatio(float aspectRatio);
@@ -350,6 +350,9 @@ namespace SDLCore {
 		*/
 		Window* SetBorderless(bool value);
 
+		// @brief (Require window recreation to take effect)
+		Window* SetBufferTransparent(bool value);
+
 	private:
 		Window(WindowID id);
 		Window(WindowID id, const std::string& name, int width, int height);
@@ -381,8 +384,8 @@ namespace SDLCore {
 		// ======= Window properties =======
 		WindowID m_id{ SDLCORE_INVALID_ID };
 		std::string m_name = "Untitled";
-		mutable int m_positionX = 0;	// < dosent get update automaticly
-		mutable int m_positionY = 30;	// < dosent get update automaticly
+		mutable int m_positionX = -1;	// < dosent get update automaticly
+		mutable int m_positionY = -1;	// < dosent get update automaticly
 		mutable int m_width = 1;		// < dosent get update automaticly
 		mutable int m_height = 1;		// < dosent get update automaticly
 		mutable Uint64 m_positionFetchedTime = 0;
@@ -391,6 +394,7 @@ namespace SDLCore {
 		bool m_resizable = true;
 		bool m_alwaysOnTop = false;
 		bool m_borderless = false;
+		// bool m_trans
 		float m_opacity = 1;
 		float m_minAspectRatio = 0;
 		float m_maxAspectRatio = 0;

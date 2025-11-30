@@ -169,7 +169,10 @@ namespace SDLCore {
 
 		SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
 		SDL_SetWindowAspectRatio(m_sdlWindow.get(), m_minAspectRatio, m_maxAspectRatio);
-		SDL_SetWindowPosition(m_sdlWindow.get(), m_positionX, m_positionY);
+		
+		SDL_SetWindowPosition(m_sdlWindow.get(), 
+			(m_positionX == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionX,
+			(m_positionY == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionY);
 	}
 
 	bool Window::SetVsync(int value) {
@@ -343,9 +346,9 @@ namespace SDLCore {
 	}
 
 	Window* Window::SetAspectRatio(float minAspectRatio, float maxAspectRatio) {
-		if (minAspectRatio <= 0)
+		if (minAspectRatio < 0 && minAspectRatio)
 			minAspectRatio = 1;
-		if (maxAspectRatio <= 0)
+		if (maxAspectRatio < 0 && maxAspectRatio)
 			maxAspectRatio = 1;
 
 		m_minAspectRatio = minAspectRatio;
@@ -354,6 +357,11 @@ namespace SDLCore {
 		if (m_sdlWindow) {
 			SDL_SetWindowAspectRatio(m_sdlWindow.get(), minAspectRatio, maxAspectRatio);
 		}
+		return this;
+	}
+
+	Window* Window::SetBufferTransparent(bool value) {
+		
 		return this;
 	}
 
