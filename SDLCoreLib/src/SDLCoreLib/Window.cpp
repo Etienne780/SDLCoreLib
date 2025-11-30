@@ -168,6 +168,7 @@ namespace SDLCore {
 			return;
 
 		SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
+		SDL_SetWindowAspectRatio(m_sdlWindow.get(), m_minAspectRatio, m_maxAspectRatio);
 		SDL_SetWindowPosition(m_sdlWindow.get(), m_positionX, m_positionY);
 	}
 
@@ -334,6 +335,20 @@ namespace SDLCore {
 			SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
 		}
 
+		return this;
+	}
+
+	Window* Window::SetAspectRatio(float aspectRatio) {
+		return SetAspectRatio(aspectRatio, aspectRatio);
+	}
+
+	Window* Window::SetAspectRatio(float minAspectRatio, float maxAspectRatio) {
+		m_minAspectRatio = minAspectRatio;
+		m_maxAspectRatio = maxAspectRatio;
+
+		if (m_sdlWindow) {
+			SDL_SetWindowAspectRatio(m_sdlWindow.get(), minAspectRatio, maxAspectRatio);
+		}
 		return this;
 	}
 

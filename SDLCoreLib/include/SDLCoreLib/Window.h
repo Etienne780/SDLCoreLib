@@ -237,6 +237,9 @@ namespace SDLCore {
 		*/
 		Window* SetOpacity(float opacity);
 
+		Window* SetAspectRatio(float aspectRatio);
+		Window* SetAspectRatio(float minAspectRatio, float maxAspectRatio);
+
 		/**
 		* @brief Subscribes a callback to be called when this window object is destryoed.
 		*
@@ -377,6 +380,8 @@ namespace SDLCore {
 		bool m_alwaysOnTop = false;
 		bool m_borderless = false;
 		float m_opacity = 1;
+		float m_minAspectRatio = 0;
+		float m_maxAspectRatio = 0;
 
 		IDManager m_callbackIDManager;
 		std::vector<WindowCallback<Callback>> m_onDestroyCallbacks;
