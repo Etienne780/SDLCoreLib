@@ -29,7 +29,7 @@ namespace SDLCore {
 	std::string Window::GetName() const {
 		return m_name;
 	}
-	
+
 	Vector2 Window::GetPosition() const {
 		PollPosition();
 		return Vector2(static_cast<float>(m_positionX), static_cast<float>(m_positionY));
@@ -95,7 +95,7 @@ namespace SDLCore {
 		if (m_sdlRenderer) {
 			DestroyRenderer();
 		}
-		
+
 		if (!m_sdlWindow) {
 			Log::Error("SDLCore::Window::CreateRenderer: Renderer creation failed on window '{}', SDL window dident exist to create a renderer for!", m_name);
 			return;
@@ -174,9 +174,7 @@ namespace SDLCore {
 		SDL_SetWindowMinimumSize(m_sdlWindow.get(), static_cast<int>(m_minSize.x), static_cast<int>(m_minSize.y));
 		SDL_SetWindowMaximumSize(m_sdlWindow.get(), static_cast<int>(m_maxSize.x), static_cast<int>(m_maxSize.y));
 
-		SDL_SetWindowPosition(m_sdlWindow.get(), 
-			(m_positionX == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionX,
-			(m_positionY == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionY);
+		SetWindowPosInternal();
 	}
 
 	bool Window::SetVsync(int value) {
@@ -187,14 +185,14 @@ namespace SDLCore {
 
 		if (value == m_vsync)
 			return true;
-		
+
 		m_vsync = value;
 
 		if (!m_sdlRenderer)
 			return false;
 
 		if (!SDL_SetRenderVSync(m_sdlRenderer.get(), value)) {
-		
+
 			if (value == -1) {
 				Log::Warn("SDLCore::Window::SetVsync: Adaptive VSync not supported, falling back to normal VSync.");
 				if (!SDL_SetRenderVSync(m_sdlRenderer.get(), 1)) {
@@ -237,6 +235,14 @@ namespace SDLCore {
 		SDL_GetWindowSize(m_sdlWindow.get(), &m_width, &m_height);
 	}
 
+	void Window::SetWindowPosInternal() {
+		if (!m_sdlWindow)
+			return;
+		SDL_SetWindowPosition(m_sdlWindow.get(),
+			(m_positionX == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionX,
+			(m_positionY == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionY);
+	}
+
 	int Window::GetVsync() const {
 		return m_vsync;
 	}
@@ -247,7 +253,24 @@ namespace SDLCore {
 		if (m_sdlWindow) {
 			SDL_SetWindowTitle(m_sdlWindow.get(), m_name.c_str());
 		}
+		return this;
+	}
 
+	Window* Window::SetPositionHor(int hor) {
+		m_positionX = hor;
+
+		if (m_sdlWindow) {
+			SetWindowPosInternal();
+		}
+		return this;
+	}
+
+	Window* Window::SetPositionVer(int ver) {
+		m_positionY = ver;
+
+		if (m_sdlWindow) {
+			SetWindowPosInternal();
+		}
 		return this;
 	}
 
@@ -256,9 +279,8 @@ namespace SDLCore {
 		m_positionY = ver;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowPosition(m_sdlWindow.get(), m_positionX, m_positionY);
+			SetWindowPosInternal();
 		}
-
 		return this;
 	}
 
@@ -283,9 +305,8 @@ namespace SDLCore {
 		m_height = height;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowPosition(m_sdlWindow.get(), m_width, m_height);
+			SDL_SetWindowSize(m_sdlWindow.get(), m_width, m_height);
 		}
-
 		return this;
 	}
 

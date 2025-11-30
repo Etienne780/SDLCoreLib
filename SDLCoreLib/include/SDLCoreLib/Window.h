@@ -162,6 +162,20 @@ namespace SDLCore {
 		Window* SetName(const std::string& name);
 
 		/**
+		* @brief Sets the window position using horizontal coordinates.
+		* @param hor New horizontal position in screen coordinates.
+		* @return Pointer to this window (for chaining).
+		*/
+		Window* SetPositionHor(int hor);
+
+		/**
+		* @brief Sets the window position using vertical coordinates.
+		* @param hor New horizontal position in screen coordinates.
+		* @return Pointer to this window (for chaining).
+		*/
+		Window* SetPositionVer(int ver);
+
+		/**
 		* @brief Sets the window position using horizontal and vertical coordinates.
 		* @param hor New horizontal position in screen coordinates.
 		* @param ver New vertical position in screen coordinates.
@@ -517,6 +531,11 @@ namespace SDLCore {
 		* Only queries SDL_GetWindowSize if the size has not been fetched this frame.
 		*/
 		void PollSize() const;
+
+		/*
+		* @brief sets the window position with the current x and y pos
+		*/
+		void SetWindowPosInternal();
 	};
 
 }
