@@ -205,7 +205,7 @@ namespace SDLCore {
         if (id.value == SDLCORE_INVALID_ID)
             return nullptr;
 
-        return Algorithm::Search::GetLinear<Window>(m_windows, [id](Window& win) {
+        return Algorithm::Search::GetLinear<Window>(m_windows, [id](Window& win) -> bool {
             return win.GetID() == id;
         });
     }
