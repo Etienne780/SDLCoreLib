@@ -397,7 +397,7 @@ namespace SDLCore {
 		bool m_resizable = true;
 		bool m_alwaysOnTop = false;
 		bool m_borderless = false;
-		// bool m_trans
+		bool m_transparentBuffer = false;
 		float m_opacity = 1;
 		float m_minAspectRatio = 0;
 		float m_maxAspectRatio = 0;

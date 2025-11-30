@@ -159,6 +159,7 @@ namespace SDLCore {
 		if (m_resizable) flags |= SDL_WINDOW_RESIZABLE;
 		if (m_alwaysOnTop) flags |= SDL_WINDOW_ALWAYS_ON_TOP;
 		if (m_borderless) flags |= SDL_WINDOW_BORDERLESS;
+		if (m_transparentBuffer) flags |= SDL_WINDOW_TRANSPARENT;
 
 		return flags;
 	}
@@ -361,7 +362,7 @@ namespace SDLCore {
 	}
 
 	Window* Window::SetBufferTransparent(bool value) {
-		
+		m_transparentBuffer = value;
 		return this;
 	}
 
