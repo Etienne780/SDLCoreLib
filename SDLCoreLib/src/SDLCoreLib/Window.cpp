@@ -343,6 +343,11 @@ namespace SDLCore {
 	}
 
 	Window* Window::SetAspectRatio(float minAspectRatio, float maxAspectRatio) {
+		if (minAspectRatio <= 0)
+			minAspectRatio = 1;
+		if (maxAspectRatio <= 0)
+			maxAspectRatio = 1;
+
 		m_minAspectRatio = minAspectRatio;
 		m_maxAspectRatio = maxAspectRatio;
 

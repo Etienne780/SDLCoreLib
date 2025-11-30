@@ -237,7 +237,19 @@ namespace SDLCore {
 		*/
 		Window* SetOpacity(float opacity);
 
+		/**
+		* @brief Sets a fixed aspect ratio for the window
+		* @param aspectRatio Desired aspect ratio (width / height), must be greater than 0
+		* @return Pointer to this window (for chaining)
+		*/
 		Window* SetAspectRatio(float aspectRatio);
+
+		/**
+		* @brief Sets an aspect ratio range for the window
+		* @param minAspectRatio Minimum allowed aspect ratio (0 to disable lower bound)
+		* @param maxAspectRatio Maximum allowed aspect ratio (0 to disable upper bound)
+		* @return Pointer to this window (for chaining)
+		*/
 		Window* SetAspectRatio(float minAspectRatio, float maxAspectRatio);
 
 		/**
