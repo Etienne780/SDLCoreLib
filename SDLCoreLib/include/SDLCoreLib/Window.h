@@ -10,6 +10,9 @@
 
 namespace SDLCore {
 
+	inline constexpr int WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED;
+	inline constexpr int WINDOWPOS_CENTERED = SDL_WINDOWPOS_CENTERED;
+
 	class Application;
 
 	/**
