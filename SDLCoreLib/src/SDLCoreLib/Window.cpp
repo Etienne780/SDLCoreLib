@@ -69,8 +69,10 @@ namespace SDLCore {
 			DestroyWindow();
 		}
 
-		if (m_width < 0) m_width = 0;
-		if (m_height < 0) m_height = 0;
+		if (m_width < 0) 
+			m_width = 0;
+		if (m_height < 0) 
+			m_height = 0;
 
 		SDL_Window* rawWindow = SDL_CreateWindow(m_name.c_str(), m_width, m_height, GetWindowFlags());
 		if (!rawWindow) {
@@ -168,6 +170,8 @@ namespace SDLCore {
 		if (!m_sdlWindow)
 			return;
 
+		SDL_SetWindowResizable(m_sdlWindow.get(), m_resizable);
+		SDL_SetWindowAlwaysOnTop(m_sdlWindow.get(), m_alwaysOnTop);
 		SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
 		SDL_SetWindowAspectRatio(m_sdlWindow.get(), m_minAspectRatio, m_maxAspectRatio);
 
