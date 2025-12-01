@@ -138,7 +138,7 @@ namespace SDLCore {
 		void Init();
 		void ProcessSDLPollEvents();
 		void ProcessSDLPollEventWindow(const std::unique_ptr<Window>& window);
-		void FPSCapDelay(uint64_t frameStartTime);
+		void FPSCapDelay(uint64_t frameStartTime) const;
 
 		/**
 		* @brief Sets the given value to all windows 

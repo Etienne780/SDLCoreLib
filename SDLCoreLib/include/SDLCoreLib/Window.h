@@ -4,14 +4,23 @@
 #include <functional>
 #include <SDL3/SDL.h>
 #include <CoreLib/Math/Vector2.h>
+#include <CoreLib/FormatUtils.h>
 
 #include "IDManager.h"
 #include "SDLCoreTypes.h"
 
 namespace SDLCore {
 
-	inline constexpr int WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED;
-	inline constexpr int WINDOWPOS_CENTERED = SDL_WINDOWPOS_CENTERED;
+	constexpr int WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED;
+	constexpr int WINDOWPOS_CENTERED = SDL_WINDOWPOS_CENTERED;
+
+	enum class WindowState {
+		NORMAL,
+		MINIMIZED,
+		MAXIMIZED,
+		FULLSCREEN_EXCLUSIVE,
+		FULLSCREEN_BORDERLESS
+	};
 
 	class Application;
 
@@ -55,6 +64,18 @@ namespace SDLCore {
 		void DestroyRenderer();
 
 		/**
+		* @brief Shows the window.
+		* @return Pointer to this window (for chaining)
+		*/
+		Window* Show();
+
+		/**
+		* @brief Hides the window.
+		* @return Pointer to this window (for chaining)
+		*/
+		Window* Hide();
+
+		/**
 		* @brief Checks if the SDL window has been created and is valid
 		* @return true if the window exists, false otherwise
 		*/
@@ -65,6 +86,18 @@ namespace SDLCore {
 		* @return true if the renderer exists, false otherwise
 		*/
 		bool HasRenderer() const;
+
+		/**
+		* @brief Checks whether the window is currently visible.
+		* @return true if visible, false otherwise
+		*/
+		bool IsVisible() const;
+
+		/**
+		* @brief Checks whether the window currently has input focus.
+		* @return true if focused, false otherwise
+		*/
+		bool IsFocused() const;
 
 		/**
 		* @brief Gets the internal ID of this window
@@ -151,6 +184,23 @@ namespace SDLCore {
 		* @return -1 = adaptive, 0 = off, 1 = on
 		*/
 		int GetVsync() const;
+
+		float GetAspectRatioMin() const;
+		float GetAspectRatioMax() const;
+		Vector2 GetWindowMinSize() const;
+		Vector2 GetWindowMaxSize() const;
+
+		/**
+		* @brief Returns the current window state (normal, minimized, maximized, fullscreen etc.).
+		* @return Current window state
+		*/
+		WindowState GetState() const;
+
+		/**
+		* @brief Returns the display ID the window is currently assigned to.
+		* @return DisplayID of the window, or 0 on failure
+		*/
+		DisplayID GetDisplayID() const;
 
 		// ======= Dynamically modifiable properties =======
 
@@ -296,6 +346,13 @@ namespace SDLCore {
 		Window* SetWindowMaxSize(int maxSizeX, int maxSizeY);
 
 		/**
+		* @brief Requests a change of the window state.
+		* @param state Desired window state
+		* @return Pointer to this window (for chaining)
+		*/
+		Window* SetState(WindowState state);
+
+		/**
 		* @brief Subscribes a callback to be called when this window object is destryoed.
 		*
 		* The callback will be stored internally and invoked when the window object is destroyed
@@ -434,10 +491,13 @@ namespace SDLCore {
 		mutable uint64_t m_positionFetchedTime = 0;
 		mutable uint64_t m_sizeFetchedTime = 0;
 
+		WindowState m_state = WindowState::NORMAL;
+		bool m_isFocused = false;
 		bool m_resizable = true;
 		bool m_alwaysOnTop = false;
 		bool m_borderless = false;
 		bool m_transparentBuffer = false;
+		bool m_isVisible = true;
 		float m_opacity = 1;
 		float m_minAspectRatio = 0;
 		float m_maxAspectRatio = 0;
@@ -504,7 +564,7 @@ namespace SDLCore {
 		* @brief Gets SDL window flags based on current settings
 		* @return SDL_WindowFlags
 		*/
-		SDL_WindowFlags GetWindowFlags();
+		SDL_WindowFlags GetWindowFlags() const;
 
 		/**
 		* @brief Sets additional SDL window properties after creation
@@ -536,6 +596,24 @@ namespace SDLCore {
 		* @brief sets the window position with the current x and y pos
 		*/
 		void SetWindowPosInternal();
+
+		/*
+		* called in application class
+		*/
+		void UpdateWindowEvents(Uint32 type);
 	};
 
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::WindowState>(SDLCore::WindowState state) {
+	switch (state)
+	{
+	case SDLCore::WindowState::NORMAL:					return "Normal";
+	case SDLCore::WindowState::MINIMIZED:				return "Minimized";
+	case SDLCore::WindowState::MAXIMIZED:				return "Maximized";
+	case SDLCore::WindowState::FULLSCREEN_EXCLUSIVE:	return "FullscreenExclusive";
+	case SDLCore::WindowState::FULLSCREEN_BORDERLESS:	return "FullscreenBorderless";
+	default:											return "UNKOWN";
+	}
 }

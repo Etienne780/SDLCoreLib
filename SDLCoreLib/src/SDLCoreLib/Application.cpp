@@ -86,7 +86,7 @@ namespace SDLCore {
         OnQuit();
 
         Render::SetWindowRenderer();
-        RemoveAllWindows();
+        DeleteAllWindows();
 
         SoundManager::Quit();
         MIX_Quit();
@@ -111,7 +111,7 @@ namespace SDLCore {
             auto* win = GetWindow(id);
             if (win)
                 win->DestroyWindow();
-            RemoveWindow(id);
+            DeleteWindow(id);
         }
         m_windowsToClose.clear();
     }
@@ -125,24 +125,29 @@ namespace SDLCore {
         case SDL_EVENT_QUIT:
             Quit();
             break;
-
         case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
             m_windowsToClose.push_back(window->GetID());
             break;
-
         case SDL_EVENT_WINDOW_RESIZED:
-            window->CallOnWindowResize();
-                break;
-
+        case SDL_EVENT_WINDOW_MINIMIZED:
+        case SDL_EVENT_WINDOW_MAXIMIZED:
+        case SDL_EVENT_WINDOW_RESTORED:
+        case SDL_EVENT_WINDOW_SHOWN:
+        case SDL_EVENT_WINDOW_HIDDEN:
+        case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
+        case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
+            window->UpdateWindowEvents(m_sdlEvent.type);
+            break;
         default:
             break;
         }
 
-        // update input
         Input::ProcessEvent(m_sdlEvent);
     }
 
-    void Application::FPSCapDelay(uint64_t frameStartTime) {
+    void Application::FPSCapDelay(uint64_t frameStartTime) const {
         if (m_fpsCap <= 0 || m_vsync != 0)
             return;
 
@@ -183,7 +188,7 @@ namespace SDLCore {
         return win;
     }
 
-    bool Application::RemoveWindow(WindowID id) {
+    bool Application::DeleteWindow(WindowID id) {
         auto it = std::find_if(m_windows.begin(), m_windows.end(),
             [id](const std::unique_ptr<Window>& win) { return win->GetID() == id; });
 
@@ -195,9 +200,9 @@ namespace SDLCore {
         return true;
     }
 
-    void Application::RemoveAllWindows() {
+    void Application::DeleteAllWindows() {
         while (!m_windows.empty()) {
-            RemoveWindow(m_windows.back()->GetID());
+            DeleteWindow(m_windows.back()->GetID());
         }
     }
 

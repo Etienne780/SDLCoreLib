@@ -18,6 +18,7 @@ namespace SDLCore {
 	typedef SDL_FRect FRect;/**< Rect with float components (SDL_FRect) */
 	typedef SDL_Color Color;/**< Color with uint8 components (SDL_Color) */
 	typedef SDL_FColor FColor;/**< Color with float components (SDL_FColor) */
+	typedef SDL_DisplayID DisplayID;/**< Uint32 id for an display (SDL_DisplayID) */
 
 	Rect ToRect(const FRect& fRect);
 	Rect ToRect(const Vector4& fRect);

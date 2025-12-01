@@ -69,9 +69,9 @@ namespace SDLCore {
 			DestroyWindow();
 		}
 
-		if (m_width < 0) 
+		if (m_width < 0)
 			m_width = 0;
-		if (m_height < 0) 
+		if (m_height < 0)
 			m_height = 0;
 
 		SDL_Window* rawWindow = SDL_CreateWindow(m_name.c_str(), m_width, m_height, GetWindowFlags());
@@ -121,6 +121,17 @@ namespace SDLCore {
 		}
 	}
 
+	Window* Window::Show() {
+		SDL_ShowWindow(m_sdlWindow.get());
+		m_isVisible = true;
+		return this;
+	}
+
+	Window* Window::Hide() {
+		SDL_HideWindow(m_sdlWindow.get());
+		m_isVisible = false;
+		return this;
+	}
 
 	bool Window::HasWindow() const {
 		return m_sdlWindow != nullptr;
@@ -128,6 +139,14 @@ namespace SDLCore {
 
 	bool Window::HasRenderer() const {
 		return m_sdlRenderer != nullptr;
+	}
+
+	bool Window::IsVisible() const {
+		return m_isVisible;
+	}
+
+	bool Window::IsFocused() const {
+		return m_isFocused;
 	}
 
 	std::weak_ptr<SDL_Window> Window::GetSDLWindow() {
@@ -155,7 +174,7 @@ namespace SDLCore {
 		CallCallbacks(m_onWinResizeCallbacks, *this);
 	}
 
-	SDL_WindowFlags Window::GetWindowFlags() {
+	SDL_WindowFlags Window::GetWindowFlags() const {
 		SDL_WindowFlags flags = 0;
 
 		if (m_resizable) flags |= SDL_WINDOW_RESIZABLE;
@@ -169,6 +188,10 @@ namespace SDLCore {
 	void Window::SetWindowProperties() {
 		if (!m_sdlWindow)
 			return;
+
+		(m_isVisible) ?
+			SDL_ShowWindow(m_sdlWindow.get()) :
+			SDL_HideWindow(m_sdlWindow.get());
 
 		SDL_SetWindowResizable(m_sdlWindow.get(), m_resizable);
 		SDL_SetWindowAlwaysOnTop(m_sdlWindow.get(), m_alwaysOnTop);
@@ -247,8 +270,71 @@ namespace SDLCore {
 			(m_positionY == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionY);
 	}
 
+	void Window::UpdateWindowEvents(Uint32 type) {
+		switch (type) {
+		case SDL_EVENT_WINDOW_RESIZED:
+			CallOnWindowResize();
+			break;
+		case SDL_EVENT_WINDOW_MINIMIZED:
+			m_state = WindowState::MINIMIZED;
+			break;
+		case SDL_EVENT_WINDOW_MAXIMIZED:
+			m_state = WindowState::MAXIMIZED;
+			break;
+		case SDL_EVENT_WINDOW_RESTORED:
+			m_state = WindowState::NORMAL;
+			break;
+		case SDL_EVENT_WINDOW_SHOWN:
+			m_isVisible = true;
+			break;
+		case SDL_EVENT_WINDOW_HIDDEN:
+			m_isVisible = false;
+			break;
+		case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+			m_state = WindowState::FULLSCREEN_EXCLUSIVE;
+			m_isVisible = true;
+			break;
+		case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
+			m_state = WindowState::NORMAL;
+			m_isVisible = true;
+			break;
+		case SDL_EVENT_WINDOW_FOCUS_GAINED:
+			m_isFocused = true;
+			break;
+		case SDL_EVENT_WINDOW_FOCUS_LOST:
+			m_isFocused = false;
+			break;
+		default:
+			break;
+		}
+	}
+
 	int Window::GetVsync() const {
 		return m_vsync;
+	}
+
+	float Window::GetAspectRatioMin() const {
+		return m_minAspectRatio;
+	}
+
+	float Window::GetAspectRatioMax() const {
+		return m_maxAspectRatio;
+	}
+
+	Vector2 Window::GetWindowMinSize() const {
+		return m_minSize;
+	}
+	
+	Vector2 Window::GetWindowMaxSize() const {
+		return m_maxSize;
+	}
+
+	WindowState Window::GetState() const {
+		return m_state;
+	}
+
+	DisplayID Window::GetDisplayID() const {
+		return SDL_GetDisplayForWindow(m_sdlWindow.get());
 	}
 
 	Window* Window::SetName(const std::string& name) {
@@ -417,6 +503,55 @@ namespace SDLCore {
 		if (m_sdlWindow) {
 			SDL_SetWindowMaximumSize(m_sdlWindow.get(), maxSizeX, maxSizeY);
 		}
+		return this;
+	}
+
+	Window* Window::SetState(WindowState state)
+	{
+		switch (state)
+		{
+		case WindowState::NORMAL:
+			// Exit fullscreen (both exclusive + borderless)
+			SDL_SetWindowFullscreen(m_sdlWindow.get(), false);
+
+			// Restore size (undo maximize/minimize)
+			SDL_RestoreWindow(m_sdlWindow.get());
+
+			// Make sure the window is visible
+			SDL_ShowWindow(m_sdlWindow.get());
+			break;
+
+		case WindowState::MINIMIZED:
+			SDL_MinimizeWindow(m_sdlWindow.get());
+			break;
+
+		case WindowState::MAXIMIZED:
+			SDL_MaximizeWindow(m_sdlWindow.get());
+			break;
+
+		case WindowState::FULLSCREEN_EXCLUSIVE:
+		{
+			SDL_DisplayID display = GetDisplayID();
+			int modeCount = 0;
+			SDL_DisplayMode** modes = SDL_GetFullscreenDisplayModes(display, &modeCount);
+
+			if (modes && modeCount > 0)
+			{
+				SDL_SetWindowFullscreenMode(m_sdlWindow.get(), modes[0]);
+				SDL_SetWindowFullscreen(m_sdlWindow.get(), true);
+			}
+
+			SDL_free(modes);
+			break;
+		}
+
+		case WindowState::FULLSCREEN_BORDERLESS:
+			SDL_SetWindowFullscreenMode(m_sdlWindow.get(), nullptr);
+			SDL_SetWindowFullscreen(m_sdlWindow.get(), true);
+			break;
+		}
+
+		m_state = state;
 		return this;
 	}
 
