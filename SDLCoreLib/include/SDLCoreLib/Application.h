@@ -72,15 +72,15 @@ namespace SDLCore {
 		Window* CreateWindow(WindowID* idPtr, const std::string& name, int width, int height);
 
 		/**
-		* @brief Removes a Window
-		* @param id Window to remove
+		* @brief Delete a Window
+		* @param id Window to Delete
 		*/
-		bool RemoveWindow(WindowID id);
+		bool DeleteWindow(WindowID id);
 
 		/*
-		* @brief Removes all window that are currently open
+		* @brief Delete all windows
 		*/
-		void RemoveAllWindows();
+		void DeleteAllWindows();
 
 		/**
 		* @brief Gets a window with a given id
