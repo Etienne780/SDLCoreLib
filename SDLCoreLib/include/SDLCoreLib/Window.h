@@ -44,8 +44,9 @@ namespace SDLCore {
 
 		/**
 		* @brief Creates the SDL window with current settings
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		void CreateWindow();
+		bool CreateWindow();
 
 		/**
 		* @brief Destroys the associated SDL window and its renderer, releasing all related SDL resources.
@@ -57,8 +58,9 @@ namespace SDLCore {
 
 		/**
 		* @brief Creates the SDL renderer associated with this window
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		void CreateRenderer();
+		bool CreateRenderer();
 
 		/**
 		* @brief Destroys the SDL renderer and releases its resources
@@ -67,15 +69,15 @@ namespace SDLCore {
 
 		/**
 		* @brief Shows the window.
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* Show();
+		bool Show();
 
 		/**
 		* @brief Hides the window.
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* Hide();
+		bool Hide();
 
 		/**
 		* @brief Checks if the SDL window has been created and is valid
@@ -228,117 +230,117 @@ namespace SDLCore {
 		/**
 		* @brief Sets the window title dynamically
 		* @param name New window title
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetName(const std::string& name);
+		bool SetName(const std::string& name);
 
 		/**
 		* @brief Sets the window position using horizontal coordinates.
 		* @param hor New horizontal position in screen coordinates.
-		* @return Pointer to this window (for chaining).
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetPositionHor(int hor);
+		bool SetPositionHor(int hor);
 
 		/**
 		* @brief Sets the window position using vertical coordinates.
 		* @param hor New horizontal position in screen coordinates.
-		* @return Pointer to this window (for chaining).
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetPositionVer(int ver);
+		bool SetPositionVer(int ver);
 
 		/**
 		* @brief Sets the window position using horizontal and vertical coordinates.
 		* @param hor New horizontal position in screen coordinates.
 		* @param ver New vertical position in screen coordinates.
-		* @return Pointer to this window (for chaining).
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetPosition(int hor, int ver);
+		bool SetPosition(int hor, int ver);
 
 		/**
 		* @brief Sets the window position using a 2D vector.
 		* @param pos New position as a Vector2 (x = horizontal, y = vertical).
-		* @return Pointer to this window (for chaining).
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetPosition(const Vector2& pos);
+		bool SetPosition(const Vector2& pos);
 
 		/**
 		* @brief Sets only the horizontal position of the window.
 		* @param hor New horizontal position in screen coordinates.
-		* @return Pointer to this window (for chaining).
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetHorizontalPos(int hor);
+		bool SetHorizontalPos(int hor);
 
 		/**
 		* @brief Sets only the vertical position of the window.
 		* @param ver New vertical position in screen coordinates.
-		* @return Pointer to this window (for chaining).
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetVerticalPos(int ver);
+		bool SetVerticalPos(int ver);
 
 		/**
 		* @brief Sets both the window width and height.
 		* @param width New window width in pixels (minimum 1).
 		* @param height New window height in pixels (minimum 1).
-		* @return Pointer to this window (for chaining).
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetSize(int width, int height);
+		bool SetSize(int width, int height);
 
 		/**
 		* @brief Sets both the window width and height using a 2D vector.
 		* @param size New size as a Vector2 (x = width, y = height), each minimum 1.
-		* @return Pointer to this window (for chaining).
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetSize(const Vector2& size);
+		bool SetSize(const Vector2& size);
 
 		/**
 		* @brief Sets the window width dynamically
 		* @param width New width in pixels (minimum 1)
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetWidth(int width);
+		bool SetWidth(int width);
 
 		/**
 		* @brief Sets the window height dynamically
 		* @param height New height in pixels (minimum 1)
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetHeight(int height);
+		bool SetHeight(int height);
 
 		/**
 		* @brief Sets whether the window is resizable
 		* @param value true to make resizable, false otherwise
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetResizable(bool value);
+		bool SetResizable(bool value);
 
 		/**
 		* @brief Sets whether the window should always stay on top
 		* @param value true to keep on top, false otherwise
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetAlwaysOnTop(bool value);
+		bool SetAlwaysOnTop(bool value);
 
 		/**
 		* @brief Sets the opacity of the window
 		* @param opacity Value between 0.0 (transparent) and 1.0 (opaque)
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetOpacity(float opacity);
+		bool SetOpacity(float opacity);
 
 		/**
 		* @brief Sets a fixed aspect ratio for the window
 		* @param aspectRatio Desired aspect ratio (width / height), 0 to disable
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetAspectRatio(float aspectRatio);
+		bool SetAspectRatio(float aspectRatio);
 
 		/**
 		* @brief Sets an aspect ratio range for the window
 		* @param minAspectRatio Minimum allowed aspect ratio (0 to disable lower bound)
 		* @param maxAspectRatio Maximum allowed aspect ratio (0 to disable upper bound)
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetAspectRatio(float minAspectRatio, float maxAspectRatio);
+		bool SetAspectRatio(float minAspectRatio, float maxAspectRatio);
 
 		/**
 		* @brief Sets both minimum and maximum allowed window size
@@ -346,62 +348,51 @@ namespace SDLCore {
 		* @param minSizeY Minimum height in pixels (0 disables the limit)
 		* @param maxSizeX Maximum width in pixels (0 disables the limit)
 		* @param maxSizeY Maximum height in pixels (0 disables the limit)
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetWindowMinMaxSize(int minSizeX, int minSizeY, int maxSizeX, int maxSizeY);
+		bool SetWindowMinMaxSize(int minSizeX, int minSizeY, int maxSizeX, int maxSizeY);
 
 		/**
 		* @brief Sets the minimum allowed window size
 		* @param minSizeX Minimum width in pixels (0 disables the limit)
 		* @param minSizeY Minimum height in pixels (0 disables the limit)
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetWindowMinSize(int minSizeX, int minSizeY);
+		bool SetWindowMinSize(int minSizeX, int minSizeY);
 
 		/**
 		* @brief Sets the maximum allowed window size
 		* @param maxSizeX Maximum width in pixels (0 disables the limit)
 		* @param maxSizeY Maximum height in pixels (0 disables the limit)
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetWindowMaxSize(int maxSizeX, int maxSizeY);
+		bool SetWindowMaxSize(int maxSizeX, int maxSizeY);
 
 		/**
 		* @brief Requests a change of the window state.
 		* @param state Desired window state
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetState(WindowState state);
+		bool SetState(WindowState state);
 
 		/**
 		* @brief Sets the window icon using a Texture.
-		*
-		* This function extracts the underlying SDL_Surface from the provided
-		* Texture and sets it as the icon for this window. High-DPI alternate
-		* representations from the TextureSurface are handled automatically if present.
-		*
-		* @param texture Texture object containing the icon image.
-		* @return Pointer to this Window for method chaining.
-		*
-		* @note If the SDL window is not valid or the surface is invalid, an error
-		*       will be logged via Log::Error().
+
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetIcon(const Texture& texture);
+		bool SetIcon(const Texture& texture);
 
 		/**
 		* @brief Sets the window icon using a TextureSurface.
 		*
-		* The given TextureSurface is applied directly as the window icon.
-		* If the surface has alternate images for different DPI scales, SDL will
-		* automatically use the best match. On failure, an SDL error is logged.
+		* This function sets the window's icon to the provided SDL surface.
+		* If the surface contains alternate images for different display scales, they
+		* will be used automatically.
 		*
-		* @param textureSurface TextureSurface containing the icon image.
-		* @return Pointer to this Window for method chaining.
-		*
-		* @note Only call this on the main thread. If the surface is invalid or
-		*       the SDL window handle is null, the icon will not be updated.
+		* @param textureSurface The TextureSurface to use as the window icon.
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetIcon(const TextureSurface& textureSurface);
+		bool SetIcon(const TextureSurface& textureSurface);
 
 		/**
 		* @brief Subscribes a callback to be called when this window object is destryoed.
@@ -542,13 +533,25 @@ namespace SDLCore {
 
 		/**
 		* @brief Sets whether the window is borderless (Require window recreation to take effect)
+		* 
+		* Note: Changing this setting requires the window to be recreated
+		* for the effect to take place.
+		* 
 		* @param value true for borderless, false otherwise
-		* @return Pointer to this window (for chaining)
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		Window* SetBorderless(bool value);
+		bool SetBorderless(bool value);
 
-		// @brief (Require window recreation to take effect)
-		Window* SetBufferTransparent(bool value);
+		/**
+		* @brief Sets whether the window buffer should be transparent.
+		*
+		* Note: Changing this setting requires the window to be recreated
+		* for the effect to take place.
+		*
+		* @param value true to enable a transparent buffer, false to disable.
+		* @return true on success. Call SDLCore::GetError() for more information
+		*/
+		bool SetBufferTransparent(bool value);
 
 	private:
 		Window(WindowID id);
@@ -670,13 +673,14 @@ namespace SDLCore {
 
 		/**
 		* @brief Sets additional SDL window properties after creation
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		void SetWindowProperties();
+		bool SetWindowProperties();
 
 		/**
 		* @brief Sets the VSync mode of this window's renderer
 		* @param value -1 = adaptive, 0 = disabled, 1 = enabled
-		* @return true on success, false on failure (check SDL_GetError())
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
 		bool SetVsync(int value);
 
@@ -696,8 +700,9 @@ namespace SDLCore {
 
 		/*
 		* @brief sets the window position with the current x and y pos
+		* @return true on success. Call SDLCore::GetError() for more information
 		*/
-		void SetWindowPosInternal();
+		bool SetWindowPosInternal();
 
 		/*
 		* called in application class
@@ -709,8 +714,7 @@ namespace SDLCore {
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::WindowState>(SDLCore::WindowState state) {
-	switch (state)
-	{
+	switch (state) {
 	case SDLCore::WindowState::NORMAL:					return "Normal";
 	case SDLCore::WindowState::MINIMIZED:				return "Minimized";
 	case SDLCore::WindowState::MAXIMIZED:				return "Maximized";

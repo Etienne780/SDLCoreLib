@@ -1,5 +1,6 @@
 #include <CoreLib/Log.h>
 
+#include "SDLCoreError.h"
 #include "CoreTime.h"
 #include "Types/Texture.h"
 #include "Window.h"
@@ -66,24 +67,28 @@ namespace SDLCore {
 		return std::unique_ptr<Window>(new Window(id, name, width, height));
 	}
 
-	void Window::CreateWindow() {
+	bool Window::CreateWindow() {
 		if (m_sdlWindow) {
 			DestroyWindow();
 		}
 
-		if (m_width < 0)
-			m_width = 0;
-		if (m_height < 0)
-			m_height = 0;
+		if (m_width < 0) m_width = 0;
+		if (m_height < 0) m_height = 0;
 
 		SDL_Window* rawWindow = SDL_CreateWindow(m_name.c_str(), m_width, m_height, GetWindowFlags());
 		if (!rawWindow) {
-			Log::Error("SDLCore::Window::CreateWindow: Failed to create window '{}': {}", m_name, SDL_GetError());
-			return;
+			SetErrorF("SDLCore::Window::CreateWindow: Failed to create window '{}': {}", m_name, SDL_GetError());
+			return false;
 		}
 
 		m_sdlWindow = std::shared_ptr<SDL_Window>(rawWindow, [](SDL_Window*) {});
-		SetWindowProperties();
+
+		if (!SetWindowProperties()) {
+			AddErrorF("\nSDLCore::Window::CreateWindow: Failed to set window properties for '{}'", m_name);
+			return false;
+		}
+
+		return true;
 	}
 
 	void Window::DestroyWindow() {
@@ -95,24 +100,30 @@ namespace SDLCore {
 		}
 	}
 
-	void Window::CreateRenderer() {
+	bool Window::CreateRenderer() {
 		if (m_sdlRenderer) {
 			DestroyRenderer();
 		}
 
 		if (!m_sdlWindow) {
-			Log::Error("SDLCore::Window::CreateRenderer: Renderer creation failed on window '{}', SDL window dident exist to create a renderer for!", m_name);
-			return;
+			SetErrorF("SDLCore::Window::CreateRenderer: Renderer creation failed on window '{}', SDL window does not exist!", m_name);
+			return false;
 		}
 
 		SDL_Renderer* rawRenderer = SDL_CreateRenderer(m_sdlWindow.get(), nullptr);
 		if (!rawRenderer) {
-			Log::Error("SDLCore::Window::CreateRenderer: Renderer creation failed on window '{}': {}", m_name, SDL_GetError());
-			return;
+			SetErrorF("SDLCore::Window::CreateRenderer: Renderer creation failed on window '{}': {}", m_name, SDL_GetError());
+			return false;
 		}
 
 		m_sdlRenderer = std::shared_ptr<SDL_Renderer>(rawRenderer, [](SDL_Renderer*) {});
-		SetVsync(m_vsync);
+
+		if (!SetVsync(m_vsync)) {
+			AddErrorF("\nSDLCore::Window::CreateRenderer: Failed to set VSync for window '{}'", m_name);
+			return false;
+		}
+
+		return true;
 	}
 
 	void Window::DestroyRenderer() {
@@ -123,16 +134,34 @@ namespace SDLCore {
 		}
 	}
 
-	Window* Window::Show() {
-		SDL_ShowWindow(m_sdlWindow.get());
+	bool Window::Show() {
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::Show: SDL window is null, cannot show window!");
+			return false;
+		}
+
+		if (!SDL_ShowWindow(m_sdlWindow.get())) {
+			SetErrorF("SDLCore::Window::Show: Failed to show window '{}': {}", m_name, SDL_GetError());
+			return false;
+		}
+
 		m_isVisible = true;
-		return this;
+		return true;
 	}
 
-	Window* Window::Hide() {
-		SDL_HideWindow(m_sdlWindow.get());
+	bool Window::Hide() {
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::Hide: SDL window is null, cannot hide window!");
+			return false;
+		}
+
+		if (!SDL_HideWindow(m_sdlWindow.get())) {
+			SetErrorF("SDLCore::Window::Hide: Failed to hide window '{}': {}", m_name, SDL_GetError());
+			return false;
+		}
+
 		m_isVisible = false;
-		return this;
+		return true;
 	}
 
 	bool Window::HasWindow() const {
@@ -195,23 +224,41 @@ namespace SDLCore {
 		return flags;
 	}
 
-	void Window::SetWindowProperties() {
-		if (!m_sdlWindow)
-			return;
+	bool Window::SetWindowProperties() {
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetWindowProperties: SDL window is null, cannot set properties!");
+			return false;
+		}
 
-		(m_isVisible) ?
-			SDL_ShowWindow(m_sdlWindow.get()) :
+		// Show or hide the window
+		if (m_isVisible) {
+			SDL_ShowWindow(m_sdlWindow.get());
+		}
+		else {
 			SDL_HideWindow(m_sdlWindow.get());
+		}
 
 		SDL_SetWindowResizable(m_sdlWindow.get(), m_resizable);
 		SDL_SetWindowAlwaysOnTop(m_sdlWindow.get(), m_alwaysOnTop);
 		SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
 		SDL_SetWindowAspectRatio(m_sdlWindow.get(), m_minAspectRatio, m_maxAspectRatio);
 
-		SDL_SetWindowMinimumSize(m_sdlWindow.get(), static_cast<int>(m_minSize.x), static_cast<int>(m_minSize.y));
-		SDL_SetWindowMaximumSize(m_sdlWindow.get(), static_cast<int>(m_maxSize.x), static_cast<int>(m_maxSize.y));
+		SDL_SetWindowMinimumSize(m_sdlWindow.get(),
+			static_cast<int>(m_minSize.x),
+			static_cast<int>(m_minSize.y));
+		SDL_SetWindowMaximumSize(m_sdlWindow.get(),
+			static_cast<int>(m_maxSize.x),
+			static_cast<int>(m_maxSize.y));
 
-		SetWindowPosInternal();
+		if (!m_icon.IsInvalid())
+			SDL_SetWindowIcon(m_sdlWindow.get(), m_icon.GetSurface());
+
+		if (!SetWindowPosInternal()) {
+			SetError("SDLCore::Window::SetWindowProperties: Failed to set window position!");
+			return false;
+		}
+
+		return true;
 	}
 
 	bool Window::SetVsync(int value) {
@@ -225,15 +272,16 @@ namespace SDLCore {
 
 		m_vsync = value;
 
-		if (!m_sdlRenderer)
+		if (!m_sdlRenderer) {
+			SetError("SDLCore::Window::SetVsync: SDL renderer is null, cannot set VSync!");
 			return false;
+		}
 
 		if (!SDL_SetRenderVSync(m_sdlRenderer.get(), value)) {
-
 			if (value == -1) {
 				Log::Warn("SDLCore::Window::SetVsync: Adaptive VSync not supported, falling back to normal VSync.");
 				if (!SDL_SetRenderVSync(m_sdlRenderer.get(), 1)) {
-					Log::Error("SDLCore::Window::SetVsync: Failed to set normal VSync for window '{}': {}", m_name, SDL_GetError());
+					SetErrorF("SDLCore::Window::SetVsync: Failed to set normal VSync for window '{}': {}", m_name, SDL_GetError());
 					m_vsync = 0;
 					return false;
 				}
@@ -241,7 +289,7 @@ namespace SDLCore {
 				return true;
 			}
 
-			Log::Error("SDLCore::Window::SetVsync: Failed to set VSync mode {} for window '{}': {}", value, m_name, SDL_GetError());
+			SetErrorF("SDLCore::Window::SetVsync: Failed to set VSync mode {} for window '{}': {}", value, m_name, SDL_GetError());
 			return false;
 		}
 
@@ -272,10 +320,10 @@ namespace SDLCore {
 		SDL_GetWindowSize(m_sdlWindow.get(), &m_width, &m_height);
 	}
 
-	void Window::SetWindowPosInternal() {
+	bool Window::SetWindowPosInternal() {
 		if (!m_sdlWindow)
-			return;
-		SDL_SetWindowPosition(m_sdlWindow.get(),
+			return false;
+		return SDL_SetWindowPosition(m_sdlWindow.get(),
 			(m_positionX == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionX,
 			(m_positionY == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionY);
 	}
@@ -349,177 +397,259 @@ namespace SDLCore {
 		return SDL_GetDisplayForWindow(m_sdlWindow.get());
 	}
 
-	Window* Window::SetName(const std::string& name) {
+	bool Window::SetName(const std::string& name) {
 		m_name = name;
 
 		if (m_sdlWindow) {
 			SDL_SetWindowTitle(m_sdlWindow.get(), m_name.c_str());
+			return true;
 		}
-		return this;
+		else {
+			SetError("SDLCore::Window::SetName: SDL window is null, cannot set window title!");
+			return false;
+		}
 	}
 
-	Window* Window::SetPositionHor(int hor) {
+	bool Window::SetPositionHor(int hor) {
 		m_positionX = hor;
 
-		if (m_sdlWindow) {
-			SetWindowPosInternal();
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetPositionHor: SDL window is null, cannot set horizontal position!");
+			return false;
 		}
-		return this;
+
+		if (!SetWindowPosInternal()) {
+			SetErrorF("SDLCore::Window::SetPositionHor: Failed to set horizontal position for window '{}'", m_name);
+			return false;
+		}
+
+		return true;
 	}
 
-	Window* Window::SetPositionVer(int ver) {
+	bool Window::SetPositionVer(int ver) {
 		m_positionY = ver;
 
-		if (m_sdlWindow) {
-			SetWindowPosInternal();
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetPositionVer: SDL window is null, cannot set vertical position!");
+			return false;
 		}
-		return this;
+
+		if (!SetWindowPosInternal()) {
+			SetErrorF("SDLCore::Window::SetPositionVer: Failed to set vertical position for window '{}'", m_name);
+			return false;
+		}
+
+		return true;
 	}
 
-	Window* Window::SetPosition(int hor, int ver) {
+	bool Window::SetPosition(int hor, int ver) {
 		m_positionX = hor;
 		m_positionY = ver;
 
-		if (m_sdlWindow) {
-			SetWindowPosInternal();
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetPosition: SDL window is null, cannot set position!");
+			return false;
 		}
-		return this;
+
+		if (!SetWindowPosInternal()) {
+			SetErrorF("SDLCore::Window::SetPosition: Failed to set position for window '{}'", m_name);
+			return false;
+		}
+
+		return true;
 	}
 
-	Window* Window::SetPosition(const Vector2& pos) {
+	bool Window::SetPosition(const Vector2& pos) {
 		return SetPosition(static_cast<int>(pos.x), static_cast<int>(pos.y));
 	}
 
-	Window* Window::SetHorizontalPos(int hor) {
+	bool Window::SetHorizontalPos(int hor) {
 		return SetPosition(hor, m_positionY);
 	}
 
-	Window* Window::SetVerticalPos(int ver) {
+	bool Window::SetVerticalPos(int ver) {
 		return SetPosition(m_positionX, ver);
 	}
 
-	Window* Window::SetSize(int width, int height) {
-		if (width <= 0)
+	bool Window::SetSize(int width, int height) {
+		if (width <= 0) 
 			width = 1;
-		if (height <= 0)
+		if (height <= 0) 
 			height = 1;
+
 		m_width = width;
 		m_height = height;
 
-		if (m_sdlWindow) {
-			SDL_SetWindowSize(m_sdlWindow.get(), m_width, m_height);
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetSize: SDL window is null, cannot set size!");
+			return false;
 		}
-		return this;
+
+		if (!SDL_SetWindowSize(m_sdlWindow.get(), m_width, m_height)) {
+			SetErrorF("SDLCore::Window::SetSize: Failed to set size for window '{}': {}",
+				m_name, SDL_GetError());
+			return false;
+		}
+
+		return true;
 	}
 
-	Window* Window::SetSize(const Vector2& size) {
+	bool Window::SetSize(const Vector2& size) {
 		return SetSize(static_cast<int>(size.x), static_cast<int>(size.y));
 	}
 
-	Window* Window::SetWidth(int width) {
+	bool Window::SetWidth(int width) {
 		return SetSize(width, m_height);
 	}
 
-	Window* Window::SetHeight(int height) {
+	bool Window::SetHeight(int height) {
 		return SetSize(m_width, height);
 	}
 
-	Window* Window::SetResizable(bool value) {
+	bool Window::SetResizable(bool value) {
 		m_resizable = value;
 
-		if (m_sdlWindow) {
-			SDL_SetWindowResizable(m_sdlWindow.get(), m_resizable);
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetResizable: SDL window is null, cannot change resizable state!");
+			return false;
 		}
 
-		return this;
+		if (!SDL_SetWindowResizable(m_sdlWindow.get(), m_resizable)) {
+			SetErrorF("SDLCore::Window::SetResizable: Failed to set resizable state for window '{}': {}",
+				m_name, SDL_GetError());
+			return false;
+		}
+
+		return true;
 	}
 
-	Window* Window::SetAlwaysOnTop(bool value) {
+	bool Window::SetAlwaysOnTop(bool value) {
 		m_alwaysOnTop = value;
 
-		if (m_sdlWindow) {
-			SDL_SetWindowAlwaysOnTop(m_sdlWindow.get(), m_alwaysOnTop);
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetAlwaysOnTop: SDL window is null, cannot change always-on-top state!");
+			return false;
 		}
-		return this;
+
+		if (!SDL_SetWindowAlwaysOnTop(m_sdlWindow.get(), m_alwaysOnTop)) {
+			SetErrorF("SDLCore::Window::SetAlwaysOnTop: Failed to set always-on-top for window '{}': {}",
+				m_name, SDL_GetError());
+			return false;
+		}
+
+		return true;
 	}
 
-	Window* Window::SetOpacity(float opacity) {
-		if (opacity < 0)
+	bool Window::SetOpacity(float opacity) {
+		if (opacity < 0) 
 			opacity = 0;
-		if (opacity > 1)
+		if (opacity > 1) 
 			opacity = 1;
 
 		m_opacity = opacity;
 
-		if (m_sdlWindow) {
-			SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetOpacity: SDL window is null, cannot set opacity!");
+			return false;
 		}
 
-		return this;
+		if (!SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity)) {
+			SetErrorF("SDLCore::Window::SetOpacity: Failed to set opacity for window '{}': {}",
+				m_name, SDL_GetError());
+			return false;
+		}
+
+		return true;
 	}
 
-	Window* Window::SetAspectRatio(float aspectRatio) {
+	bool Window::SetAspectRatio(float aspectRatio) {
 		return SetAspectRatio(aspectRatio, aspectRatio);
 	}
 
-	Window* Window::SetAspectRatio(float minAspectRatio, float maxAspectRatio) {
-		if (minAspectRatio < 0)
+	bool Window::SetAspectRatio(float minAspectRatio, float maxAspectRatio) {
+		if (minAspectRatio < 0) 
 			minAspectRatio = 1;
-		if (maxAspectRatio < 0)
+		if (maxAspectRatio < 0) 
 			maxAspectRatio = 1;
 
 		m_minAspectRatio = minAspectRatio;
 		m_maxAspectRatio = maxAspectRatio;
 
-		if (m_sdlWindow) {
-			SDL_SetWindowAspectRatio(m_sdlWindow.get(), m_minAspectRatio, m_maxAspectRatio);
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetAspectRatio: SDL window is null, cannot set aspect ratio!");
+			return false;
 		}
-		return this;
+
+		if (!SDL_SetWindowAspectRatio(m_sdlWindow.get(), m_minAspectRatio, m_maxAspectRatio)) {
+			SetErrorF("SDLCore::Window::SetAspectRatio: Failed to set aspect ratio for window '{}': {}",
+				m_name, SDL_GetError());
+			return false;
+		}
+
+		return true;
 	}
 
-	Window* Window::SetWindowMinMaxSize(int minSizeX, int minSizeY, int maxSizeX, int maxSizeY) {
-		SetWindowMinSize(minSizeX, minSizeY);
-		return SetWindowMaxSize(maxSizeX, maxSizeY);
-	}
-
-	Window* Window::SetWindowMinSize(int minSizeX, int minSizeY) {
-		if (minSizeX < 0)
+	bool Window::SetWindowMinSize(int minSizeX, int minSizeY) {
+		if (minSizeX < 0) 
 			minSizeX = 1;
-		if (minSizeY < 0)
+		if (minSizeY < 0) 
 			minSizeY = 1;
 
 		m_minSize.Set(static_cast<float>(minSizeX), static_cast<float>(minSizeY));
-		if (m_sdlWindow) {
-			SDL_SetWindowMinimumSize(m_sdlWindow.get(), minSizeX, minSizeY);
+
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetWindowMinSize: SDL window is null, cannot set minimum size!");
+			return false;
 		}
-		return this;
+
+		if (!SDL_SetWindowMinimumSize(m_sdlWindow.get(), minSizeX, minSizeY)) {
+			SetErrorF("SDLCore::Window::SetWindowMinSize: Failed to set minimum size for window '{}': {}",
+				m_name, SDL_GetError());
+			return false;
+		}
+
+		return true;
 	}
-		
-	Window* Window::SetWindowMaxSize(int maxSizeX, int maxSizeY) {
-		if (maxSizeX < 0)
+
+	bool Window::SetWindowMaxSize(int maxSizeX, int maxSizeY) {
+		if (maxSizeX < 0) 
 			maxSizeX = 1;
-		if (maxSizeY < 0)
+		if (maxSizeY < 0) 
 			maxSizeY = 1;
 
 		m_maxSize.Set(static_cast<float>(maxSizeX), static_cast<float>(maxSizeY));
-		if (m_sdlWindow) {
-			SDL_SetWindowMaximumSize(m_sdlWindow.get(), maxSizeX, maxSizeY);
+
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetWindowMaxSize: SDL window is null, cannot set maximum size!");
+			return false;
 		}
-		return this;
+
+		if (!SDL_SetWindowMaximumSize(m_sdlWindow.get(), maxSizeX, maxSizeY)) {
+			SetErrorF("SDLCore::Window::SetWindowMaxSize: Failed to set maximum size for window '{}': {}",
+				m_name, SDL_GetError());
+			return false;
+		}
+
+		return true;
 	}
 
-	Window* Window::SetState(WindowState state)
-	{
-		switch (state)
-		{
+	bool Window::SetWindowMinMaxSize(int minSizeX, int minSizeY, int maxSizeX, int maxSizeY) {
+		bool success = true;
+		if (!SetWindowMinSize(minSizeX, minSizeY)) success = false;
+		if (!SetWindowMaxSize(maxSizeX, maxSizeY)) success = false;
+		return success;
+	}
+
+	bool Window::SetState(WindowState state) {
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetState: SDL window is null, cannot change window state!");
+			return false;
+		}
+
+		switch (state) {
 		case WindowState::NORMAL:
-			// Exit fullscreen (both exclusive + borderless)
 			SDL_SetWindowFullscreen(m_sdlWindow.get(), false);
-
-			// Restore size (undo maximize/minimize)
 			SDL_RestoreWindow(m_sdlWindow.get());
-
-			// Make sure the window is visible
 			SDL_ShowWindow(m_sdlWindow.get());
 			break;
 
@@ -531,16 +661,22 @@ namespace SDLCore {
 			SDL_MaximizeWindow(m_sdlWindow.get());
 			break;
 
-		case WindowState::FULLSCREEN_EXCLUSIVE:
-		{
+		case WindowState::FULLSCREEN_EXCLUSIVE: {
 			SDL_DisplayID display = GetDisplayID();
 			int modeCount = 0;
 			SDL_DisplayMode** modes = SDL_GetFullscreenDisplayModes(display, &modeCount);
 
-			if (modes && modeCount > 0)
-			{
-				SDL_SetWindowFullscreenMode(m_sdlWindow.get(), modes[0]);
-				SDL_SetWindowFullscreen(m_sdlWindow.get(), true);
+			if (!modes || modeCount == 0) {
+				SetErrorF("SDLCore::Window::SetState: No fullscreen modes available for window '{}'", m_name);
+				return false;
+			}
+
+			if (SDL_SetWindowFullscreenMode(m_sdlWindow.get(), modes[0]) != 0 ||
+				SDL_SetWindowFullscreen(m_sdlWindow.get(), true) != 0) {
+				SetErrorF("SDLCore::Window::SetState: Failed to set exclusive fullscreen for window '{}': {}",
+					m_name, SDL_GetError());
+				SDL_free(modes);
+				return false;
 			}
 
 			SDL_free(modes);
@@ -548,26 +684,33 @@ namespace SDLCore {
 		}
 
 		case WindowState::FULLSCREEN_BORDERLESS:
-			SDL_SetWindowFullscreenMode(m_sdlWindow.get(), nullptr);
-			SDL_SetWindowFullscreen(m_sdlWindow.get(), true);
+			if (SDL_SetWindowFullscreenMode(m_sdlWindow.get(), nullptr) != 0 ||
+				SDL_SetWindowFullscreen(m_sdlWindow.get(), true) != 0) {
+				SetErrorF("SDLCore::Window::SetState: Failed to set borderless fullscreen for window '{}': {}",
+					m_name, SDL_GetError());
+				return false;
+			}
 			break;
 		}
 
 		m_state = state;
-		return this;
+		return true;
 	}
 
-	Window* Window::SetIcon(const Texture& texture) {
+	bool Window::SetIcon(const Texture& texture) {
 		return SetIcon(texture.GetSurface());
 	}
 
-	Window* Window::SetIcon(const TextureSurface& textureSurface) {
+	bool Window::SetIcon(const TextureSurface& textureSurface) {
 		m_icon = textureSurface;
-		if (m_sdlWindow && !m_icon.IsInvalid()) {
-			if (!SDL_SetWindowIcon(m_sdlWindow.get(), m_icon.GetSurface()))
-				Log::Error("SDL Error: {}", SDL_GetError());
+		if (!m_icon.IsInvalid()) {
+			if (!SDL_SetWindowIcon(m_sdlWindow.get(), m_icon.GetSurface())) {
+				SetErrorF("SDLCore::Window::SetIcon: Failed to set window icon: {}", SDL_GetError());
+				return false;
+			}
 		}
-		return this;
+
+		return true;
 	}
 
 	WindowCallbackID Window::AddOnDestroy(VoidCallback&& cb) {
@@ -630,19 +773,25 @@ namespace SDLCore {
 		return this;
 	}
 
-	Window* Window::SetBorderless(bool value) {
+	bool Window::SetBorderless(bool value) {
 		m_borderless = value;
 
-		if (m_sdlWindow) {
-			SDL_SetWindowBordered(m_sdlWindow.get(), m_borderless);
+		if (!m_sdlWindow) {
+			SetError("SDLCore::Window::SetBorderless: SDL window is null, cannot set borderless state!");
+			return false;
 		}
 
-		return this;
+		if (!SDL_SetWindowBordered(m_sdlWindow.get(), !m_borderless)) {
+			SetErrorF("SDLCore::Window::SetBorderless: Failed to set borderless mode for window '{}': {}", m_name, SDL_GetError());
+			return false;
+		}
+
+		return true;
 	}
 
-	Window* Window::SetBufferTransparent(bool value) {
+	bool Window::SetBufferTransparent(bool value) {
 		m_transparentBuffer = value;
-		return this;
+		return true;
 	}
 
 }
