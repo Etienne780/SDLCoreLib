@@ -202,7 +202,7 @@ void App::OnUpdate() {
 
         // needs to be called after using the window. becaus nullptr and so ...
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
-            RemoveWindow(winFillID);
+            DeleteWindow(winFillID);
     }
 
     if (winStrokeID != SDLCORE_INVALID_ID) {
@@ -226,7 +226,7 @@ void App::OnUpdate() {
 
         // needs to be called after using the window. becaus nullptr and so ...
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
-            RemoveWindow(winStrokeID);
+            DeleteWindow(winStrokeID);
     }
 
     if (winPolygonID != SDLCORE_INVALID_ID) {
@@ -255,7 +255,7 @@ void App::OnUpdate() {
 
         // needs to be called after using the window. becaus nullptr and so ...
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
-            RemoveWindow(winPolygonID);
+            DeleteWindow(winPolygonID);
     }
 
     if (winImageID != SDLCORE_INVALID_ID) {
@@ -302,7 +302,7 @@ void App::OnUpdate() {
 
         // needs to be called after using the window. becaus nullptr and so ...
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
-            RemoveWindow(winImageID);
+            DeleteWindow(winImageID);
     }
 
     static float frameRate = 0;
@@ -346,7 +346,7 @@ void App::OnUpdate() {
 
         // needs to be called after using the window. becaus nullptr and so ...
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
-            RemoveWindow(winTextID);
+            DeleteWindow(winTextID);
     }
 
     if (winSoundID != SDLCORE_INVALID_ID) {
@@ -511,7 +511,7 @@ void App::OnUpdate() {
         RE::Present();
 
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
-            RemoveWindow(winSoundID);
+            DeleteWindow(winSoundID);
     }
 
     static double lastTime = -1;
