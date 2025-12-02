@@ -1,9 +1,11 @@
+#include <memory>
 #include <SDL3_image/SDL_image.h>
 #include <CoreLib/Log.h>
 
 #include "Application.h"
 #include "SDLCoreRenderer.h"
 #include "SDLCoreError.h"
+#include "Internal/TextureManager.h"
 #include "types/Texture.h"
 
 namespace SDLCore {
@@ -49,14 +51,15 @@ namespace SDLCore {
         : m_type(type) {
 
         if (File::Exists(path)) {
-            m_surface = IMG_Load(path);
-            if (!m_surface) {
+            SDL_Surface* surface = IMG_Load(path);
+            if (!surface) {
                 Log::Error("SDLCore::Texture: Failed to load '{}': {}", path, SDL_GetError());
                 return;
             }
 
-            m_width = m_surface->w;
-            m_height = m_surface->h;
+            m_width = surface->w;
+            m_height = surface->h;
+            m_surface = std::make_unique<TextureSurface>(surface);
         }
         else {
             // fallback
@@ -88,7 +91,7 @@ namespace SDLCore {
     }
 
     bool Texture::CreateForWindow(WindowID winID) {
-        if (!m_surface) {
+        if (!m_surface || m_surface->IsInvalid()) {dds
             Log::Warn("SDLCore::Texture::CreateForWindow: Failed to create texture for window '{}', no valid texture available, using fallback texture!", winID);
             LoadFallback();
             return false;
@@ -114,7 +117,7 @@ namespace SDLCore {
             m_windowSDLRendererDestroyCallbacks[winID] = win->AddOnSDLRendererDestroy([this, winID]() { FreeForWindow(winID); });
         }
 
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, m_surface);
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, m_surface->GetSurface());
         if (!tex) {
             SetErrorF("Failed to create texture for window {}: {}", winID.value, SDL_GetError());
             return false;
@@ -267,7 +270,7 @@ namespace SDLCore {
         return texture->tex;
     }
 
-    SDL_Surface* Texture::GetSDLSurface() const {
+    TextureSurface Texture::GetSDLSurface() const {
         return m_surface;
     }
 
@@ -319,7 +322,7 @@ namespace SDLCore {
         m_textures.clear();
 
         if (m_surface) {
-            SDL_DestroySurface(m_surface);
+            m_surface.reset();das
             m_surface = nullptr;
         }
 
@@ -368,9 +371,10 @@ namespace SDLCore {
     }
 
     void Texture::LoadFallback() {
-        m_surface = GenerateFallbackSurface();
-        m_width = m_surface->w;
-        m_height = m_surface->h;
+        SDL_Surface* surface = GenerateFallbackSurface();
+        m_surface = std::make_unique<TextureSurface>(surface);
+        m_width = surface->w;
+        m_height = surface->h;
     }
 
     void Texture::RemoveSDLRendererDestroyCallbackForWindow(WindowID winID) {

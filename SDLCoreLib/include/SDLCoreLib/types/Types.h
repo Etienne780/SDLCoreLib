@@ -55,6 +55,7 @@ namespace SDLCore {
 	struct AudioPlaybackDeviceTag {};
 	struct AudioClipTag {};
 	struct AudioTrackTag {};
+	struct TextureTag {};
 
 	/**
 	 * @brief Identifier for a window.
@@ -85,6 +86,12 @@ namespace SDLCore {
 	*        Internally stored as an uint32_t
 	*/
 	using AudioTrackID = SDLCoreID<AudioTrackTag>;
+
+	/**
+	* @brief Identifier for a texture (used internally).
+	*        Internally stored as an uint32_t
+	*/
+	using TextureID = SDLCoreID<TextureTag>;
 
 	enum class TextureParams : int {
 		NONE = 0,
@@ -134,6 +141,11 @@ static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::Audi
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::AudioTrackTag>>(SDLCore::AudioTrackID id) {
+	return FormatUtils::toString(id.value);
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::TextureTag>>(SDLCore::TextureID id) {
 	return FormatUtils::toString(id.value);
 }
 

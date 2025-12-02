@@ -7,12 +7,13 @@
 #include <CoreLib/FormatUtils.h>
 #include <CoreLib/File.h>
 
+#include "TextureSurface.h"
 #include "SDLCoreTypes.h"
 
 namespace SDLCore {
 	
     class Window;
-    
+
     inline constexpr bool TEXTURE_FALLBACK_TEXTURE = true;
 
     /**
@@ -257,10 +258,9 @@ namespace SDLCore {
         SDL_Texture* GetSDLTexture(WindowID id);
 
         /**
-        * @brief Get the original SDL_Surface of this texture.
-        * @return Pointer to SDL_Surface.
+        * @brief get
         */
-        SDL_Surface* GetSDLSurface() const;
+        TextureSurface GetSurface() const;kfdlköd
 
         /*
         * @param Resets all params to
@@ -277,7 +277,7 @@ namespace SDLCore {
             }
         };
 
-        SDL_Surface* m_surface = nullptr;
+        std::unique_ptr<TextureSurface> m_surface = nullptr;
         std::unordered_map<WindowID, SDLTexture> m_textures;
 
         std::unordered_map<WindowID, WindowCallbackID> m_windowSDLRendererDestroyCallbacks;
