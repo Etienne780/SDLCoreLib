@@ -160,9 +160,10 @@ namespace SDLCore {
         }
 
         SDL_FRect dst{ x, y, w, h };
-        SDL_FPoint center;
-        center.x = dst.x + m_center.x * dst.w;
-        center.y = dst.y + m_center.y * dst.h;
+        SDL_FPoint center{
+            dst.x + m_center.x * dst.w,
+            dst.y + m_center.y * dst.h
+        };
 
         SDL_FlipMode sdlFlip = static_cast<SDL_FlipMode>(m_flip);
         if (!SDL_RenderTextureRotated(renderer, texture->tex, src, &dst, m_rotation, &center, sdlFlip)) {
