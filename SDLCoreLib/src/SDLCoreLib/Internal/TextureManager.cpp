@@ -1,3 +1,4 @@
+#include <CoreLib/Log.h>
 #include "Internal/TextureManager.h"
 
 namespace SDLCore {
@@ -23,6 +24,7 @@ namespace SDLCore {
 	TextureID TextureManager::RegisterTexture(SDL_Surface* surface) {
 		TextureID newID = TextureID(m_idManager.GetNewUniqueIdentifier());
 		m_textureAssets.emplace(newID, TextureAsset(surface, 1));
+		Log::Debug("TextureManager: RegisterTexture with id {}", newID);
 		return newID;
 	}
 	
@@ -32,6 +34,7 @@ namespace SDLCore {
 			return;
 
 		it->second.refCount++;
+		Log::Debug("TextureManager: IncreaseRef of id {}, now {}", id, it->second.refCount);
 	}
 
 	void TextureManager::DecreaseRef(TextureID id) {
@@ -41,6 +44,7 @@ namespace SDLCore {
 
 		auto& asset = it->second;
 		asset.refCount--;
+		Log::Debug("TextureManager: DecreaseRef of id {}, now {}", id, it->second.refCount);
 
 		// delete texture if not used
 		if (it->second.refCount <= 0) {
@@ -49,6 +53,7 @@ namespace SDLCore {
 			m_idManager.FreeUniqueIdentifier(it->first.value);
 
 			m_textureAssets.erase(it);
+			Log::Debug("TextureManager: Deleted surface with id {}", id);
 		}
 	}
 

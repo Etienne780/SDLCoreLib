@@ -73,8 +73,8 @@ namespace SDLCore {
         */
         ~Texture();
 
-        Texture(const Texture&) = delete;
-        Texture& operator=(const Texture&) = delete;
+        Texture(const Texture& other);
+        Texture& operator=(const Texture& other);
 
         /**
         * @brief Move constructor. Transfers ownership of all GPU and CPU resources from another texture.
@@ -260,7 +260,7 @@ namespace SDLCore {
         /**
         * @brief get
         */
-        TextureSurface GetSurface() const;kfdlköd
+        TextureSurface GetSurface() const;
 
         /*
         * @param Resets all params to
@@ -277,9 +277,8 @@ namespace SDLCore {
             }
         };
 
-        std::unique_ptr<TextureSurface> m_surface = nullptr;
+        TextureSurface m_textureSurface;
         std::unordered_map<WindowID, SDLTexture> m_textures;
-
         std::unordered_map<WindowID, WindowCallbackID> m_windowSDLRendererDestroyCallbacks;
 
         int m_width = 0;

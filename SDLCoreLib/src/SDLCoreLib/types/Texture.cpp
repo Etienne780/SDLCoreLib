@@ -59,7 +59,7 @@ namespace SDLCore {
 
             m_width = surface->w;
             m_height = surface->h;
-            m_surface = std::make_unique<TextureSurface>(surface);
+            m_textureSurface = TextureSurface(surface);
         }
         else {
             // fallback
@@ -81,6 +81,34 @@ namespace SDLCore {
             Cleanup();
     }
 
+    Texture::Texture(const Texture& other)
+        : m_textureSurface(other.m_textureSurface),
+        m_width(other.m_width),
+        m_height(other.m_height),
+        m_rotation(other.m_rotation),
+        m_center(other.m_center),
+        m_colorTint(other.m_colorTint),
+        m_flip(other.m_flip),
+        m_type(other.m_type) {
+    }
+
+    Texture& Texture::operator=(const Texture& other) {
+        if (this == &other)
+            return *this;
+        Cleanup();
+
+        m_textureSurface = other.m_textureSurface;
+        m_width = other.m_width;
+        m_height = other.m_height;
+        m_rotation = other.m_rotation;
+        m_center = other.m_center;
+        m_colorTint = other.m_colorTint;
+        m_flip = other.m_flip;
+        m_type = other.m_type;
+
+        return *this;
+    }
+
     Texture::Texture(Texture&& other) noexcept {
         MoveFrom(std::move(other));
     }
@@ -91,7 +119,7 @@ namespace SDLCore {
     }
 
     bool Texture::CreateForWindow(WindowID winID) {
-        if (!m_surface || m_surface->IsInvalid()) {dds
+        if (m_textureSurface.IsInvalid()) {
             Log::Warn("SDLCore::Texture::CreateForWindow: Failed to create texture for window '{}', no valid texture available, using fallback texture!", winID);
             LoadFallback();
             return false;
@@ -117,7 +145,7 @@ namespace SDLCore {
             m_windowSDLRendererDestroyCallbacks[winID] = win->AddOnSDLRendererDestroy([this, winID]() { FreeForWindow(winID); });
         }
 
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, m_surface->GetSurface());
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, m_textureSurface.GetSurface());
         if (!tex) {
             SetErrorF("Failed to create texture for window {}: {}", winID.value, SDL_GetError());
             return false;
@@ -270,8 +298,8 @@ namespace SDLCore {
         return texture->tex;
     }
 
-    TextureSurface Texture::GetSDLSurface() const {
-        return m_surface;
+    TextureSurface Texture::GetSurface() const {
+        return m_textureSurface;
     }
 
     Texture* Texture::Reset(TextureParams ignoreMask) {
@@ -321,10 +349,7 @@ namespace SDLCore {
             SDL_DestroyTexture(texture.tex);
         m_textures.clear();
 
-        if (m_surface) {
-            m_surface.reset();das
-            m_surface = nullptr;
-        }
+        // TextureSurface has a destructor and will automaticly be destroyed
 
         // Remove all window callbacks safely
         std::vector<WindowID> windowIDs;
@@ -357,22 +382,29 @@ namespace SDLCore {
         if (this == &other) return;
         Cleanup();
 
-        m_surface = other.m_surface;
-        other.m_surface = nullptr;
-
+        m_textureSurface = std::move(other.m_textureSurface);
         m_textures = std::move(other.m_textures);
         m_width = other.m_width;
         m_height = other.m_height;
+        m_rotation = other.m_rotation;
+        m_center = other.m_center;
+        m_colorTint = other.m_colorTint;
+        m_flip = other.m_flip;
         m_type = other.m_type;
 
         other.m_width = 0;
         other.m_height = 0;
+        other.m_rotation = 0.0f;
+        other.m_center.Set(0.0f, 0.0f);
+        other.m_colorTint.Set(255.0f, 255.0f, 255.0f, 255.0f);
+        other.m_flip = Flip::NONE;
+        other.m_type = Type::STATIC;
         other.m_textures.clear();
     }
 
     void Texture::LoadFallback() {
         SDL_Surface* surface = GenerateFallbackSurface();
-        m_surface = std::make_unique<TextureSurface>(surface);
+        m_textureSurface = TextureSurface(surface);
         m_width = surface->w;
         m_height = surface->h;
     }
