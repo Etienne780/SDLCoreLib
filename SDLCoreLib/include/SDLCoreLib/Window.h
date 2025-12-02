@@ -185,9 +185,28 @@ namespace SDLCore {
 		*/
 		int GetVsync() const;
 
+		/**
+		* @brief Gets the minimum allowed aspect ratio of the window.
+		* @return Minimum aspect ratio (width / height) as a float.
+		*/
 		float GetAspectRatioMin() const;
+
+		/**
+		* @brief Gets the maximum allowed aspect ratio of the window.
+		* @return Maximum aspect ratio (width / height) as a float.
+		*/
 		float GetAspectRatioMax() const;
+
+		/**
+		* @brief Gets the minimum size of the window.
+		* @return Minimum size as a Vector2 (x = width, y = height).
+		*/
 		Vector2 GetWindowMinSize() const;
+
+		/**
+		* @brief Gets the maximum size of the window.
+		* @return Maximum size as a Vector2 (x = width, y = height).
+		*/
 		Vector2 GetWindowMaxSize() const;
 
 		/**
