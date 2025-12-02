@@ -1,3 +1,4 @@
+#include <sstream>
 #include <cmath>
 
 #include "CoreLib\Math\Matrix.h"
@@ -35,7 +36,9 @@ Vector2::Vector2(const Vector4& vec)
 }
 
 std::string Vector2::ToString() const {
-    return FormatUtils::formatString("[{}, {}]", x, y);
+    std::ostringstream oss;
+    oss << "[" << x << ", " << y << "]";
+    return oss.str();
 }
 
 Matrix Vector2::ToMatrix2x1() const {

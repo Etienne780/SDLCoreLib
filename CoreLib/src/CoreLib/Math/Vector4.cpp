@@ -31,7 +31,9 @@ Vector4::Vector4(const Vector3& vec, float w)
 }
 
 std::string Vector4::ToString() const {
-    return FormatUtils::formatString("[{}, {}, {}, {}]", x, y, z, w);
+    std::ostringstream oss;
+    oss << "[" << x << ", " << y << ", " << z << ", " << w << "]";
+    return oss.str();
 }
 Matrix Vector4::ToMatrix4x1() const {
     float data[4] = { x, y, z, w };

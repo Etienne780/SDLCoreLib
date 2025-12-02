@@ -1,11 +1,10 @@
-#include <stdexcept>
+#include <sstream>
 #include <cmath>
 
 #include "CoreLib\Math\Vector2.h"
 #include "CoreLib\Math\Vector4.h"
 #include "CoreLib\Math\Matrix.h"
 #include "CoreLib\Math\MathUtil.h"
-#include "CoreLib\FormatUtils.h"
 
 #include "CoreLib\Math\Vector3.h"
 
@@ -38,7 +37,9 @@ Vector3::Vector3(const Vector4& vec)
 }
 
 std::string Vector3::ToString() const {
-    return FormatUtils::formatString("[{}, {}, {}]", x, y, z);
+    std::ostringstream oss;
+    oss << "[" << x << ", " << y << ", " << z << "]";
+    return oss.str();
 }
 
 Matrix Vector3::ToMatrix3x1() const {
