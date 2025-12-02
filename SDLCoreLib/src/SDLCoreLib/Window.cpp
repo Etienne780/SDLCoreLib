@@ -174,6 +174,14 @@ namespace SDLCore {
 		CallCallbacks(m_onWinResizeCallbacks, *this);
 	}
 
+	void Window::CallOnWindowFocusGain() {
+		CallCallbacks(m_onWinFocusGainCallbacks, *this);
+	}
+
+	void Window::CallOnWindowFocusLost() {
+		CallCallbacks(m_onWinFocusLostCallbacks, *this);
+	}
+
 	SDL_WindowFlags Window::GetWindowFlags() const {
 		SDL_WindowFlags flags = 0;
 
@@ -300,9 +308,11 @@ namespace SDLCore {
 			break;
 		case SDL_EVENT_WINDOW_FOCUS_GAINED:
 			m_isFocused = true;
+			CallOnWindowFocusGain();
 			break;
 		case SDL_EVENT_WINDOW_FOCUS_LOST:
 			m_isFocused = false;
+			CallOnWindowFocusLost();
 			break;
 		default:
 			break;
@@ -560,32 +570,32 @@ namespace SDLCore {
 		return this;
 	}
 
-	WindowCallbackID Window::AddOnDestroy(Callback&& cb) {
-		return AddCallback<Callback>(m_onDestroyCallbacks, std::move(cb));
+	WindowCallbackID Window::AddOnDestroy(VoidCallback&& cb) {
+		return AddCallback<VoidCallback>(m_onDestroyCallbacks, std::move(cb));
 	}
 
 	Window* Window::RemoveOnDestroy(WindowCallbackID id) {
-		if (!RemoveCallback<Callback>(m_onDestroyCallbacks, id))
+		if (!RemoveCallback<VoidCallback>(m_onDestroyCallbacks, id))
 			Log::Warn("SDLCore::Window::RemoveOnDestroy: No callback found with ID '{}', nothing was removed.", id);
 		return this;
 	}
 
-	WindowCallbackID Window::AddOnSDLWindowClose(Callback&& cb) {
-		return AddCallback<Callback>(m_onSDLWindowCloseCallbacks, std::move(cb));
+	WindowCallbackID Window::AddOnSDLWindowClose(VoidCallback&& cb) {
+		return AddCallback<VoidCallback>(m_onSDLWindowCloseCallbacks, std::move(cb));
 	}
 
 	Window* Window::RemoveOnSDLWindowClose(WindowCallbackID id) {
-		if (!RemoveCallback<Callback>(m_onSDLWindowCloseCallbacks, id))
+		if (!RemoveCallback<VoidCallback>(m_onSDLWindowCloseCallbacks, id))
 			Log::Warn("SDLCore::Window::RemoveOnSDLWindowClose: No callback found with ID '{}', nothing was removed.", id);
 		return this;
 	}
 
-	WindowCallbackID Window::AddOnSDLRendererDestroy(Callback&& cb) {
-		return AddCallback<Callback>(m_onSDLRendererDestroyCallbacks, std::move(cb));
+	WindowCallbackID Window::AddOnSDLRendererDestroy(VoidCallback&& cb) {
+		return AddCallback<VoidCallback>(m_onSDLRendererDestroyCallbacks, std::move(cb));
 	}
 
 	Window* Window::RemoveOnSDLRendererDestroy(WindowCallbackID id) {
-		if (!RemoveCallback<Callback>(m_onSDLRendererDestroyCallbacks, id))
+		if (!RemoveCallback<VoidCallback>(m_onSDLRendererDestroyCallbacks, id))
 			Log::Warn("SDLCore::Window::RemoveOnSDLRendererDestroy: No callback found with ID '{}', nothing was removed.", id);
 		return this;
 	}
@@ -597,6 +607,26 @@ namespace SDLCore {
 	Window* Window::RemoveOnWindowResize(WindowCallbackID id) {
 		if (!RemoveCallback<WinCallback>(m_onWinResizeCallbacks, id))
 			Log::Warn("SDLCore::Window::RemoveOnWindowResize: No callback found with ID '{}', nothing was removed.", id);
+		return this;
+	}
+
+	WindowCallbackID Window::AddOnWindowFocusGain(WinCallback&& cb) {
+		return AddCallback<WinCallback>(m_onWinFocusGainCallbacks, std::move(cb));
+	}
+
+	Window* Window::RemoveOnWindowFocusGain(WindowCallbackID id) {
+		if (!RemoveCallback<WinCallback>(m_onWinFocusGainCallbacks, id))
+			Log::Warn("SDLCore::Window::RemoveOnWindowFocusGain: No callback found with ID '{}', nothing was removed.", id);
+		return this;
+	}
+
+	WindowCallbackID Window::AddOnWindowFocusLost(WinCallback&& cb) {
+		return AddCallback<WinCallback>(m_onWinFocusLostCallbacks, std::move(cb));
+	}
+
+	Window* Window::RemoveOnWindowFocusLost(WindowCallbackID id) {
+		if (!RemoveCallback<WinCallback>(m_onWinFocusLostCallbacks, id))
+			Log::Warn("SDLCore::Window::RemoveOnWindowFocusLost: No callback found with ID '{}', nothing was removed.", id);
 		return this;
 	}
 

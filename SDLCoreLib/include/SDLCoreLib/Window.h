@@ -35,7 +35,7 @@ namespace SDLCore {
 	class Window {
 	friend class Application;
 	public:
-		using Callback = std::function<void()>;
+		using VoidCallback = std::function<void()>;
 		using WinCallback = std::function<void(Window& win)>;
 
 		~Window();
@@ -361,7 +361,7 @@ namespace SDLCore {
 		* @param cb The function or lambda to call on window close.
 		* @return A unique WindowCallbackID that can be used to remove the callback later.
 		*/
-		WindowCallbackID AddOnDestroy(Callback&& cb);
+		WindowCallbackID AddOnDestroy(VoidCallback&& cb);
 
 		/**
 		* @brief Removes a previously registered close callback.
@@ -383,7 +383,7 @@ namespace SDLCore {
 		* @param cb The function or lambda to call on window close.
 		* @return A unique WindowCallbackID that can be used to remove the callback later.
 		*/
-		WindowCallbackID AddOnSDLWindowClose(Callback&& cb);
+		WindowCallbackID AddOnSDLWindowClose(VoidCallback&& cb);
 
 		/**
 		* @brief Removes a previously registered close callback.
@@ -405,7 +405,7 @@ namespace SDLCore {
 		* @param cb The function or lambda to execute on SDL renderer destruction.
 		* @return A unique WindowCallbackID used to remove the callback later.
 		*/
-		WindowCallbackID AddOnSDLRendererDestroy(Callback&& cb);
+		WindowCallbackID AddOnSDLRendererDestroy(VoidCallback&& cb);
 
 		/**
 		* @brief Removes a previously registered SDL-renderer-destroy callback.
@@ -440,6 +440,52 @@ namespace SDLCore {
 		* @return Pointer to this Window for method chaining.
 		*/
 		Window* RemoveOnWindowResize(WindowCallbackID id);
+
+		/**
+		* @brief Subscribes a callback triggered when the window gains input focus.
+		*
+		* This callback is invoked when the operating system notifies that this window
+		* has become the active/focused window. Multiple callbacks may be registered.
+		*
+		* @param cb The function or lambda to execute when the window gains focus.
+		* @return A unique WindowCallbackID that can be used to remove the callback later.
+		*/
+		WindowCallbackID AddOnWindowFocusGain(WinCallback&& cb);
+
+		/**
+		* @brief Removes a previously registered window-focus-gain callback.
+		*
+		* Use the WindowCallbackID returned from AddOnWindowFocusGain to remove a
+		* specific entry. If the ID is invalid or the callback was already removed,
+		* no action is taken.
+		*
+		* @param id The unique identifier of the callback to remove.
+		* @return Pointer to this Window for method chaining.
+		*/
+		Window* RemoveOnWindowFocusGain(WindowCallbackID id);
+
+		/**
+		* @brief Subscribes a callback triggered when the window loses input focus.
+		*
+		* This callback is invoked when the operating system reports that this window
+		* is no longer the focused/active window. Multiple callbacks may be registered.
+		*
+		* @param cb The function or lambda to execute when the window loses focus.
+		* @return A unique WindowCallbackID that can be used to remove the callback later.
+		*/
+		WindowCallbackID AddOnWindowFocusLost(WinCallback&& cb);
+
+		/**
+		* @brief Removes a previously registered window-focus-lost callback.
+		*
+		* Use the WindowCallbackID returned from AddOnWindowFocusLost to remove a
+		* specific entry. If the ID is invalid or the callback was already removed,
+		* this function performs no action.
+		*
+		* @param id The unique identifier of the callback to remove.
+		* @return Pointer to this Window for method chaining.
+		*/
+		Window* RemoveOnWindowFocusLost(WindowCallbackID id);
 
 		// ======= Properties that require window recreation =======
 
@@ -505,10 +551,12 @@ namespace SDLCore {
 		Vector2 m_maxSize{ 0, 0 };
 
 		IDManager m_callbackIDManager;
-		std::vector<WindowCallback<Callback>> m_onDestroyCallbacks;
-		std::vector<WindowCallback<Callback>> m_onSDLWindowCloseCallbacks;
-		std::vector<WindowCallback<Callback>> m_onSDLRendererDestroyCallbacks;
+		std::vector<WindowCallback<VoidCallback>> m_onDestroyCallbacks;
+		std::vector<WindowCallback<VoidCallback>> m_onSDLWindowCloseCallbacks;
+		std::vector<WindowCallback<VoidCallback>> m_onSDLRendererDestroyCallbacks;
 		std::vector<WindowCallback<WinCallback>> m_onWinResizeCallbacks;
+		std::vector<WindowCallback<WinCallback>> m_onWinFocusGainCallbacks;
+		std::vector<WindowCallback<WinCallback>> m_onWinFocusLostCallbacks;
 
 		// ======= Renderer properties =======
 		int m_vsync = 0;
@@ -559,6 +607,8 @@ namespace SDLCore {
 		void CallOnSDLWindowClose();
 		void CallOnSDLRendererDestroy();
 		void CallOnWindowResize();
+		void CallOnWindowFocusGain();
+		void CallOnWindowFocusLost();
 		
 		/**
 		* @brief Gets SDL window flags based on current settings
