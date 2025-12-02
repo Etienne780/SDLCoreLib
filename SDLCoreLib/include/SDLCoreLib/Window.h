@@ -6,6 +6,7 @@
 #include <CoreLib/Math/Vector2.h>
 #include <CoreLib/FormatUtils.h>
 
+#include "Types/TextureSurface.h"
 #include "IDManager.h"
 #include "SDLCoreTypes.h"
 
@@ -23,6 +24,7 @@ namespace SDLCore {
 	};
 
 	class Application;
+	class Texture;
 
 	/**
 	* @brief Encapsulates an SDL window and its renderer, providing
@@ -372,6 +374,36 @@ namespace SDLCore {
 		Window* SetState(WindowState state);
 
 		/**
+		* @brief Sets the window icon using a Texture.
+		*
+		* This function extracts the underlying SDL_Surface from the provided
+		* Texture and sets it as the icon for this window. High-DPI alternate
+		* representations from the TextureSurface are handled automatically if present.
+		*
+		* @param texture Texture object containing the icon image.
+		* @return Pointer to this Window for method chaining.
+		*
+		* @note If the SDL window is not valid or the surface is invalid, an error
+		*       will be logged via Log::Error().
+		*/
+		Window* SetIcon(const Texture& texture);
+
+		/**
+		* @brief Sets the window icon using a TextureSurface.
+		*
+		* The given TextureSurface is applied directly as the window icon.
+		* If the surface has alternate images for different DPI scales, SDL will
+		* automatically use the best match. On failure, an SDL error is logged.
+		*
+		* @param textureSurface TextureSurface containing the icon image.
+		* @return Pointer to this Window for method chaining.
+		*
+		* @note Only call this on the main thread. If the surface is invalid or
+		*       the SDL window handle is null, the icon will not be updated.
+		*/
+		Window* SetIcon(const TextureSurface& textureSurface);
+
+		/**
 		* @brief Subscribes a callback to be called when this window object is destryoed.
 		*
 		* The callback will be stored internally and invoked when the window object is destroyed
@@ -548,6 +580,7 @@ namespace SDLCore {
 
 		// ======= Window properties =======
 		WindowID m_id{ SDLCORE_INVALID_ID };
+		TextureSurface m_icon;
 		std::string m_name = "Untitled";
 		mutable int m_positionX = -1;	// < dosent get update automaticly
 		mutable int m_positionY = -1;	// < dosent get update automaticly

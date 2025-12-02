@@ -9,7 +9,10 @@ App::App()
 }
 
 void App::OnStart() {
-    CreateWindow(&m_winID, "Tetris", 800, 800);
+    SDLCore::Texture tex("J:/images/image.png");
+    auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
+
+    win->SetIcon(tex);
 }
 
 void App::OnUpdate() {

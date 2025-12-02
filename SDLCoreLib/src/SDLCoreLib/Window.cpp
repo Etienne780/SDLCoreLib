@@ -1,5 +1,7 @@
 #include <CoreLib/Log.h>
+
 #include "CoreTime.h"
+#include "Types/Texture.h"
 #include "Window.h"
 
 namespace SDLCore {
@@ -441,16 +443,6 @@ namespace SDLCore {
 		return this;
 	}
 
-	Window* Window::SetBorderless(bool value) {
-		m_borderless = value;
-
-		if (m_sdlWindow) {
-			SDL_SetWindowBordered(m_sdlWindow.get(), m_borderless);
-		}
-
-		return this;
-	}
-
 	Window* Window::SetOpacity(float opacity) {
 		if (opacity < 0)
 			opacity = 0;
@@ -565,8 +557,16 @@ namespace SDLCore {
 		return this;
 	}
 
-	Window* Window::SetBufferTransparent(bool value) {
-		m_transparentBuffer = value;
+	Window* Window::SetIcon(const Texture& texture) {
+		return SetIcon(texture.GetSurface());
+	}
+
+	Window* Window::SetIcon(const TextureSurface& textureSurface) {
+		m_icon = textureSurface;
+		if (m_sdlWindow && !m_icon.IsInvalid()) {
+			if (!SDL_SetWindowIcon(m_sdlWindow.get(), m_icon.GetSurface()))
+				Log::Error("SDL Error: {}", SDL_GetError());
+		}
 		return this;
 	}
 
@@ -627,6 +627,21 @@ namespace SDLCore {
 	Window* Window::RemoveOnWindowFocusLost(WindowCallbackID id) {
 		if (!RemoveCallback<WinCallback>(m_onWinFocusLostCallbacks, id))
 			Log::Warn("SDLCore::Window::RemoveOnWindowFocusLost: No callback found with ID '{}', nothing was removed.", id);
+		return this;
+	}
+
+	Window* Window::SetBorderless(bool value) {
+		m_borderless = value;
+
+		if (m_sdlWindow) {
+			SDL_SetWindowBordered(m_sdlWindow.get(), m_borderless);
+		}
+
+		return this;
+	}
+
+	Window* Window::SetBufferTransparent(bool value) {
+		m_transparentBuffer = value;
 		return this;
 	}
 
