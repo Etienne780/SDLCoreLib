@@ -43,7 +43,7 @@ namespace SDLCore {
     }
 
 	SoundClip::~SoundClip() {
-        SoundManager::DeleteSound(m_id);
+        SoundManager::DeleteSound(*this);
         idManager.FreeUniqueIdentifier(m_id.value);
 	}
 
@@ -110,7 +110,7 @@ namespace SDLCore {
             return *this;
         }
 
-        SoundClip subSound = *this;// need to check what this does
+        SoundClip subSound = *this;// copy sound (increase ref count)
         subSound.m_subID = SoundClipID(idManager.GetNewUniqueIdentifier());
         return subSound;
     }
@@ -156,7 +156,7 @@ namespace SDLCore {
     }
 
     std::string SoundClip::GetName() const {
-        m_path.filename().string();
+        return m_path.filename().string();
     }
 
     SystemFilePath SoundClip::GetPath() const {
@@ -213,7 +213,6 @@ namespace SDLCore {
 
         m_frameCount = MIX_GetAudioDuration(tempAudio);
 
-        
         SDL_AudioSpec spec;
         MIX_GetAudioFormat(tempAudio, &spec);
         m_frequency = spec.freq;
