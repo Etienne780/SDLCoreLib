@@ -155,6 +155,14 @@ namespace SDLCore {
         return m_position;
     }
 
+    std::string SoundClip::GetName() const {
+        m_path.filename().string();
+    }
+
+    SystemFilePath SoundClip::GetPath() const {
+        return m_path;
+    }
+
     SoundClip* SoundClip::SetVolume(float volume) {
         m_volume = volume;
         SoundManager::ApplyClipParams(*this);
