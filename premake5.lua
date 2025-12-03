@@ -1,4 +1,4 @@
-workspace "Game"
+workspace "Project"
     architecture "x64"
 
     configurations { 
