@@ -39,10 +39,16 @@ namespace SDLCore {
 			return value == invalidValue;
 		}
 
+		/*
+		* @brief Sets the id to an invalid value
+		*/
 		void SetInvalid() {
 			value = invalidValue;
 		}
 
+		/*
+		* @brief Converts the ID to a string
+		*/
 		std::string ToString() const {
 			return IsInvalid() ? "InvalidID" : FormatUtils::toString(value);
 		}
