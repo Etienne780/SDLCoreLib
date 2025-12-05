@@ -39,6 +39,10 @@ namespace SDLCore {
 			return value == invalidValue;
 		}
 
+		void SetInvalid() {
+			value = invalidValue;
+		}
+
 		std::string ToString() {
 			return IsInvalid() ? "InvalidID" : FormatUtils::toString(value);
 		}
