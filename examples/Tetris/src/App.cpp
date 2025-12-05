@@ -8,6 +8,7 @@ App::App()
     : Application("Tetris", SDLCore::Version(1, 0)) {
 }
 
+SDLCore::WindowID id;
 void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
@@ -19,10 +20,9 @@ void App::OnUpdate() {
     if (GetWindowCount() <= 0)
         Quit();
 
-    if (m_winID != SDLCORE_INVALID_ID) {
+    if (!m_winID.IsInvalid()) {
         using namespace SDLCore;
         Input::SetWindow(m_winID);
-
 
         namespace RE = SDLCore::Render;
         RE::SetWindowRenderer(m_winID);
@@ -30,6 +30,9 @@ void App::OnUpdate() {
         RE::Clear();
 
         RE::Present();
+
+        if (Input::KeyJustPressed(KeyCode::ESCAPE))
+            DeleteWindow(m_winID);
     }
 }
 
