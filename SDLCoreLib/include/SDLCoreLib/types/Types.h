@@ -35,7 +35,7 @@ namespace SDLCore {
 		* @brief The result of value == SDLCORE_INVALID_ID
 		* @return true on invalid value
 		*/
-		bool IsInvalid() {
+		bool IsInvalid() const {
 			return value == invalidValue;
 		}
 
@@ -43,7 +43,7 @@ namespace SDLCore {
 			value = invalidValue;
 		}
 
-		std::string ToString() {
+		std::string ToString() const {
 			return IsInvalid() ? "InvalidID" : FormatUtils::toString(value);
 		}
 
