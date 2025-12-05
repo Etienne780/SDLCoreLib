@@ -112,6 +112,8 @@ namespace SDLCore {
         * @return Position vector used for 2D positional audio.
         */
         Vector2 GetPosition() const;
+        std::string GetName() const;
+        SystemFilePath GetPath() const;
 
         /**
         * @brief Sets the linear gain factor of the clip.
@@ -188,6 +190,42 @@ namespace SDLCore {
         bool CreateStaticAudio(const char* path, bool predecode);
     };
 
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::SoundClip>(SDLCore::SoundClip clip) {
+    const bool hasName = !clip.GetName().empty();
+    const bool isSub = clip.IsSubSound();
+
+    if (isSub) {
+        if (hasName) {
+            return FormatUtils::formatString(
+                "SoundClip[name='{}', id={}, sub={}]",
+                clip.GetName(),
+                clip.GetID(),
+                clip.GetSubID()
+            );
+        }
+
+        return FormatUtils::formatString(
+            "SoundClip[id={}, sub={}]",
+            clip.GetID(),
+            clip.GetSubID()
+        );
+    }
+
+    if (hasName) {
+        return FormatUtils::formatString(
+            "SoundClip[name='{}', id={}]",
+            clip.GetName(),
+            clip.GetID()
+        );
+    }
+
+    return FormatUtils::formatString(
+        "SoundClip[id={}]",
+        clip.GetID()
+    );
 }
 
 template<>

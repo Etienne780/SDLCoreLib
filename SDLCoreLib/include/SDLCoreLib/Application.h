@@ -13,7 +13,10 @@
 
 namespace SDLCore {
 
+	class Window;
+
 	class Application {
+	friend class Window;
 	public:
 		Application(std::string& name, const Version& version);
 		Application(std::string&& name, const Version& version);
@@ -83,6 +86,18 @@ namespace SDLCore {
 		void DeleteAllWindows();
 
 		/**
+		* @brief Returns whether a window currently has cursor locking enabled.
+		* @return True if cursor locking is active for a window, otherwise false.
+		*/
+		bool IsCursorLocked() const;
+
+		/**
+		* @brief Returns whether cursor locking is configured to auto-center on window resize.
+		* @return True when lock position is automatically updated to the window center.
+		*/
+		bool IsCursorLockCenter() const;
+
+		/**
 		* @brief Gets a window with a given id
 		* @param id to search for
 		* @param raw ptr to the window or nullptr if not found
@@ -95,10 +110,23 @@ namespace SDLCore {
 		*/
 		size_t GetWindowCount() const;
 
-		/**/
+		/*
+		* @brief Gets the name of the current application
+		* @return Application name
+		*/
 		std::string GetName() const;
 
+		/*
+		* @brief Gets the Version of the current application
+		* @return Application version
+		*/
 		Version GetVersion() const;
+
+		/**
+		* @brief Returns the window ID for which cursor locking is currently active.
+		* @return The WindowID of the locked window, or an invalid ID if no lock is active.
+		*/
+		WindowID GetCursorLockWinID() const;
 
 		/**
 		* @brief Sets the application's frame rate cap or VSync mode.
@@ -116,8 +144,57 @@ namespace SDLCore {
 		*/
 		void SetFPSCap(int value);
 
+		/**
+		* @brief Enables or disables cursor locking for a specific window.
+		* 
+		* When cursor locking is active, the cursor is repositioned according to the lock configuration.
+		* For input processing while the cursor is locked, relative mouse movement should be used
+		* (e.g. SDL relative motion or Input::GetRelativePosition()), as absolute coordinates are not meaningful
+		* during cursor lock.
+		* 
+		* @param winID Identifier of the target window.
+		* @param active Enables cursor locking when true, disables when false.
+		* @param center When true, the lock position is automatically updated to the window center.
+		* @return True on successful configuration, false if the window does not exist.
+		*/
+		bool SetCursorLock(WindowID winID, bool active, bool center = true);
+
+		/**
+		* @brief Activates or deactivates the internal cursor-lock behavior for the currently locked window.
+		* 
+		* For input processing while cursor locking is active, relative mouse movement should be used
+		* (e.g. SDL relative motion or engine-provided relative delta). Absolute mouse positions do not reflect
+		* real cursor motion when locking is enabled.
+		* 
+		* @param active When true, cursor grab is enforced; when false, the previous grab state is restored.
+		*/
+		void SetCursorLockActive(bool active);
+
+		/**
+		* @brief Sets the horizontal lock position for the cursor.
+		* @param x Desired lock position on the x-axis (clamped to >= 0).
+		*/
+		void SetCursorLockPosX(float x);
+
+		/**
+		* @brief Sets the vertical lock position for the cursor.
+		* @param y Desired lock position on the y-axis (clamped to >= 0).
+		*/
+		void SetCursorLockPosY(float y);
+
+		/*
+		* @brief Called on programm start
+		*/
 		virtual void OnStart() = 0;
+
+		/*
+		* @brief called every frame of the programm
+		*/
 		virtual void OnUpdate() = 0;
+
+		/*
+		* @brief called called on programm end
+		*/
 		virtual void OnQuit() = 0;
 	private:
 		std::string m_name = "UNKNOWN";
@@ -135,10 +212,28 @@ namespace SDLCore {
 		int m_vsync = 0;
 		int m_fpsCap = 0;
 
+		WindowID m_cursorLockWinID;
+		WindowCallbackID m_cursorLockResizeCallbackID;
+		WindowCallbackID m_cursorLockFocusGainCallbackID;
+		WindowCallbackID m_cursorLockFocusLostCallbackID;
+		std::weak_ptr<SDL_Window> m_cursorLockSDLWin;
+		bool m_cursorLockWinActive = false;
+		bool m_cursorLockLastWinCursorGrab = false;// stores the last state of cursor grab before window was locked
+		float m_cursorLockPosX = 0;
+		float m_cursorLockPosY = 0;
+		float m_cursorLastTime = 0;
+		const float m_cursorTick = 0.1f;// intervall speed of the cursorLock (in sec)
+
 		void Init();
 		void ProcessSDLPollEvents();
 		void ProcessSDLPollEventWindow(const std::unique_ptr<Window>& window);
 		void FPSCapDelay(uint64_t frameStartTime) const;
+		void LockCursor();
+		/*
+		* @brief Sets every var that is used for cursorlock to its default values.
+		* and unsubs to the old win resize if the cb exists
+		*/
+		void ResetCursorLockParams();
 
 		/**
 		* @brief Sets the given value to all windows 

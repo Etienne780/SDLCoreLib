@@ -1,8 +1,10 @@
 #include <CoreLib/Log.h>
 
+#include "Types/Input/InputManager.h"
 #include "SDLCoreError.h"
 #include "CoreTime.h"
 #include "Types/Texture.h"
+#include "Application.h"
 #include "Window.h"
 
 namespace SDLCore {
@@ -16,7 +18,7 @@ namespace SDLCore {
 	}
 
 	Window::~Window() {
-		// DestroyWindow gets called in Application::RemoveWindow before this destructor gets called
+		// DestroyWindow gets called in Application::DeleteWindow before this destructor gets called
 		// DestroyWindow();
 		CallOnDestroy();
 	}
@@ -87,7 +89,6 @@ namespace SDLCore {
 			AddErrorF("\nSDLCore::Window::CreateWindow: Failed to set window properties for '{}'", m_name);
 			return false;
 		}
-
 		return true;
 	}
 
@@ -130,7 +131,7 @@ namespace SDLCore {
 		if (m_sdlRenderer) {
 			CallOnSDLRendererDestroy();
 			SDL_DestroyRenderer(m_sdlRenderer.get());
-			m_sdlRenderer.reset();
+			m_sdlRenderer = nullptr;
 		}
 	}
 
@@ -162,6 +163,14 @@ namespace SDLCore {
 
 		m_isVisible = false;
 		return true;
+	}
+
+	void Window::LockCursor(bool value) const {
+		auto* app = Application::GetInstance();
+		if (!app)
+			return;
+
+		app->SetCursorLock(m_id, value);
 	}
 
 	bool Window::HasWindow() const {
@@ -213,6 +222,83 @@ namespace SDLCore {
 		CallCallbacks(m_onWinFocusLostCallbacks, *this);
 	}
 
+	void Window::PollPosition() const {
+		if (!m_sdlWindow)
+			return;
+
+		auto now = Time::GetFrameCount();
+		if (m_positionFetchedTime == now)
+			return;
+
+		m_positionFetchedTime = now;
+		SDL_GetWindowPosition(m_sdlWindow.get(), &m_positionX, &m_positionY);
+	}
+
+	void Window::PollSize() const {
+		if (!m_sdlWindow)
+			return;
+
+		auto now = Time::GetFrameCount();
+		if (m_sizeFetchedTime == now)
+			return;
+
+		m_sizeFetchedTime = now;
+		SDL_GetWindowSize(m_sdlWindow.get(), &m_width, &m_height);
+	}
+
+	void Window::UpdateWindowEvents(Uint32 type) {
+		switch (type) {
+		case SDL_EVENT_WINDOW_RESIZED:
+			CallOnWindowResize();
+			break;
+		case SDL_EVENT_WINDOW_MINIMIZED:
+			m_state = WindowState::MINIMIZED;
+			break;
+		case SDL_EVENT_WINDOW_MAXIMIZED:
+			m_state = WindowState::MAXIMIZED;
+			break;
+		case SDL_EVENT_WINDOW_RESTORED:
+			m_state = WindowState::NORMAL;
+			break;
+		case SDL_EVENT_WINDOW_SHOWN:
+			m_isVisible = true;
+			break;
+		case SDL_EVENT_WINDOW_HIDDEN:
+			m_isVisible = false;
+			break;
+		case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+			m_state = WindowState::FULLSCREEN_EXCLUSIVE;
+			m_isVisible = true;
+			break;
+		case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
+			m_state = WindowState::NORMAL;
+			m_isVisible = true;
+			break;
+		case SDL_EVENT_WINDOW_FOCUS_GAINED:
+			m_isFocused = true;
+			CallOnWindowFocusGain();
+			break;
+		case SDL_EVENT_WINDOW_FOCUS_LOST:
+			m_isFocused = false;
+			CallOnWindowFocusLost();
+			break;
+		default:
+			break;
+		}
+
+		UpdateCursorVisibility();
+	}
+
+	bool Window::UpdateCursorVisibility() const {
+		if (m_isFocused) {
+			return (m_isCursorHiden) ?
+				SDL_HideCursor() : SDL_ShowCursor();
+		}
+		else {
+			SDL_ShowCursor();
+		}
+	}
+
 	SDL_WindowFlags Window::GetWindowFlags() const {
 		SDL_WindowFlags flags = 0;
 
@@ -229,29 +315,31 @@ namespace SDLCore {
 			SetError("SDLCore::Window::SetWindowProperties: SDL window is null, cannot set properties!");
 			return false;
 		}
+		SDL_Window* window = m_sdlWindow.get();
 
 		// Show or hide the window
 		if (m_isVisible) {
-			SDL_ShowWindow(m_sdlWindow.get());
+			SDL_ShowWindow(window);
 		}
 		else {
-			SDL_HideWindow(m_sdlWindow.get());
+			SDL_HideWindow(window);
 		}
 
-		SDL_SetWindowResizable(m_sdlWindow.get(), m_resizable);
-		SDL_SetWindowAlwaysOnTop(m_sdlWindow.get(), m_alwaysOnTop);
-		SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
-		SDL_SetWindowAspectRatio(m_sdlWindow.get(), m_minAspectRatio, m_maxAspectRatio);
+		SDL_SetWindowResizable(window, m_resizable);
+		SDL_SetWindowAlwaysOnTop(window, m_alwaysOnTop);
+		SDL_SetWindowOpacity(window, m_opacity);
+		SDL_SetWindowAspectRatio(window, m_minAspectRatio, m_maxAspectRatio);
 
-		SDL_SetWindowMinimumSize(m_sdlWindow.get(),
+		SDL_SetWindowMinimumSize(window,
 			static_cast<int>(m_minSize.x),
 			static_cast<int>(m_minSize.y));
-		SDL_SetWindowMaximumSize(m_sdlWindow.get(),
+		SDL_SetWindowMaximumSize(window,
 			static_cast<int>(m_maxSize.x),
 			static_cast<int>(m_maxSize.y));
 
 		if (!m_icon.IsInvalid())
-			SDL_SetWindowIcon(m_sdlWindow.get(), m_icon.GetSurface());
+			SDL_SetWindowIcon(window, m_icon.GetSurface());
+		SDL_SetWindowMouseGrab(window, m_cursorGrab);
 
 		if (!SetWindowPosInternal()) {
 			SetError("SDLCore::Window::SetWindowProperties: Failed to set window position!");
@@ -296,77 +384,12 @@ namespace SDLCore {
 		return true;
 	}
 
-	void Window::PollPosition() const {
-		if (!m_sdlWindow)
-			return;
-
-		auto now = Time::GetFrameCount();
-		if (m_positionFetchedTime == now)
-			return;
-
-		m_positionFetchedTime = now;
-		SDL_GetWindowPosition(m_sdlWindow.get(), &m_positionX, &m_positionY);
-	}
-
-	void Window::PollSize() const {
-		if (!m_sdlWindow)
-			return;
-
-		auto now = Time::GetFrameCount();
-		if (m_sizeFetchedTime == now)
-			return;
-
-		m_sizeFetchedTime = now;
-		SDL_GetWindowSize(m_sdlWindow.get(), &m_width, &m_height);
-	}
-
 	bool Window::SetWindowPosInternal() {
 		if (!m_sdlWindow)
 			return false;
 		return SDL_SetWindowPosition(m_sdlWindow.get(),
 			(m_positionX == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionX,
 			(m_positionY == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionY);
-	}
-
-	void Window::UpdateWindowEvents(Uint32 type) {
-		switch (type) {
-		case SDL_EVENT_WINDOW_RESIZED:
-			CallOnWindowResize();
-			break;
-		case SDL_EVENT_WINDOW_MINIMIZED:
-			m_state = WindowState::MINIMIZED;
-			break;
-		case SDL_EVENT_WINDOW_MAXIMIZED:
-			m_state = WindowState::MAXIMIZED;
-			break;
-		case SDL_EVENT_WINDOW_RESTORED:
-			m_state = WindowState::NORMAL;
-			break;
-		case SDL_EVENT_WINDOW_SHOWN:
-			m_isVisible = true;
-			break;
-		case SDL_EVENT_WINDOW_HIDDEN:
-			m_isVisible = false;
-			break;
-		case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
-			m_state = WindowState::FULLSCREEN_EXCLUSIVE;
-			m_isVisible = true;
-			break;
-		case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
-			m_state = WindowState::NORMAL;
-			m_isVisible = true;
-			break;
-		case SDL_EVENT_WINDOW_FOCUS_GAINED:
-			m_isFocused = true;
-			CallOnWindowFocusGain();
-			break;
-		case SDL_EVENT_WINDOW_FOCUS_LOST:
-			m_isFocused = false;
-			CallOnWindowFocusLost();
-			break;
-		default:
-			break;
-		}
 	}
 
 	int Window::GetVsync() const {
@@ -391,6 +414,10 @@ namespace SDLCore {
 
 	WindowState Window::GetState() const {
 		return m_state;
+	}
+
+	bool Window::GetCursorGrab() const {
+		return m_cursorGrab;
 	}
 
 	DisplayID Window::GetDisplayID() const {
@@ -703,6 +730,10 @@ namespace SDLCore {
 
 	bool Window::SetIcon(const TextureSurface& textureSurface) {
 		m_icon = textureSurface;
+		// icon can be set before window creation
+		if (!m_sdlWindow)
+			return true;
+
 		if (!m_icon.IsInvalid()) {
 			if (!SDL_SetWindowIcon(m_sdlWindow.get(), m_icon.GetSurface())) {
 				SetErrorF("SDLCore::Window::SetIcon: Failed to set window icon: {}", SDL_GetError());
@@ -710,6 +741,28 @@ namespace SDLCore {
 			}
 		}
 
+		return true;
+	}
+
+	bool Window::SetCursorGrab(bool value) {
+		m_cursorGrab = value;
+		if (!m_sdlWindow)
+			return true;
+	
+		if (!SDL_SetWindowMouseGrab(m_sdlWindow.get(), value)) {
+			SetErrorF("SDLCore::Window::SetCursorGrab: Failed to set window cursor grab: {}", SDL_GetError());
+			return false;
+		}
+		return true;
+	}
+
+	bool Window::SetCursorHiden(bool visibility) {
+		m_isCursorHiden = visibility;
+
+		if (!UpdateCursorVisibility()) {
+			SetErrorF("SDLCore::Window::SetCursorHidden: Failed to set cursor hidden: {}", SDL_GetError());
+			return false;
+		}
 		return true;
 	}
 

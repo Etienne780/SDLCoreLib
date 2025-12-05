@@ -29,6 +29,12 @@ namespace SDLCore {
 		*/
 		static void SetWindow(WindowID windowID = WindowID(SDLCORE_INVALID_ID));
 
+		/*
+		* @brief Gets the currently active window for input queries
+		* @return window id
+		*/
+		static WindowID GetWindowID();
+
 		/**
 		* @brief Resets the currently active window state to no window.
 		*/
@@ -204,16 +210,28 @@ namespace SDLCore {
 
 		/**
 		* @brief Gets the current mouse position relative to the active window.
-		* @return Current mouse position as a Vector2.
+		* @return Current mouse position as a Vector2. Returns (-1,-1) if no matching window exists.
 		*/
 		static Vector2 GetMousePosition();
 
 		/**
 		* @brief Gets the change in mouse position since the last frame.
 		* @param invertYAchses Inverts the Y delta if true.
-		* @return Mouse movement delta as a Vector2.
+		* @return Mouse movement delta as a Vector2. Returns (-1,-1) if no matching window exists.
 		*/
 		static Vector2 GetMouseDelta(bool invertYAchses = false);
+
+		/**
+		* @brief Returns the most recent relative mouse movement for the active input window.
+		*
+		* This function provides the delta supplied by SDL_EVENT_MOUSE_MOTION
+		* when SDL is in relative mouse mode (SDL_SetRelativeMouseMode).
+		* If no explicit active window is set, the function falls back to the window
+		* that currently has keyboard focus.
+		*
+		* @return Relative mouse movement as Vector2. Returns (-1,-1) if no matching window exists.
+		*/
+		Vector2 Input::GetRelativePosition();
 
 		/**
 		* @brief Gets the mouse scroll direction (1 = up, -1 = down, 0 = none).
@@ -283,6 +301,7 @@ namespace SDLCore {
 
 			Vector2 mousePos{ 0, 0 };
 			Vector2 lastMousePos{ 0, 0 };
+			Vector2 relativeMousePos{ 0, 0 };
 			int scrollDir = 0;
 
 			WindowInputState(SDL_WindowID _sdlWinID)
@@ -294,7 +313,7 @@ namespace SDLCore {
 		static inline std::vector<WindowInputState> s_windowStates;
 		static inline WindowInputState* s_activeWindowState = nullptr;
 		static inline SDL_WindowID s_activeSDLWindowID = 0;
-
+		static inline WindowID s_activeWinID;
 
 		/**
 		* @brief Stores button and axis states for a single gamepad.

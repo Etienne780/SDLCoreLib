@@ -38,17 +38,6 @@ namespace SDLCore {
         static bool SetAudioDevice(AudioPlaybackDeviceID deviceID);
 
         /**
-        * @brief Adds a SoundClip to the internal audio storage.
-        *
-        * If the clip does not already exist in the storage, it creates a new audio track.
-        *
-        * @param clip The SoundClip to add.
-        * @param tag Optional tag to categorize the sound. Defaults to SoundTags::DEFAULT.
-        * @return true on success, false if adding failed. Call SDLCore::GetError() for more information.
-        */
-        static bool AddSound(const SoundClip& clip, const std::string& tag = SoundTags::DEFAULT);
-
-        /**
         * @brief Removes a SoundClip from the internal storage, stopping playback if necessary.
         *
         * @param clip The SoundClip to remove.
@@ -203,18 +192,16 @@ namespace SDLCore {
             AudioTrackID audioTrackID{ SDLCORE_INVALID_ID };
             std::unordered_map<SoundClipID, Audio> subSounds;
             bool fireAndForget = false;
-            size_t refCount = 0;// if refCount == 0; object can be deleted
+            int refCount = 0;// if refCount == 0; object can be deleted
 
             void IncreaseRefCount() {
                 refCount++;
-                Log::Print("Increase: New Ref Count: {}", refCount);
             }
 
             void DecreaseRefCount() {
                 refCount--;
                 if (refCount < 0)
                     refCount = 0;
-                Log::Print("Decrease: New Ref Count: {}", refCount);
             }
 
             Audio() = default;
@@ -283,7 +270,7 @@ namespace SDLCore {
         * @param id The ID of the sound clip to delete.
         * @return true on success. Call SDLCore::GetError() for more information
         */
-        static bool DeleteSound(SoundClipID id);
+        static bool DeleteSound(const SoundClip& clip);
 
         // ============== Member ==============
         MIX_Mixer* m_mixer = nullptr;
@@ -319,8 +306,8 @@ namespace SDLCore {
         */
         SDL_PropertiesID CreateProperty(const SoundClip& clip);
         bool CreateAudioTrack(AudioTrack*& audioTrack, const SoundClip& clip, const std::string& tag);
-        void MarkTrackAsDeleted(AudioTrack* audioTrack);
-        void OnTrackStopped(MIX_Track* track);
+        void MarkTrackAsDeleted(AudioTrack* audioTrack, AudioTrackID id);
+        void OnTrackStopped(AudioTrackID id);
     };
 
 }

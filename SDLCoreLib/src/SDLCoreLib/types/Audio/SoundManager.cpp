@@ -139,7 +139,7 @@ namespace SDLCore {
 			return false;
 
 		if (!audio) {
-			SetError("SDLCore::SoundManager::");
+			SetError("SDLCore::SoundManager::CreateSound: Could not create audio, audio was nullptr");
 			return false;
 		}
 
@@ -150,7 +150,7 @@ namespace SDLCore {
 			// delets old element
 			auto& a = it->second;
 			AudioTrack* track = s_soundManager->GetAudioTrack(a.audioTrackID);
-			s_soundManager->MarkTrackAsDeleted(track);
+			s_soundManager->MarkTrackAsDeleted(track, a.audioTrackID);
 
 			MIX_DestroyAudio(a.mixAudio);
 		}
@@ -160,23 +160,37 @@ namespace SDLCore {
 		return true;
 	}
 
-	bool SoundManager::DeleteSound(SoundClipID id) {
+	bool SoundManager::DeleteSound(const SoundClip& clip) {
 		if (!InstanceExist())
 			return false;
 
 		auto& audios = s_soundManager->m_audios;
-		auto it = audios.find(id);
+		auto it = audios.find(clip.GetID());
 		if (it == audios.end())
 			return true;
 
-		auto& a = it->second;
-		a.DecreaseRefCount();
-		// delete if there are no refs to this audio
-		if (a.refCount <= 0) {
-			AudioTrack* track = s_soundManager->GetAudioTrack(a.audioTrackID);
-			s_soundManager->MarkTrackAsDeleted(track);
+		auto& audio = it->second;
+		if (clip.IsSubSound()) {
+			auto subIt = audio.subSounds.find(clip.GetSubID());
+			if (subIt != audio.subSounds.end()) {
+				Audio& subAu = subIt->second;
+				subAu.DecreaseRefCount();
 
-			MIX_DestroyAudio(a.mixAudio);
+				if (subAu.refCount <= 0) {
+					AudioTrack* track = s_soundManager->GetAudioTrack(subAu.audioTrackID);
+					s_soundManager->MarkTrackAsDeleted(track, subAu.audioTrackID);
+					audio.subSounds.erase(subIt);
+				}
+			}
+		}
+
+		audio.DecreaseRefCount();
+		// delete if there are no refs to this audio
+		if (audio.refCount <= 0) {
+			AudioTrack* track = s_soundManager->GetAudioTrack(audio.audioTrackID);
+			s_soundManager->MarkTrackAsDeleted(track, audio.audioTrackID);
+
+			MIX_DestroyAudio(audio.mixAudio);
 			audios.erase(it);
 		}
 		return true;
@@ -230,21 +244,6 @@ namespace SDLCore {
 		return result;
 	}
 
-	bool SoundManager::AddSound(const SoundClip& clip, const std::string& tag) {
-		if (!InstanceExist())
-			return false;
-
-		AudioTrack* audioTrack = s_soundManager->GetAudioTrack(clip.GetID(), clip.GetSubID());
-
-		// create audio track if it was not found
-		if (!audioTrack) {
-			if (!s_soundManager->CreateAudioTrack(audioTrack, clip, tag)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	bool SoundManager::RemoveSound(const SoundClip& clip) {
 		if (!InstanceExist())
 			return false;
@@ -265,7 +264,7 @@ namespace SDLCore {
 			return true;
 		// deletes the track immediately
 		track->isDeleted = true;
-		s_soundManager->OnTrackStopped(track->track);
+		s_soundManager->OnTrackStopped(audio->audioTrackID);
 		return true;
 	}
 
@@ -624,7 +623,7 @@ namespace SDLCore {
 	void SoundManager::Cleanup() {
 		if (!Application::IsQuit()) {
 			for (auto& [id, audioTrack] : m_audioTracks) {
-				OnTrackStopped(audioTrack.track);
+				OnTrackStopped(id);
 			}
 			MIX_DestroyMixer(m_mixer);
 		}
@@ -773,17 +772,19 @@ namespace SDLCore {
 			auto& subSound = audio->subSounds;
 			auto it = subSound.find(clip.GetSubID());
 			if (it != subSound.end()) {
-				AudioTrack* t = GetAudioTrack(it->second.audioTrackID);
-				MarkTrackAsDeleted(t);
+				Audio& a = it->second;
+				AudioTrack* t = GetAudioTrack(a.audioTrackID);
+				MarkTrackAsDeleted(t, a.audioTrackID);
 			}
 			Audio subAudio;
 			subAudio.audioTrackID = newID;
+			subAudio.IncreaseRefCount();
 			subSound[clip.GetSubID()] = subAudio;
 		}
 		else {
 			// mark old track with this audio as deleted
 			AudioTrack* t = GetAudioTrack(audio->audioTrackID);
-			MarkTrackAsDeleted(t);
+			MarkTrackAsDeleted(t, audio->audioTrackID);
 			// set the id of the new track
 			audio->audioTrackID = newID;
 		}
@@ -792,16 +793,31 @@ namespace SDLCore {
 		m_audioTracks.emplace(newID, at);
 		audioTrack = &m_audioTracks.at(newID);
 
-		MIX_SetTrackStoppedCallback(track, [](void* u, MIX_Track* t) {
-			if (SoundManager::InstanceExist())
-				static_cast<SoundManager*>(u)->OnTrackStopped(t);
-			}, this);
+		struct TrackCallbackData {
+			SoundManager* manager;
+			AudioTrackID  trackID;
+		};
+
+		auto* cbData = new TrackCallbackData{ this, newID };
+		MIX_SetTrackStoppedCallback(track,
+			[](void* u, MIX_Track* t) {
+				auto* data = static_cast<TrackCallbackData*>(u);
+
+				if (data->manager && SoundManager::InstanceExist()) {
+					data->manager->OnTrackStopped(data->trackID);
+				}
+
+				// cleanup
+				delete data;
+			},
+			cbData
+		);
 
 		ApplyClipParams(audioTrack, clip);
 		return true;
 	}
 
-	void SoundManager::MarkTrackAsDeleted(AudioTrack* audioTrack) {
+	void SoundManager::MarkTrackAsDeleted(AudioTrack* audioTrack, AudioTrackID id) {
 		if (!audioTrack)
 			return;
 
@@ -809,22 +825,21 @@ namespace SDLCore {
 		MIX_Track* track = audioTrack->track;
 		if (track) {
 			if (!MIX_TrackPlaying(track) && !MIX_TrackPaused(track)) {
-				OnTrackStopped(track);
+				OnTrackStopped(id);
 			}
 		}
 	}
 
-	void SoundManager::OnTrackStopped(MIX_Track* track) {
-		auto it = std::find_if(m_audioTracks.begin(), m_audioTracks.end(),
-			[track](auto& pair) { return pair.second.track == track; });
+	void SoundManager::OnTrackStopped(AudioTrackID id) {
+		auto it = m_audioTracks.find(id);
+		if (it == m_audioTracks.end())
+			return;
 
-		if (it != m_audioTracks.end()) {
-			it->second.isPlaying = false;
-			if (it->second.isDeleted) {
-				m_trackIDManager.FreeUniqueIdentifier(it->first.value);
-				MIX_DestroyTrack(it->second.track);
-				m_audioTracks.erase(it);
-			}
+		it->second.isPlaying = false;
+		if (it->second.isDeleted) {
+			m_trackIDManager.FreeUniqueIdentifier(it->first.value);
+			MIX_DestroyTrack(it->second.track);
+			m_audioTracks.erase(it);
 		}
 	}
 

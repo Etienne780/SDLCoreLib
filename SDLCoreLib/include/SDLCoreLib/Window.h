@@ -80,6 +80,15 @@ namespace SDLCore {
 		bool Hide();
 
 		/**
+		* @brief Enables or disables cursor locking for this window.
+		* @param value When true, cursor locking is activated; when false, it is disabled.
+		*
+		* The lock state is forwarded to the Application instance, which manages the
+		* underlying behavior (cursor grabbing, relative motion usage, and lock position).
+		*/
+		void LockCursor(bool value) const;
+
+		/**
 		* @brief Checks if the SDL window has been created and is valid
 		* @return true if the window exists, false otherwise
 		*/
@@ -117,13 +126,13 @@ namespace SDLCore {
 
 		/**
 		* @brief Gets the SDL window
-		* @return SDL_Window weak pointer
+		* @return SDL_Window weak_ptr pointer
 		*/
 		std::weak_ptr<SDL_Window> GetSDLWindow();
 
 		/**
 		* @brief Gets the SDL Renderer of this window
-		* @return SDL_Renderer weak pointer
+		* @return SDL_Renderer weak_ptr pointer
 		*/
 		std::weak_ptr<SDL_Renderer> GetSDLRenderer();
 
@@ -218,6 +227,15 @@ namespace SDLCore {
 		* @return Current window state
 		*/
 		WindowState GetState() const;
+
+		/**
+		* @brief Returns whether mouse grabbing is enabled for this window.
+		*
+		* Mouse grabbing confines the cursor to the window until released.
+		*
+		* @return True if cursor grabbing is active, otherwise false.
+		*/
+		bool GetCursorGrab() const;
 
 		/**
 		* @brief Returns the display ID the window is currently assigned to.
@@ -393,6 +411,25 @@ namespace SDLCore {
 		* @return true on success. Call SDLCore::GetError() for more information
 		*/
 		bool SetIcon(const TextureSurface& textureSurface);
+
+		/**
+		* @brief Enables or disables mouse grabbing for this window.
+		*
+		* When enabled, SDL confines the cursor to the window.
+		* This requires a valid SDL window handle.
+		* On failure, an internal error message is stored.
+		*
+		* @param value True to enable grabbing, false to disable.
+		* @return true on success. Call SDLCore::GetError() for more information.
+		*/
+		bool SetCursorGrab(bool value);
+
+		/**
+		* @brief Sets the visibility state of the mouse cursor for this window.
+		* @param visibility When true, the cursor will be hidden; when false, it will be shown.
+		* @return True if the visibility update was successfully applied, false on SDL failure.
+		*/
+		bool SetCursorHiden(bool visibility);
 
 		/**
 		* @brief Subscribes a callback to be called when this window object is destryoed.
@@ -594,11 +631,13 @@ namespace SDLCore {
 
 		WindowState m_state = WindowState::NORMAL;
 		bool m_isFocused = false;
+		bool m_isCursorHiden = false;
 		bool m_resizable = true;
 		bool m_alwaysOnTop = false;
 		bool m_borderless = false;
 		bool m_transparentBuffer = false;
 		bool m_isVisible = true;
+		bool m_cursorGrab = false;
 		float m_opacity = 1;
 		float m_minAspectRatio = 0;
 		float m_maxAspectRatio = 0;
@@ -632,6 +671,8 @@ namespace SDLCore {
 		template<typename CBType>
 		bool RemoveCallback(std::vector<WindowCallback<CBType>>& callbacks,
 			WindowCallbackID id) {
+			if (id.IsInvalid())
+				return true;
 			size_t preSize = callbacks.size();
 
 			callbacks.erase(
@@ -666,6 +707,30 @@ namespace SDLCore {
 		void CallOnWindowFocusLost();
 		
 		/**
+		* @brief Polls and updates the cached window position for the current frame
+		*
+		* Only queries SDL_GetWindowPosition if the position has not been fetched this frame.
+		*/
+		void PollPosition() const;
+
+		/**
+		* @brief Polls and updates the cached window size for the current frame
+		*
+		* Only queries SDL_GetWindowSize if the size has not been fetched this frame.
+		*/
+		void PollSize() const;
+
+		/*
+		* @brief called in application class
+		*/
+		void UpdateWindowEvents(Uint32 type);
+
+		/*
+		* @brief Updates Shows/hiddes the cursor
+		*/
+		bool UpdateCursorVisibility() const;
+
+		/**
 		* @brief Gets SDL window flags based on current settings
 		* @return SDL_WindowFlags
 		*/
@@ -684,30 +749,11 @@ namespace SDLCore {
 		*/
 		bool SetVsync(int value);
 
-		/**
-		* @brief Polls and updates the cached window position for the current frame
-		*
-		* Only queries SDL_GetWindowPosition if the position has not been fetched this frame.
-		*/
-		void PollPosition() const;
-
-		/**
-		* @brief Polls and updates the cached window size for the current frame
-		*
-		* Only queries SDL_GetWindowSize if the size has not been fetched this frame.
-		*/
-		void PollSize() const;
-
 		/*
 		* @brief sets the window position with the current x and y pos
 		* @return true on success. Call SDLCore::GetError() for more information
 		*/
 		bool SetWindowPosInternal();
-
-		/*
-		* called in application class
-		*/
-		void UpdateWindowEvents(Uint32 type);
 	};
 
 }

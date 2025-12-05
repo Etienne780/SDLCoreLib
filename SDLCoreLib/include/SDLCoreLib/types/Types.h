@@ -27,8 +27,31 @@ namespace SDLCore {
 	FRect ToFRect(const Vector4& rect);
 
 	template<typename Tag>
-	struct SDLCoreID {
+	class SDLCoreID {
+	public:
 		uint32_t value = SDLCORE_INVALID_ID;
+
+		/*
+		* @brief The result of value == SDLCORE_INVALID_ID
+		* @return true on invalid value
+		*/
+		bool IsInvalid() const {
+			return value == invalidValue;
+		}
+
+		/*
+		* @brief Sets the id to an invalid value
+		*/
+		void SetInvalid() {
+			value = invalidValue;
+		}
+
+		/*
+		* @brief Converts the ID to a string
+		*/
+		std::string ToString() const {
+			return IsInvalid() ? "InvalidID" : FormatUtils::toString(value);
+		}
 
 		constexpr SDLCoreID() = default;
 		explicit constexpr SDLCoreID(uint32_t v) : value(v) {}
@@ -48,6 +71,9 @@ namespace SDLCore {
 		constexpr bool operator>=(const SDLCoreID& other) const { return value >= other.value; }
 
 		explicit constexpr operator bool() const { return value != 0; }
+
+	private: 
+		static inline constexpr uint32_t invalidValue = SDLCORE_INVALID_ID;
 	};
 
 	struct WindowTag {};
@@ -121,32 +147,32 @@ namespace std {
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::WindowTag>>(SDLCore::WindowID id) {
-	return FormatUtils::toString(id.value);
+	return id.ToString();
 }
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::WindowCallbackTag>>(SDLCore::WindowCallbackID id) {
-	return FormatUtils::toString(id.value);
+	return id.ToString();
 }
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::AudioPlaybackDeviceTag>>(SDLCore::AudioPlaybackDeviceID id) {
-	return FormatUtils::toString(id.value);
+	return id.ToString();
 }
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::AudioClipTag>>(SDLCore::SoundClipID id) {
-	return FormatUtils::toString(id.value);
+	return id.ToString();
 }
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::AudioTrackTag>>(SDLCore::AudioTrackID id) {
-	return FormatUtils::toString(id.value);
+	return id.ToString();
 }
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::TextureTag>>(SDLCore::TextureID id) {
-	return FormatUtils::toString(id.value);
+	return id.ToString();
 }
 
 template<>
