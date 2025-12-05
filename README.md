@@ -58,4 +58,4 @@ A unified time module providing:
 
 ### Audio
 
-A basic helper layer for loading and playing audio. Compatible with SDL_mixer.
+A basic helper layer for loading and playing audio. Build on top of SDL_Mixer
