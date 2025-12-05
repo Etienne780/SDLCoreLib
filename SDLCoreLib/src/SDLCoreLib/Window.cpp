@@ -1,5 +1,6 @@
 #include <CoreLib/Log.h>
 
+#include "Types/Input/InputManager.h"
 #include "SDLCoreError.h"
 #include "CoreTime.h"
 #include "Types/Texture.h"
@@ -221,6 +222,83 @@ namespace SDLCore {
 		CallCallbacks(m_onWinFocusLostCallbacks, *this);
 	}
 
+	void Window::PollPosition() const {
+		if (!m_sdlWindow)
+			return;
+
+		auto now = Time::GetFrameCount();
+		if (m_positionFetchedTime == now)
+			return;
+
+		m_positionFetchedTime = now;
+		SDL_GetWindowPosition(m_sdlWindow.get(), &m_positionX, &m_positionY);
+	}
+
+	void Window::PollSize() const {
+		if (!m_sdlWindow)
+			return;
+
+		auto now = Time::GetFrameCount();
+		if (m_sizeFetchedTime == now)
+			return;
+
+		m_sizeFetchedTime = now;
+		SDL_GetWindowSize(m_sdlWindow.get(), &m_width, &m_height);
+	}
+
+	void Window::UpdateWindowEvents(Uint32 type) {
+		switch (type) {
+		case SDL_EVENT_WINDOW_RESIZED:
+			CallOnWindowResize();
+			break;
+		case SDL_EVENT_WINDOW_MINIMIZED:
+			m_state = WindowState::MINIMIZED;
+			break;
+		case SDL_EVENT_WINDOW_MAXIMIZED:
+			m_state = WindowState::MAXIMIZED;
+			break;
+		case SDL_EVENT_WINDOW_RESTORED:
+			m_state = WindowState::NORMAL;
+			break;
+		case SDL_EVENT_WINDOW_SHOWN:
+			m_isVisible = true;
+			break;
+		case SDL_EVENT_WINDOW_HIDDEN:
+			m_isVisible = false;
+			break;
+		case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+			m_state = WindowState::FULLSCREEN_EXCLUSIVE;
+			m_isVisible = true;
+			break;
+		case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
+			m_state = WindowState::NORMAL;
+			m_isVisible = true;
+			break;
+		case SDL_EVENT_WINDOW_FOCUS_GAINED:
+			m_isFocused = true;
+			CallOnWindowFocusGain();
+			break;
+		case SDL_EVENT_WINDOW_FOCUS_LOST:
+			m_isFocused = false;
+			CallOnWindowFocusLost();
+			break;
+		default:
+			break;
+		}
+
+		UpdateCursorVisibility();
+	}
+
+	bool Window::UpdateCursorVisibility() const {
+		if (m_isFocused) {
+			return (m_isCursorHiden) ?
+				SDL_HideCursor() : SDL_ShowCursor();
+		}
+		else {
+			SDL_ShowCursor();
+		}
+	}
+
 	SDL_WindowFlags Window::GetWindowFlags() const {
 		SDL_WindowFlags flags = 0;
 
@@ -306,77 +384,12 @@ namespace SDLCore {
 		return true;
 	}
 
-	void Window::PollPosition() const {
-		if (!m_sdlWindow)
-			return;
-
-		auto now = Time::GetFrameCount();
-		if (m_positionFetchedTime == now)
-			return;
-
-		m_positionFetchedTime = now;
-		SDL_GetWindowPosition(m_sdlWindow.get(), &m_positionX, &m_positionY);
-	}
-
-	void Window::PollSize() const {
-		if (!m_sdlWindow)
-			return;
-
-		auto now = Time::GetFrameCount();
-		if (m_sizeFetchedTime == now)
-			return;
-
-		m_sizeFetchedTime = now;
-		SDL_GetWindowSize(m_sdlWindow.get(), &m_width, &m_height);
-	}
-
 	bool Window::SetWindowPosInternal() {
 		if (!m_sdlWindow)
 			return false;
 		return SDL_SetWindowPosition(m_sdlWindow.get(),
 			(m_positionX == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionX,
 			(m_positionY == -1) ? SDL_WINDOWPOS_UNDEFINED : m_positionY);
-	}
-
-	void Window::UpdateWindowEvents(Uint32 type) {
-		switch (type) {
-		case SDL_EVENT_WINDOW_RESIZED:
-			CallOnWindowResize();
-			break;
-		case SDL_EVENT_WINDOW_MINIMIZED:
-			m_state = WindowState::MINIMIZED;
-			break;
-		case SDL_EVENT_WINDOW_MAXIMIZED:
-			m_state = WindowState::MAXIMIZED;
-			break;
-		case SDL_EVENT_WINDOW_RESTORED:
-			m_state = WindowState::NORMAL;
-			break;
-		case SDL_EVENT_WINDOW_SHOWN:
-			m_isVisible = true;
-			break;
-		case SDL_EVENT_WINDOW_HIDDEN:
-			m_isVisible = false;
-			break;
-		case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
-			m_state = WindowState::FULLSCREEN_EXCLUSIVE;
-			m_isVisible = true;
-			break;
-		case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
-			m_state = WindowState::NORMAL;
-			m_isVisible = true;
-			break;
-		case SDL_EVENT_WINDOW_FOCUS_GAINED:
-			m_isFocused = true;
-			CallOnWindowFocusGain();
-			break;
-		case SDL_EVENT_WINDOW_FOCUS_LOST:
-			m_isFocused = false;
-			CallOnWindowFocusLost();
-			break;
-		default:
-			break;
-		}
 	}
 
 	int Window::GetVsync() const {
@@ -738,6 +751,16 @@ namespace SDLCore {
 	
 		if (!SDL_SetWindowMouseGrab(m_sdlWindow.get(), value)) {
 			SetErrorF("SDLCore::Window::SetCursorGrab: Failed to set window cursor grab: {}", SDL_GetError());
+			return false;
+		}
+		return true;
+	}
+
+	bool Window::SetCursorHiden(bool visibility) {
+		m_isCursorHiden = visibility;
+
+		if (!UpdateCursorVisibility()) {
+			SetErrorF("SDLCore::Window::SetCursorHidden: Failed to set cursor hidden: {}", SDL_GetError());
 			return false;
 		}
 		return true;
