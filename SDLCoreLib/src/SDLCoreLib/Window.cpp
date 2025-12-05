@@ -3,6 +3,7 @@
 #include "SDLCoreError.h"
 #include "CoreTime.h"
 #include "Types/Texture.h"
+#include "Application.h"
 #include "Window.h"
 
 namespace SDLCore {
@@ -16,7 +17,7 @@ namespace SDLCore {
 	}
 
 	Window::~Window() {
-		// DestroyWindow gets called in Application::RemoveWindow before this destructor gets called
+		// DestroyWindow gets called in Application::DeleteWindow before this destructor gets called
 		// DestroyWindow();
 		CallOnDestroy();
 	}
@@ -87,7 +88,6 @@ namespace SDLCore {
 			AddErrorF("\nSDLCore::Window::CreateWindow: Failed to set window properties for '{}'", m_name);
 			return false;
 		}
-
 		return true;
 	}
 
@@ -130,7 +130,7 @@ namespace SDLCore {
 		if (m_sdlRenderer) {
 			CallOnSDLRendererDestroy();
 			SDL_DestroyRenderer(m_sdlRenderer.get());
-			m_sdlRenderer.reset();
+			m_sdlRenderer = nullptr;
 		}
 	}
 
@@ -162,6 +162,14 @@ namespace SDLCore {
 
 		m_isVisible = false;
 		return true;
+	}
+
+	void Window::LockCursor(bool value) const {
+		auto* app = Application::GetInstance();
+		if (!app)
+			return;
+
+		app->SetCursorLock(m_id, value);
 	}
 
 	bool Window::HasWindow() const {
@@ -727,7 +735,7 @@ namespace SDLCore {
 		m_cursorGrab = value;
 		if (!m_sdlWindow)
 			return true;
-
+	
 		if (!SDL_SetWindowMouseGrab(m_sdlWindow.get(), value)) {
 			SetErrorF("SDLCore::Window::SetCursorGrab: Failed to set window cursor grab: {}", SDL_GetError());
 			return false;

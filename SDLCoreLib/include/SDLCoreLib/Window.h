@@ -80,6 +80,16 @@ namespace SDLCore {
 		bool Hide();
 
 		/**
+		* @brief Enables or disables cursor locking for this window.
+		* @param value When true, cursor locking is activated; when false, it is disabled.
+		*
+		* The lock state is forwarded to the Application instance, which manages the
+		* underlying behavior (cursor grabbing, relative motion usage, and lock position).
+		*/
+		void LockCursor(bool value) const;
+
+
+		/**
 		* @brief Checks if the SDL window has been created and is valid
 		* @return true if the window exists, false otherwise
 		*/
@@ -117,13 +127,13 @@ namespace SDLCore {
 
 		/**
 		* @brief Gets the SDL window
-		* @return SDL_Window weak pointer
+		* @return SDL_Window weak_ptr pointer
 		*/
 		std::weak_ptr<SDL_Window> GetSDLWindow();
 
 		/**
 		* @brief Gets the SDL Renderer of this window
-		* @return SDL_Renderer weak pointer
+		* @return SDL_Renderer weak_ptr pointer
 		*/
 		std::weak_ptr<SDL_Renderer> GetSDLRenderer();
 
@@ -654,6 +664,8 @@ namespace SDLCore {
 		template<typename CBType>
 		bool RemoveCallback(std::vector<WindowCallback<CBType>>& callbacks,
 			WindowCallbackID id) {
+			if (id.IsInvalid())
+				return true;
 			size_t preSize = callbacks.size();
 
 			callbacks.erase(
