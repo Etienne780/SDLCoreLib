@@ -5,18 +5,28 @@
 namespace SDLCore {
 
 	void Input::SetWindow(WindowID winID) {
-		auto* app = Application::GetInstance();
-		if (!app) {
-			Log::Error("SDLCore::Input::SetWindow: Cant set window, cant get instance if application! Set active window to default");
+		if (winID.IsInvalid()) {
 			s_activeSDLWindowID = 0;
+			s_activeWinID.SetInvalid();
 			s_activeWindowState = nullptr;
 			return;
 		}
 
+		auto* app = Application::GetInstance();
+		if (!app) {
+			Log::Error("SDLCore::Input::SetWindow: Cant set window, cant get instance if application! Set active window to default");
+			s_activeSDLWindowID = 0;
+			s_activeWinID.SetInvalid();
+			s_activeWindowState = nullptr;
+			return;
+		}
+
+		s_activeWinID = winID;
 		auto* win = app->GetWindow(winID);
 		if (!win) {
-			Log::Error("SDLCore::Input::SetWindow: Cant set window, window with id '{}', dosent exist! Set active window to default", winID.value);
+			Log::Error("SDLCore::Input::SetWindow: Cant set window, window with id '{}', dosent exist! Set active window to default", winID);
 			s_activeSDLWindowID = 0;
+			s_activeWinID.SetInvalid();
 			s_activeWindowState = nullptr;
 			return;
 		}
@@ -35,6 +45,10 @@ namespace SDLCore {
 		// if not found, added it
 		s_windowStates.emplace_back(s_activeSDLWindowID);
 		s_activeWindowState = &s_windowStates.back();
+	}
+
+	WindowID Input::GetWindowID() {
+		return s_activeWinID;
 	}
 
 	void Input::DropWindow() {

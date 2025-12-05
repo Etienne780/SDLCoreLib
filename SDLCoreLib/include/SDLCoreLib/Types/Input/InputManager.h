@@ -29,6 +29,12 @@ namespace SDLCore {
 		*/
 		static void SetWindow(WindowID windowID = WindowID(SDLCORE_INVALID_ID));
 
+		/*
+		* @brief Gets the currently active window for input queries
+		* @return window id
+		*/
+		static WindowID GetWindowID();
+
 		/**
 		* @brief Resets the currently active window state to no window.
 		*/
@@ -307,7 +313,7 @@ namespace SDLCore {
 		static inline std::vector<WindowInputState> s_windowStates;
 		static inline WindowInputState* s_activeWindowState = nullptr;
 		static inline SDL_WindowID s_activeSDLWindowID = 0;
-
+		static inline WindowID s_activeWinID;
 
 		/**
 		* @brief Stores button and axis states for a single gamepad.
