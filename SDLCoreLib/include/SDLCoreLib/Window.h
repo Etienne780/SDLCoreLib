@@ -220,6 +220,15 @@ namespace SDLCore {
 		WindowState GetState() const;
 
 		/**
+		* @brief Returns whether mouse grabbing is enabled for this window.
+		*
+		* Mouse grabbing confines the cursor to the window until released.
+		*
+		* @return True if cursor grabbing is active, otherwise false.
+		*/
+		bool GetCursorGrab() const;
+
+		/**
 		* @brief Returns the display ID the window is currently assigned to.
 		* @return DisplayID of the window, or 0 on failure
 		*/
@@ -393,6 +402,18 @@ namespace SDLCore {
 		* @return true on success. Call SDLCore::GetError() for more information
 		*/
 		bool SetIcon(const TextureSurface& textureSurface);
+
+		/**
+		* @brief Enables or disables mouse grabbing for this window.
+		*
+		* When enabled, SDL confines the cursor to the window.
+		* This requires a valid SDL window handle.
+		* On failure, an internal error message is stored.
+		*
+		* @param value True to enable grabbing, false to disable.
+		* @return true on success. Call SDLCore::GetError() for more information.
+		*/
+		bool SetCursorGrab(bool value);
 
 		/**
 		* @brief Subscribes a callback to be called when this window object is destryoed.
@@ -599,6 +620,7 @@ namespace SDLCore {
 		bool m_borderless = false;
 		bool m_transparentBuffer = false;
 		bool m_isVisible = true;
+		bool m_cursorGrab = false;
 		float m_opacity = 1;
 		float m_minAspectRatio = 0;
 		float m_maxAspectRatio = 0;
