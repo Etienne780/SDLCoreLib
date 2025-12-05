@@ -340,7 +340,7 @@ namespace SDLCore {
 			}
 		}
 
-		return Vector2(0);
+		return Vector2{-1};
 	}
 
 	Vector2 Input::GetMouseDelta(bool invertYAchses) {
@@ -369,7 +369,7 @@ namespace SDLCore {
 			}
 		}
 
-		return Vector2{};
+		return Vector2{-1};
 	}
 
 
@@ -388,7 +388,7 @@ namespace SDLCore {
 			}
 		}
 
-		return Vector2{};
+		return Vector2{-1};
 	}
 
 	int Input::GetScrollDir() {

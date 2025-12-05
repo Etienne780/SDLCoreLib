@@ -204,18 +204,28 @@ namespace SDLCore {
 
 		/**
 		* @brief Gets the current mouse position relative to the active window.
-		* @return Current mouse position as a Vector2.
+		* @return Current mouse position as a Vector2. Returns (-1,-1) if no matching window exists.
 		*/
 		static Vector2 GetMousePosition();
 
 		/**
 		* @brief Gets the change in mouse position since the last frame.
 		* @param invertYAchses Inverts the Y delta if true.
-		* @return Mouse movement delta as a Vector2.
+		* @return Mouse movement delta as a Vector2. Returns (-1,-1) if no matching window exists.
 		*/
 		static Vector2 GetMouseDelta(bool invertYAchses = false);
 
-		static Vector2 GetRelativePosition();
+		/**
+		* @brief Returns the most recent relative mouse movement for the active input window.
+		*
+		* This function provides the delta supplied by SDL_EVENT_MOUSE_MOTION
+		* when SDL is in relative mouse mode (SDL_SetRelativeMouseMode).
+		* If no explicit active window is set, the function falls back to the window
+		* that currently has keyboard focus.
+		*
+		* @return Relative mouse movement as Vector2. Returns (-1,-1) if no matching window exists.
+		*/
+		Vector2 Input::GetRelativePosition()
 
 		/**
 		* @brief Gets the mouse scroll direction (1 = up, -1 = down, 0 = none).
