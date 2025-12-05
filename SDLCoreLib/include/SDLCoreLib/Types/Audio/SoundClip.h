@@ -53,27 +53,96 @@ namespace SDLCore {
 
         bool IsSubSound() const;
 
-        /*
-        * @brief Gets the id of this sound object
-        * @return SoundClipID of this object
+        /**
+        * @brief Returns the primary identifier of this sound clip.
+        * @return SoundClipID associated with this clip.
         */
         SoundClipID GetID() const;
+
+        /**
+        * @brief Returns the secondary identifier of this sound clip.
+        * @return Sub-identifier of this clip.
+        */
         SoundClipID GetSubID() const;
+
+        /**
+        * @brief Returns the type classification of the sound clip.
+        * @return SoundType enum value representing the clip type.
+        */
         SoundType GetSoundType() const;
 
+        /**
+        * @brief Returns the current gain factor of the sound clip.
+        * @return Volume value, where 0.0 is muted and 1.0 is the default level.
+        */
         float GetVolume() const;
+
+        /**
+        * @brief Returns the configured loop count for playback.
+        * @return Number of loops; -1 indicates infinite looping.
+        */
+        int GetNumberOfLoops() const;
+
+        /**
+        * @brief Returns the clip duration in milliseconds.
+        * @return Duration in ms.
+        */
         float GetDurationMS() const;
+
+        /**
+        * @brief Returns the clip duration in seconds.
+        * @return Duration in seconds.
+        */
         float GetDurationSec() const;
+
+        /**
+        * @brief Returns the total number of audio frames in this clip.
+        * @return Frame count.
+        */
         Sint64 GetNumberOfFrames() const;
+
+        /**
+        * @brief Returns the sampling frequency of the clip.
+        * @return Frequency in Hz.
+        */
         int GetFrequency() const;
+
+        /**
+        * @brief Returns the spatial position assigned to this clip.
+        * @return Position vector used for 2D positional audio.
+        */
         Vector2 GetPosition() const;
 
-        /*
-        * @brief 0 is muted and 1 is the default
+        /**
+        * @brief Sets the linear gain factor of the clip.
+        * @param volume Gain value; 0.0 mutes, 1.0 is the default level.
+        * @return Pointer to this clip instance.
         */
         SoundClip* SetVolume(float volume);
 
+        /**
+        * @brief Sets how often the clip should loop during playback.
+        * @param value Loop count; 0 disables looping, 1 repeats once, -1 enables infinite looping.
+        * @return Pointer to this clip instance.
+        *
+        * @note Loop configuration is applied through SDL mixer properties.
+        *       When used with track tags, behavior may vary depending on backend support.
+        */
+        SoundClip* SetNumberOfLoops(int value);
+
+        /**
+        * @brief Sets the spatial position of the clip in 2D space.
+        * @param x X-coordinate.
+        * @param y Y-coordinate.
+        * @return Pointer to this clip instance.
+        */
         SoundClip* SetPosition(float x, float y);
+
+        /**
+        * @brief Sets the spatial position of the clip in 2D space.
+        * @param pos Position vector.
+        * @return Pointer to this clip instance.
+        */
         SoundClip* SetPosition(const Vector2& pos);
 
         /**
@@ -94,6 +163,7 @@ namespace SDLCore {
         SoundClipID m_subID{ SDLCORE_INVALID_ID };
         SoundType m_type = SoundType::AUTO;
         SystemFilePath m_path;
+        int m_numberOfLoops = 0;
         float m_volume = 0.5f;
         float m_durationMS = 0.0f;
 

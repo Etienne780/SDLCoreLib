@@ -306,6 +306,18 @@ namespace SDLCore {
         Audio* GetAudio(SoundClipID id);
 
         bool TryGetMixer(MIX_Mixer*& mixer, const std::string& func);
+
+        /**
+        * @brief Creates an SDL_PropertiesID for configuring playback parameters of a sound clip.
+        *
+        * The caller is responsible for destroying the returned properties object with SDL_DestroyProperties()
+        * after it is no longer needed. The function initializes the property set with values required by
+        * SDL_mixer, such as the loop-count parameter.
+        *
+        * @param clip Reference to the SoundClip providing playback configuration (e.g. loop count).
+        * @return A valid SDL_PropertiesID on success, or 0 on failure.
+        */
+        SDL_PropertiesID CreateProperty(const SoundClip& clip);
         bool CreateAudioTrack(AudioTrack*& audioTrack, const SoundClip& clip, const std::string& tag);
         void MarkTrackAsDeleted(AudioTrack* audioTrack);
         void OnTrackStopped(MIX_Track* track);

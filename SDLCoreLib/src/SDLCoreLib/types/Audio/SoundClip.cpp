@@ -17,6 +17,7 @@ namespace SDLCore {
         m_type = other.m_type;
         m_path = other.m_path;
         m_volume = other.m_volume;
+        m_numberOfLoops = other.m_numberOfLoops;
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
         m_frequency = other.m_frequency;
@@ -34,6 +35,7 @@ namespace SDLCore {
         m_type = other.m_type;
         m_path = std::move(other.m_path);
         m_volume = other.m_volume;
+        m_numberOfLoops = other.m_numberOfLoops;
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
         m_frequency = other.m_frequency;
@@ -62,6 +64,7 @@ namespace SDLCore {
         m_type = other.m_type;
         m_path = other.m_path;
         m_volume = other.m_volume;
+        m_numberOfLoops = other.m_numberOfLoops;
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
         m_frequency = other.m_frequency;
@@ -89,6 +92,7 @@ namespace SDLCore {
         m_type = other.m_type;
         m_path = std::move(other.m_path);
         m_volume = other.m_volume;
+        m_numberOfLoops = other.m_numberOfLoops;
         m_durationMS = other.m_durationMS;
         m_frameCount = other.m_frameCount;
         m_frequency = other.m_frequency;
@@ -135,6 +139,10 @@ namespace SDLCore {
         return m_volume;
     }
 
+    int SoundClip::GetNumberOfLoops() const {
+        return m_numberOfLoops;
+    }
+
     float SoundClip::GetDurationMS() const {
         return m_durationMS;
     }
@@ -158,6 +166,11 @@ namespace SDLCore {
     SoundClip* SoundClip::SetVolume(float volume) {
         m_volume = volume;
         SoundManager::ApplyClipParams(*this);
+        return this;
+    }
+
+    SoundClip* SoundClip::SetNumberOfLoops(int value) {
+        m_numberOfLoops = value;
         return this;
     }
 

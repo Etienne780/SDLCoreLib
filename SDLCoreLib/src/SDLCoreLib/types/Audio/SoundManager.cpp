@@ -108,7 +108,7 @@ namespace SDLCore {
 			SetErrorF("SDLCore::SoundManager::ApplyClipParams: AudioTrack '{}' has invalid MIX_Track (nullptr)!", clip.GetID());
 			return false;
 		}
-
+		
 		float newVolume = clip.GetVolume();
 		Vector2 pos = clip.GetPosition();
 		MIX_Point3D mixPoint{ pos.x, 0.0f, pos.y };
@@ -301,11 +301,14 @@ namespace SDLCore {
 		// dosent have a null check because CreateAudioTrack would return false if track could be created and it would also not be stored in the map
 		MIX_Track* track = outAudioTrack->track;
 
-		if (!MIX_PlayTrack(track, 0)) {
+		SDL_PropertiesID propID = s_soundManager->CreateProperty(clip);
+		if (!MIX_PlayTrack(track, propID)) {
+			SDL_DestroyProperties(propID);
 			SetError("SDLCore::SoundManager::PlaySound: Could not play sound!\n" + std::string(SDL_GetError()));
 			return false;
 		}
 
+		SDL_DestroyProperties(propID);
 		outAudioTrack->isPlaying = true;
 		return true;
 	}
@@ -705,6 +708,16 @@ namespace SDLCore {
 		}
 		mixer = m_mixer;
 		return true;
+	}
+
+	SDL_PropertiesID SoundManager::CreateProperty(const SoundClip& clip) {
+		SDL_PropertiesID propID = SDL_CreateProperties();
+		if (propID == 0)
+			return propID;
+
+		int loops = clip.GetNumberOfLoops();
+		SDL_SetNumberProperty(propID, MIX_PROP_PLAY_LOOPS_NUMBER, loops);
+		return propID;
 	}
 
 	bool SoundManager::CreateAudioTrack(AudioTrack*& audioTrack, const SoundClip& clip, const std::string& tag) {
