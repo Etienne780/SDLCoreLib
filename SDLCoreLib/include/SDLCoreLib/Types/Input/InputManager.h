@@ -215,6 +215,8 @@ namespace SDLCore {
 		*/
 		static Vector2 GetMouseDelta(bool invertYAchses = false);
 
+		static Vector2 GetRelativePosition();
+
 		/**
 		* @brief Gets the mouse scroll direction (1 = up, -1 = down, 0 = none).
 		* @return Scroll direction integer.
@@ -283,6 +285,7 @@ namespace SDLCore {
 
 			Vector2 mousePos{ 0, 0 };
 			Vector2 lastMousePos{ 0, 0 };
+			Vector2 relativeMousePos{ 0, 0 };
 			int scrollDir = 0;
 
 			WindowInputState(SDL_WindowID _sdlWinID)

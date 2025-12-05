@@ -60,7 +60,7 @@ namespace SDLCore {
 	void Input::ProcessEvent(const SDL_Event& e) {
 		SDL_WindowID sdlWinID = e.window.windowID;
 		WindowInputState* state = GetWindowState(sdlWinID);
-		if (!state) 
+		if (!state)
 			return;
 
 		SDL_Window* sdlFocusWin = SDL_GetKeyboardFocus();
@@ -72,6 +72,7 @@ namespace SDLCore {
 			switch (e.type) {
 			case SDL_EVENT_MOUSE_MOTION:
 				state->mousePos.Set(e.motion.x, e.motion.y);
+				state->relativeMousePos.Set(e.motion.xrel, e.motion.yrel);
 				break;
 
 			case SDL_EVENT_MOUSE_WHEEL:
@@ -368,7 +369,26 @@ namespace SDLCore {
 			}
 		}
 
-		return Vector2(0);
+		return Vector2{};
+	}
+
+
+	Vector2 Input::GetRelativePosition() {
+		if (IsWindowSet())
+			return s_activeWindowState->relativeMousePos;
+
+		SDL_Window* sdlFocusWin = SDL_GetKeyboardFocus();
+		SDL_WindowID sdlFocusWinID = sdlFocusWin ? SDL_GetWindowID(sdlFocusWin) : 0;
+
+		if (sdlFocusWinID != 0) {
+			for (auto& state : s_windowStates) {
+				if (state.sdlWinID == sdlFocusWinID) {
+					return state.relativeMousePos;
+				}
+			}
+		}
+
+		return Vector2{};
 	}
 
 	int Input::GetScrollDir() {
