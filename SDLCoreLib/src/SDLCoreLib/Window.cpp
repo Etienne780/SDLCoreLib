@@ -295,7 +295,7 @@ namespace SDLCore {
 				SDL_HideCursor() : SDL_ShowCursor();
 		}
 		else {
-			SDL_ShowCursor();
+			return SDL_ShowCursor();
 		}
 	}
 
