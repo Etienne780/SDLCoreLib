@@ -2,7 +2,7 @@
 
 #include "Types/Input/InputManager.h"
 #include "SDLCoreError.h"
-#include "CoreTime.h"
+#include "SDLCoreTime.h"
 #include "Types/Texture.h"
 #include "Application.h"
 #include "Window.h"

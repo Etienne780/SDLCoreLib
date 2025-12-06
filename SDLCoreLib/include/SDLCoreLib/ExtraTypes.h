@@ -5,3 +5,4 @@
 #include "Types/Texture.h"
 
 #include "Types/Audio/SoundManager.h"
+#include "Types/Font/Font.h"
