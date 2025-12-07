@@ -10,7 +10,7 @@ namespace SDLCore::UI {
     static std::vector<double> g_numbers; // alle Zahlen als double speichern
 
 	template<typename T>
-	static bool IsInBounds(uint32_t id, std::vector<T>& vec) {
+	static bool IsInBounds(uint32_t id, const std::vector<T>& vec) {
 		return id < vec.size();
 	}
 
