@@ -143,6 +143,52 @@ namespace SDLCore::UI {
 }
 
 template<>
+static inline std::string FormatUtils::toString<SDLCore::UI::UIState>(SDLCore::UI::UIState state) {
+	switch (state) {
+	case SDLCore::UI::UIState::NORMAL:		return "Normal";
+	case SDLCore::UI::UIState::HOVER:		return "Hover";
+	case SDLCore::UI::UIState::ACTIVE:		return "Active";
+	case SDLCore::UI::UIState::CLICK:		return "Click";
+	case SDLCore::UI::UIState::DISABLED:	return "Disabled";
+	default:								return "UNKOWN";
+	}
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::UI::UIAlignment>(SDLCore::UI::UIAlignment alignment) {
+	switch (alignment) {
+	case SDLCore::UI::UIAlignment::START:	return "Start";
+	case SDLCore::UI::UIAlignment::CENTER:	return "Center";
+	case SDLCore::UI::UIAlignment::END:		return "End";
+	default:								return "UNKOWN";
+	}
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::UI::UILayoutDirection>(SDLCore::UI::UILayoutDirection dir) {
+	switch (dir) {
+	case SDLCore::UI::UILayoutDirection::ROW:			return "Row";
+	case SDLCore::UI::UILayoutDirection::COLUMN:		return "Column";
+	case SDLCore::UI::UILayoutDirection::ROW_START:		return "Row_start";
+	case SDLCore::UI::UILayoutDirection::ROW_END:		return "Row_end";
+	case SDLCore::UI::UILayoutDirection::COLUMN_START:	return "Column_start";
+	case SDLCore::UI::UILayoutDirection::COLUMN_END:	return "Column_end";
+	default:											return "UNKOWN";
+	}
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::UI::UISizeUnit>(SDLCore::UI::UISizeUnit unit) {
+	switch (unit) {
+	case SDLCore::UI::UISizeUnit::PX:			return "px";
+	case SDLCore::UI::UISizeUnit::PERCENTAGE:	return "%";
+	case SDLCore::UI::UISizeUnit::PERCENTAGE_W: return "%w";
+	case SDLCore::UI::UISizeUnit::PERCENTAGE_H: return "%h";
+	default:									return "UNKOWN";
+	}
+}
+
+template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::UI::UIColorTag>>(SDLCore::UI::UIColorID id) {
 	return id.ToString();
 }
@@ -165,17 +211,17 @@ static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::UI::
 template<>
 static inline std::string FormatUtils::toString<SDLCore::UI::PropertyValue::Type>(SDLCore::UI::PropertyValue::Type type) {
 	switch (type) {
-	case SDLCore::UI::PropertyValue::Type::INT: return "int";
-	case SDLCore::UI::PropertyValue::Type::FLOAT: return "float";
-	case SDLCore::UI::PropertyValue::Type::DOUBLE: return "double";
-	case SDLCore::UI::PropertyValue::Type::VECTOR2: return "Vector2";
-	case SDLCore::UI::PropertyValue::Type::VECTOR4: return "Vector4";
-	case SDLCore::UI::PropertyValue::Type::TEXTURE: return "Texture";
-	case SDLCore::UI::PropertyValue::Type::FONT: return "Font";
-	case SDLCore::UI::PropertyValue::Type::COLOR_ID: return "UIColorID";
-	case SDLCore::UI::PropertyValue::Type::FONT_ID: return "UIFontID";
-	case SDLCore::UI::PropertyValue::Type::TEXTURE_ID: return "UITextureID";
-	case SDLCore::UI::PropertyValue::Type::NUMBER_ID: return "UINumberID";
-	default: return "UNKNOWN";
+	case SDLCore::UI::PropertyValue::Type::INT:			return "int";
+	case SDLCore::UI::PropertyValue::Type::FLOAT:		return "float";
+	case SDLCore::UI::PropertyValue::Type::DOUBLE:		return "double";
+	case SDLCore::UI::PropertyValue::Type::VECTOR2:		return "Vector2";
+	case SDLCore::UI::PropertyValue::Type::VECTOR4:		return "Vector4";
+	case SDLCore::UI::PropertyValue::Type::TEXTURE:		return "Texture";
+	case SDLCore::UI::PropertyValue::Type::FONT:		return "Font";
+	case SDLCore::UI::PropertyValue::Type::COLOR_ID:	return "UIColorID";
+	case SDLCore::UI::PropertyValue::Type::FONT_ID:		return "UIFontID";
+	case SDLCore::UI::PropertyValue::Type::TEXTURE_ID:	return "UITextureID";
+	case SDLCore::UI::PropertyValue::Type::NUMBER_ID:	return "UINumberID";
+	default:											return "UNKNOWN";
 	}
 }
