@@ -1,6 +1,6 @@
 #include <CoreLib/Log.h>
 #include <SDL3/SDL.h>
-#include "CoreTime.h"
+#include "SDLCoreTime.h"
 
 namespace SDLCore {
 
