@@ -92,7 +92,6 @@ namespace SDLCore::UI {
 		bool GetIsSet() const;
 		bool GetIsImportant() const;
 
-		PropertyValue& SetIsSet(bool value);
 		PropertyValue& SetIsImportant(bool value);
 
 		PropertyValue& SetValue(int i);
@@ -131,6 +130,8 @@ namespace SDLCore::UI {
 		Type m_valueType = Type::INT;
 		bool m_isSet = false;
 		bool m_isImportant = false;
+
+		PropertyValue& SetIsSet(bool value);
 
 		/**
 		* @brief Helper function that returns a readable type name for type_info.
