@@ -9,7 +9,7 @@
 
 namespace SDLCore::UI {
 	
-	enum class State {
+	enum class UIState {
 		NORMAL = 0,
 		HOVER,
 		ACTIVE,
@@ -17,13 +17,13 @@ namespace SDLCore::UI {
 		DISABLED
 	};
 
-	enum class Alignment {
+	enum class UIAlignment {
 		START = 0,
 		CENTER,
 		END
 	};
 
-	enum class LayoutDirection {
+	enum class UILayoutDirection {
 		ROW = 0,// is equal to using ROW_START
 		COLUMN,// is equal to using COLUMN_START
 		ROW_START,
@@ -31,7 +31,7 @@ namespace SDLCore::UI {
 		COLUMN_START, 
 		COLUMN_END
 	};
-	using LayoutDir = LayoutDirection;
+	using UILayoutDir = UILayoutDirection;
 
 	enum class SizeUnit {
 		PX = 0,
