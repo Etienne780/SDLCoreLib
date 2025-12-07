@@ -8,6 +8,8 @@ void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
     win->SetIcon(tex);
+
+    SDLCore::Font();
 }
 
 void App::OnUpdate() {
@@ -32,17 +34,6 @@ void App::OnUpdate() {
         if (Time::GetFrameCount() % 200 == 0)
             Log::Print("FPS: {}", Time::GetFrameRateHzF());
     }
-
-    /*
-    using namespace SDLCore::UI;
-
-    BeginFrame();
-    {   
-        
-    }
-    EndFrame();
-    
-    */
 }
 
 void App::OnQuit() {
