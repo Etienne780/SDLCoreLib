@@ -33,7 +33,7 @@ namespace SDLCore::UI {
 	};
 	using UILayoutDir = UILayoutDirection;
 
-	enum class SizeUnit {
+	enum class UISizeUnit {
 		PX = 0,
 		PERCENTAGE,
 		PERCENTAGE_W,
