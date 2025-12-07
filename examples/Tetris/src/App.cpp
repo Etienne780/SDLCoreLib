@@ -1,8 +1,4 @@
-﻿#include <cmath>
-#include <vector>
-#include <array>
-#include <CoreLib/Math/Vector4.h>
-#include "App.h"
+﻿#include "App.h"
 
 App::App()
     : Application("Tetris", SDLCore::Version(1, 0)) {
@@ -13,6 +9,8 @@ void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
     win->SetIcon(tex);
+
+    SDLCore::Font();
 }
 
 void App::OnUpdate() {
@@ -34,17 +32,6 @@ void App::OnUpdate() {
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
             DeleteWindow(m_winID);
     }
-
-    /*
-    using namespace SDLCore::UI;
-
-    BeginFrame();
-    {   
-        
-    }
-    EndFrame();
-    
-    */
 }
 
 void App::OnQuit() {
