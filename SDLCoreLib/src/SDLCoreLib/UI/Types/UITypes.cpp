@@ -77,66 +77,77 @@ namespace SDLCore::UI {
 	PropertyValue& PropertyValue::SetValue(int i) {
 		m_valueType = Type::INT;
 		m_value = i;
+		SetIsSet(true);
 		return *this;
 	}
 
 	PropertyValue& PropertyValue::SetValue(float f) {
 		m_valueType = Type::FLOAT;
 		m_value = f;
+		SetIsSet(true);
 		return *this;
 	}
 
 	PropertyValue& PropertyValue::SetValue(double d) {
 		m_valueType = Type::DOUBLE;
 		m_value = d;
+		SetIsSet(true);
 		return *this;
 	}
 
 	PropertyValue& PropertyValue::SetValue(const Vector2& vec) {
 		m_valueType = Type::VECTOR2;
 		m_value = vec;
+		SetIsSet(true);
 		return *this;
 	}
 
 	PropertyValue& PropertyValue::SetValue(const Vector4& vec) {
 		m_valueType = Type::VECTOR4;
 		m_value = vec;
+		SetIsSet(true);
 		return *this;
 	}
 
 	PropertyValue& PropertyValue::SetValue(const Texture& tex) {
 		m_valueType = Type::TEXTURE;
 		m_value = tex;
+		SetIsSet(true);
 		return *this;
 	}
 
 	PropertyValue& PropertyValue::SetValue(std::shared_ptr<Font> font) {
 		m_valueType = Type::FONT;
 		m_value = font;
+		SetIsSet(true);
 		return *this;
 	}
 
 	PropertyValue& PropertyValue::SetValue(UIColorID id) {
 		m_valueType = Type::COLOR_ID;
 		m_value = id;
+		SetIsSet(true);
 		return *this;
 	}
 
 	PropertyValue& PropertyValue::SetValue(UIFontID id) {
 		m_valueType = Type::FONT_ID;
 		m_value = id;
+		SetIsSet(true);
 		return *this;
 	}
 
 	PropertyValue& PropertyValue::SetValue(UITextureID id) {
 		m_valueType = Type::TEXTURE_ID;
 		m_value = id;
+		SetIsSet(true);
 		return *this;
 	}
 
 	PropertyValue& PropertyValue::SetValue(UINumberID id) {
 		m_valueType = Type::NUMBER_ID;
 		m_value = id;
+		SetIsSet(true);
 		return *this;
 	}
 
