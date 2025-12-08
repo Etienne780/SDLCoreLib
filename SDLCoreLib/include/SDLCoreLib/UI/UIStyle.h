@@ -16,6 +16,11 @@ namespace SDLCore::UI {
 		*/
 		std::string ToString() const;
 
+		/*
+		* @brief Merges this style with on top of outStyle
+		*/
+		void Merge(UIStyle& outStyle) const;
+
 		std::string GetName() const;
 		UIStyleState GetStyleState(UIState state);
 

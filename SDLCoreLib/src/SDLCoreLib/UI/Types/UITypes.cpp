@@ -52,6 +52,16 @@ namespace SDLCore::UI {
 		: m_value(id), m_valueType(Type::NUMBER_ID) {
 	}
 
+	void PropertyValue::ApplyWithPriority(const PropertyValue& other) {
+		if (!other.GetIsSet())
+			return;
+
+		if (m_isImportant && !other.m_isImportant)
+			return;
+
+		*this = other;
+	}
+
 	PropertyValue::Type PropertyValue::GetType() const {
 		return m_valueType;
 	}

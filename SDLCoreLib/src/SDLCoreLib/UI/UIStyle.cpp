@@ -14,6 +14,26 @@ namespace SDLCore::UI {
 		return m_name;
 	}
 
+	void UIStyle::Merge(UIStyle& outStyle) const {
+		for (auto& [state, style] : this->m_uiStates) {
+			UIStyleState* outStyleState = outStyle.GetState(state);
+
+			outStyleState->alignmentHor.ApplyWithPriority(style.alignmentHor);
+			outStyleState->alignmentVer.ApplyWithPriority(style.alignmentVer);
+			outStyleState->backgroundColor.ApplyWithPriority(style.backgroundColor);
+			outStyleState->backgroundTexture.ApplyWithPriority(style.backgroundTexture);
+			outStyleState->borderColor.ApplyWithPriority(style.borderColor);
+			outStyleState->borderThickness.ApplyWithPriority(style.borderThickness);
+			outStyleState->height.ApplyWithPriority(style.height);
+			outStyleState->layoutDirection.ApplyWithPriority(style.layoutDirection);
+			outStyleState->margin.ApplyWithPriority(style.margin);
+			outStyleState->padding.ApplyWithPriority(style.padding);
+			outStyleState->sizeUnitH.ApplyWithPriority(style.sizeUnitH);
+			outStyleState->sizeUnitW.ApplyWithPriority(style.sizeUnitW);
+			outStyleState->width.ApplyWithPriority(style.width);
+		}
+	}
+
 	std::string UIStyle::GetName() const {
 		return m_name;
 	}
