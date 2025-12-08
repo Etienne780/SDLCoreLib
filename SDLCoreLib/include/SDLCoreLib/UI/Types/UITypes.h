@@ -8,7 +8,7 @@
 #include "Types/Types.h"
 
 namespace SDLCore::UI {
-	
+
 	enum class UIState {
 		NORMAL = 0,
 		HOVER,
@@ -87,6 +87,8 @@ namespace SDLCore::UI {
 		PropertyValue(UIFontID id);
 		PropertyValue(UITextureID id);
 		PropertyValue(UINumberID id);
+
+		void ApplyWithPriority(const PropertyValue& other);
 
 		Type GetType() const;
 		bool GetIsSet() const;
