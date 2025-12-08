@@ -1,4 +1,5 @@
 ﻿#include "App.h"
+#include <SDLCoreLib/SDLCoreUI.h>
 
 App::App()
     : Application("Tetris", SDLCore::Version(1, 0)) {
@@ -9,7 +10,21 @@ void App::OnStart() {
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
     win->SetIcon(tex);
 
-    SDLCore::Font();
+
+    {
+        using namespace SDLCore;
+
+        UI::UIStyle style("Test");
+        style.SetSize(10, 10);
+
+        UI::FrameScope root;
+        {
+            UI::FrameScope(style);
+            {
+                
+            }
+        }
+    }
 }
 
 void App::OnUpdate() {
