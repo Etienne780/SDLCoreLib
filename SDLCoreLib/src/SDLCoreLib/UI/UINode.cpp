@@ -2,6 +2,8 @@
 
 namespace SDLCore::UI {
 
+	#pragma region UINode
+
 	void UINode::AddChild(const std::shared_ptr<UINode>& child) {
 		child->parent = this;
 		children.push_back(child);
@@ -25,12 +27,30 @@ namespace SDLCore::UI {
 		return outStyle;
 	}
 
+	#pragma endregion
+
+	#pragma region FrameNode
+
 	FrameNode::FrameNode() 
 		: UINode(NodeType::Frame) {
 	}
 
+	void FrameNode::Init(const UIContext* uiContext) {
+		CalculateLayout(uiContext);
+	}
+
+	void FrameNode::CalculateLayout(const UIContext* uiContext) {
+		
+	}
+
+	#pragma endregion
+
+	#pragma region TextNode
+
 	TextNode::TextNode() 
 		: UINode(NodeType::Frame) {
 	}
+
+	#pragma endregion
 
 }
