@@ -143,6 +143,13 @@ namespace SDLCore::UI {
 		static std::string GetReadableTypeName(const std::type_info& type);
 	};
 
+	class UINode;
+	class FrameNode;
+	struct UIContext {
+		std::vector<UINode*> nodeStack;
+		std::shared_ptr<FrameNode> rootNode = nullptr;
+	};
+
 }
 
 template<>

@@ -16,6 +16,8 @@ namespace SDLCore::UI {
         Text
     };
 
+    struct UIContext;
+
     class UINode {
     public:
         UINode(NodeType t);
@@ -44,7 +46,6 @@ namespace SDLCore::UI {
 
         std::vector<std::shared_ptr<UINode>> children;
         std::vector<UIStyle> appliedStyles;
-
         UIEvent eventState;
 
         Vector2 position;
@@ -54,12 +55,20 @@ namespace SDLCore::UI {
     public:
         FrameNode();
 
+        /*
+        * @brief Inits the Frame
+        */
+        void Init(const UIContext* uiContext);
+
         Vector2 size;
         Vector4 padding;
         Vector4 margin;
 
         Vector4 backgroundColor;
         Vector4 borderColor;
+
+    private:
+        void CalculateLayout(const UIContext* uiContext);
     };
 
     class TextNode : public UINode {
