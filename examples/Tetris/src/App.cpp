@@ -5,7 +5,6 @@ App::App()
     : Application("Tetris", SDLCore::Version(1, 0)) {
 }
 
-SDLCore::WindowID id;
 void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);

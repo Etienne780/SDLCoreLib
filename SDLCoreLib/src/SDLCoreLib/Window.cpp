@@ -9,6 +9,7 @@
 
 namespace SDLCore {
 
+
 	Window::Window(WindowID id)
 		: m_id(id) {
 	}
@@ -83,6 +84,7 @@ namespace SDLCore {
 			return false;
 		}
 
+		UpdateDisplayParams(SDL_GetDisplayForWindow(rawWindow));
 		m_sdlWindow = std::shared_ptr<SDL_Window>(rawWindow, [](SDL_Window*) {});
 
 		if (!SetWindowProperties()) {
@@ -247,8 +249,15 @@ namespace SDLCore {
 	}
 
 	void Window::UpdateWindowEvents(Uint32 type) {
+		SDL_WindowID;
 		switch (type) {
+		case SDL_EVENT_WINDOW_MOVED:
+			if (m_sdlWindow)
+				UpdateDisplayParams(SDL_GetDisplayForWindow(m_sdlWindow.get()));
+			break;
 		case SDL_EVENT_WINDOW_RESIZED:
+			if(m_sdlWindow)
+				UpdateDisplayParams(SDL_GetDisplayForWindow(m_sdlWindow.get()));
 			CallOnWindowResize();
 			break;
 		case SDL_EVENT_WINDOW_MINIMIZED:
@@ -297,6 +306,13 @@ namespace SDLCore {
 		else {
 			return SDL_ShowCursor();
 		}
+	}
+
+	void Window::UpdateDisplayParams(SDL_DisplayID displayID) {
+		m_sdlDisplayID = displayID;
+
+		if(m_sdlWindow)
+			m_contentScale = SDL_GetWindowDisplayScale(m_sdlWindow.get());
 	}
 
 	SDL_WindowFlags Window::GetWindowFlags() const {
@@ -421,7 +437,11 @@ namespace SDLCore {
 	}
 
 	DisplayID Window::GetDisplayID() const {
-		return SDL_GetDisplayForWindow(m_sdlWindow.get());
+		return m_sdlDisplayID;
+	}
+
+	float Window::GetContentScale() const {
+		return m_contentScale;
 	}
 
 	bool Window::SetName(const std::string& name) {
