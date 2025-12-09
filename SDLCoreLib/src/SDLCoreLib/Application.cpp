@@ -318,6 +318,7 @@ namespace SDLCore {
         case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
             m_windowsToClose.push_back(window->GetID());
             break;
+        case SDL_EVENT_WINDOW_MOVED:
         case SDL_EVENT_WINDOW_RESIZED:
         case SDL_EVENT_WINDOW_MINIMIZED:
         case SDL_EVENT_WINDOW_MAXIMIZED:

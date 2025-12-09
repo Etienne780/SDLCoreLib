@@ -243,6 +243,12 @@ namespace SDLCore {
 		*/
 		DisplayID GetDisplayID() const;
 
+		/**
+		* @brief Returns the effective UI content scale of the window.
+		* @return The content scaling factor, where 1.0 represents the baseline resolution (1920x1080).
+		*/
+		float GetContentScale() const;
+
 		// ======= Dynamically modifiable properties =======
 
 		/**
@@ -620,6 +626,7 @@ namespace SDLCore {
 
 		// ======= Window properties =======
 		WindowID m_id{ SDLCORE_INVALID_ID };
+		SDL_DisplayID m_sdlDisplayID = 0;
 		TextureSurface m_icon;
 		std::string m_name = "Untitled";
 		mutable int m_positionX = -1;	// < dosent get update automaticly
@@ -638,11 +645,12 @@ namespace SDLCore {
 		bool m_transparentBuffer = false;
 		bool m_isVisible = true;
 		bool m_cursorGrab = false;
-		float m_opacity = 1;
-		float m_minAspectRatio = 0;
-		float m_maxAspectRatio = 0;
-		Vector2 m_minSize{ 0, 0 };
-		Vector2 m_maxSize{ 0, 0 };
+		float m_contentScale = 1.0f; /**< UI scaling factor for this window. A value of 1.0 represents the default scale (1920x1080). */
+		float m_opacity = 1.0f;/**< Is in the rang 0-1. Default is 1*/
+		float m_minAspectRatio = 0.0f;/**< Is in width/height, 0 to disable. Default is 0*/
+		float m_maxAspectRatio = 0.0f;/**< Is in width/height, 0 to disable. Default is 0*/
+		Vector2 m_minSize{ 0.0f, 0.0f };/**< Is in px, 0 to disable. Default [0, 0]*/
+		Vector2 m_maxSize{ 0.0f, 0.0f };/**< Is in px, 0 to disable. Default [0, 0]*/
 
 		IDManager m_callbackIDManager;
 		std::vector<WindowCallback<VoidCallback>> m_onDestroyCallbacks;
@@ -654,7 +662,6 @@ namespace SDLCore {
 
 		// ======= Renderer properties =======
 		int m_vsync = 0;
-
 		std::shared_ptr<SDL_Window> m_sdlWindow = nullptr;
 		std::shared_ptr<SDL_Renderer> m_sdlRenderer = nullptr;
 
@@ -729,6 +736,11 @@ namespace SDLCore {
 		* @brief Updates Shows/hiddes the cursor
 		*/
 		bool UpdateCursorVisibility() const;
+
+		/*
+		* Updates all display related values
+		*/
+		void UpdateDisplayParams(SDL_DisplayID displayID);
 
 		/**
 		* @brief Gets SDL window flags based on current settings
