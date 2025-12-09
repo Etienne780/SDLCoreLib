@@ -8,11 +8,6 @@
 
 namespace SDLCore::UI {
 
-    struct UIContext {
-        std::vector<UINode*> nodeStack;
-        std::shared_ptr<FrameNode> rootNode = nullptr;
-    };
-
     static inline UIContext g_UIContext;
 
     /**
@@ -31,7 +26,8 @@ namespace SDLCore::UI {
         else {
             g_UIContext.rootNode = node;
         }
-
+        
+        node->Init(&g_IUContext);
         g_UIContext.nodeStack.push_back(node.get());
     }
 
