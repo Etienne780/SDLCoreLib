@@ -9,32 +9,47 @@ namespace SDLCore::UI {
 	}
 
     uint16_t UIContext::GetCurrentStackPosition() const {
-        return m_stackPosition;
+        return 0;
     }
 
     void UIContext::IncreaseStackCounter() {
-        m_stackPosition++;
+        // m_stackPosition++;
     }
 
     void UIContext::ResetStackCounter() {
-        m_stackPosition = 0;
+        // m_stackPosition = 0;
     }
 
     bool UIContext::IsNewKey(uintptr_t newId) {
-        if (m_stackPosition < m_nodeIDs.size()) {
-            uintptr_t id = m_nodeIDs[m_stackPosition];
-            return id != newId;
-        }
-        Log::Error("SDLCore::UI::UIContext::IsNewKey: stack was outOfBounds");
+        // if (m_stackPosition < m_nodeIDs.size()) {
+        //     uintptr_t id = m_nodeIDs[m_stackPosition];
+        //     return id != newId;
+        // }
+        // Log::Error("SDLCore::UI::UIContext::IsNewKey: stack was outOfBounds");
         return false;
     }
 
 
     FrameNode* UIContext::BeginFrame(uintptr_t id) {
+        if (m_lastNodeStack.empty() && m_rootNode) {
+            if (m_rootNode->GetID() != id) {
+                // Creats new root node
+                m_rootNode = nullptr;
+            }
+            else {
+                // pushes root node on to stack
+                m_lastNodeStack.push_back(reinterpret_cast<UINode*>(m_rootNode.get()));
+                m_lastChildPosition.push_back(0);
+                return m_rootNode.get();
+            }
+        }
+        
         if (!m_rootNode) {
             m_rootNode = std::make_shared<FrameNode>(id);
             FrameNode* frame = m_rootNode.get();
             m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
+            m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
+            m_lastChildPosition.push_back(0);
             return frame;
         }
 
@@ -46,25 +61,65 @@ namespace SDLCore::UI {
             auto sharedFrame = std::make_shared<FrameNode>(id);
             FrameNode* frame = sharedFrame.get();
             m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
+            m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
+            m_lastChildPosition.push_back(0);
 
             node->AddChild(sharedFrame);
             return frame;
         }
         else {
-            UINode* node = (m_lastNode) ? m_lastNode : m_rootNode.get();
-            if (node->ContainsChildAtPos(m_lastChildPosition, id)) {
-                // element with id exists at position
+            UINode* node = m_lastNodeStack.back();
+            uint16_t pos = (m_lastChildPosition.empty()) ? 0 : m_lastChildPosition.back();
+            UINode* currentNode = nullptr;
+            if (node->ContainsChildAtPos(pos, id, currentNode)) {
+                // element with id exists at position. set it as last position
+                m_lastNodeStack.push_back(currentNode);
+                m_lastChildPosition.push_back(0);
+                return reinterpret_cast<FrameNode*>(currentNode);
             }
             else {
-                // element does not exist
-            }
+                // element does not exist. create element and create stack
+                auto sharedFrame = std::make_shared<FrameNode>(id);
+                FrameNode* frame = sharedFrame.get();
+                m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
+                m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
+                m_lastChildPosition.push_back(0);
 
+                // remove pos and every entry after
+                node->RemoveChildrenFromIndex(pos);
+
+                node->AddChild(sharedFrame);
+                return frame;
+            }
         }
+
+        return nullptr;
     }
 
     void UIContext::EndFrame() {
-        if(!m_nodeStack.empty())
+        if (!m_lastChildPosition.empty()) {
+
+            Log::Print("stack size {}, value {}, nodeStack size: {} value child count: {}", m_lastChildPosition.size(), m_lastChildPosition.back(), m_lastNodeStack.size(), m_lastNodeStack.back()->GetChildren().size());
+            UINode* node = m_lastNodeStack.back();
+            if (node && m_lastChildPosition.back() < node->GetChildren().size()) {
+                node->RemoveChildrenFromIndex(m_lastChildPosition.back());
+            }
+            
+            m_lastChildPosition.pop_back();
+            if (!m_lastChildPosition.empty()) {
+                m_lastChildPosition.back()++;
+            }
+        }
+
+        if (!m_nodeStack.empty())
             m_nodeStack.pop_back();
+
+        if (!m_lastNodeStack.empty())
+            m_lastNodeStack.pop_back();
+    }
+
+    UINode* UIContext::GetRootNode() const {
+        return m_rootNode.get();
     }
 
     void UIContext::SetWindowParams(WindowID id) {

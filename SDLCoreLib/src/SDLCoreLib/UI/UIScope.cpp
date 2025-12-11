@@ -21,13 +21,25 @@ namespace SDLCore::UI {
         }
 
         FrameNode* BeginFrame(uintptr_t key) {
-            if (IsContextNull("GetNode: Could not get node"))
-                return;
+            if (IsContextNull("BeginFrame: Could not begin frame"))
+                return nullptr;
             return ctx->BeginFrame(key);
         }
 
+        void EndFrame() {
+            if (IsContextNull("GetNode: Could not end frame"))
+                return;
+            return ctx->EndFrame();
+        }
+
+        UINode* GetRootNode() {
+            if (IsContextNull("GetRootNode: Could not get root node"))
+                return nullptr;
+            return ctx->GetRootNode();
+        }
+
         void SetWindowParams(WindowID id) {
-            if (IsContextNull("SetWindowParams: Could not Set window params"))
+            if (IsContextNull("SetWindowParams: Could not set window params"))
                 return;
             ctx->SetWindowParams(id);
         }
@@ -36,7 +48,7 @@ namespace SDLCore::UI {
     static inline UICTXWrapper g_currentUIContext;
     static inline bool g_isCurrentUIContextDestroyed = false;
     
-    namespace {
+    namespace Internal {
         FrameNode* InternalBeginFrame(uintptr_t key) {
             return g_currentUIContext.BeginFrame(key); // element with key or new element
         }
@@ -96,6 +108,52 @@ namespace SDLCore::UI {
         return g_currentUIContext.ctx;
     }
 
+    std::string GetContextStringHierarchy() {
+        return GetContextStringHierarchy(g_currentUIContext.ctx);
+    }
+
+    static void BuildHierarchy(std::ostringstream& stream, const UINode* node, int depth = 0) {
+        for (int i = 0; i < depth; i++) {
+            stream << "|    ";
+        }
+
+        const auto& children = node->GetChildren();
+        if (children.size() > 0) {
+            stream << "Begin Node: " << FormatUtils::toString(node->GetType()) << std::endl;
+
+            for (const auto& n : children) {
+                BuildHierarchy(stream, n.get(), depth + 1);
+            }
+
+            for (int i = 0; i < depth; i++) {
+                stream << "|    ";
+            }
+
+            stream << "End Node" << std::endl;
+        }
+        else {
+            stream << "Node: " << FormatUtils::toString(node->GetType()) << std::endl;
+        }
+    }
+
+    std::string GetContextStringHierarchy(UIContext* ctx) {
+        std::ostringstream stream;
+        if (!ctx) {
+            stream << "Invalid UIContext, " << "UIContext is null" << std::endl;
+            return stream.str();
+        }
+
+        UICTXWrapper wrapper{ ctx };
+        UINode* root = wrapper.GetRootNode();
+        if (!root) {
+            stream << "Invalid UIContext, root node is null" << std::endl;
+            return stream.str();
+        }
+
+        BuildHierarchy(stream, root);
+        return stream.str();
+    }
+
     UIEvent EndFrame() {
         // if (g_UIContext.nodeStack.empty())
         //    return UIEvent{};
@@ -104,6 +162,7 @@ namespace SDLCore::UI {
         // g_UIContext.nodeStack.pop_back();
 
         //return node ? node->GetEvent() : UIEvent{};
+        g_currentUIContext.EndFrame();
         return UIEvent{};
     }
 
