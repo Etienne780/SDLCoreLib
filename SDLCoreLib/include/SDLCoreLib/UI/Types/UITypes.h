@@ -44,6 +44,7 @@ namespace SDLCore::UI {
 	struct UIFontTag {};
 	struct UITextureTag {};
 	struct UINumberTag {};
+	struct UINodeTag {};
 
 	/**
 	* @brief Identifier for a color (used by the UIStyles).
@@ -68,6 +69,12 @@ namespace SDLCore::UI {
 	*        Internally stored as an uint32_t
 	*/
 	using UINumberID = SDLCoreID<UINumberTag>;
+
+	/**
+	* @brief Identifier for a node (used by the UIContext).
+	*        Internally stored as an uint32_t
+	*/
+	using UINodeID = SDLCoreID<UINodeTag>;
 
 	class PropertyValue {
 	public:
@@ -143,11 +150,16 @@ namespace SDLCore::UI {
 		static std::string GetReadableTypeName(const std::type_info& type);
 	};
 
-	class UINode;
-	class FrameNode;
-	struct UIContext {
-		std::vector<UINode*> nodeStack;
-		std::shared_ptr<FrameNode> rootNode = nullptr;
+	struct UIKey {
+		uintptr_t id;
+
+		template<size_t N>
+		explicit UIKey(const char(&str)[N])
+			: id(reinterpret_cast<uintptr_t>(str)) {
+		}
+
+		UIKey(const UIKey&) = delete;
+		UIKey(UIKey&&) = default;
 	};
 
 }
@@ -215,6 +227,11 @@ static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::UI::
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::UI::UINumberTag>>(SDLCore::UI::UINumberID id) {
+	return id.ToString();
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::UI::UINodeTag>>(SDLCore::UI::UINodeID id) {
 	return id.ToString();
 }
 
