@@ -8,6 +8,7 @@ namespace SDLCore::UI {
 
 	class UIStyle {
 	public:
+		UIStyle() = default;
 		UIStyle(const std::string& name);
 		UIStyle(std::string&& name);
 		
@@ -39,7 +40,7 @@ namespace SDLCore::UI {
 		UIStyle& SetHeight(float height, bool important = false);
 
 	private:
-		std::string m_name;
+		std::string m_name = "UNKOWN";
 		UIState m_currentState = UIState::NORMAL;
 		std::unordered_map<UIState, UIStyleState> m_uiStates;
 

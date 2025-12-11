@@ -16,11 +16,11 @@ namespace SDLCore::UI {
         Text
     };
 
-    struct UIContext;
+    class UIContext;
 
     class UINode {
     public:
-        UINode(NodeType t);
+        UINode(uintptr_t id, NodeType t);
         virtual ~UINode() = default;
 
         /**
@@ -28,10 +28,10 @@ namespace SDLCore::UI {
         */
         void AddChild(const std::shared_ptr<UINode>& child);
 
-        /**
-        * @brief Return event state of this node.
-        */
+        bool ContainsChildAtPos(uint16_t position, uintptr_t id);
+
         UIEvent GetEvent() const;
+        uintptr_t GetID() const;
 
     protected:
 
@@ -41,19 +41,21 @@ namespace SDLCore::UI {
         */
         UIStyle CreateStyle();
 
-        NodeType type;
-        UINode* parent = nullptr;
+        uintptr_t m_id = 0;
+        NodeType m_type;
+        UINode* m_parent = nullptr;
 
-        std::vector<std::shared_ptr<UINode>> children;
-        std::vector<UIStyle> appliedStyles;
-        UIEvent eventState;
+        std::vector<std::shared_ptr<UINode>> m_children;
+        std::vector<UIStyle> m_appliedStyles;
+        UIStyle m_finalStyle;
+        UIEvent m_eventState;
 
-        Vector2 position;
+        Vector2 m_position;
     };
 
     class FrameNode : public UINode {
     public:
-        FrameNode();
+        FrameNode(uintptr_t key);
 
         /*
         * @brief Inits the Frame
@@ -73,7 +75,7 @@ namespace SDLCore::UI {
 
     class TextNode : public UINode {
     public:
-        TextNode();
+        TextNode(uintptr_t key);
 
         std::string text;
         float textSize = 0;

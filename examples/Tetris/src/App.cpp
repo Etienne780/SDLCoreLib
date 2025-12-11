@@ -5,26 +5,29 @@ App::App()
     : Application("Tetris", SDLCore::Version(1, 0)) {
 }
 
+SDLCore::UI::UIContext* context = SDLCore::UI::CreateContext();
 void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
     win->SetIcon(tex);
 
-
     {
         using namespace SDLCore;
+        UI::SetContextWindow(context, m_winID);
 
         UI::UIStyle style("Test");
         style.SetSize(10, 10);
 
         UI::FrameScope root;
         {
-            UI::FrameScope(style);
+            UI::FrameScope(UI::UIKey("test"), style);
             {
                 
             }
         }
     }
+
+    int i = 1;
 }
 
 void App::OnUpdate() {

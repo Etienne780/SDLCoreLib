@@ -4,45 +4,60 @@
 #include <string>
 
 #include <CoreLib/Log.h>
+
+#include "UI/Types/UIContext.h" 
 #include "UI/UINode.h"
 
 namespace SDLCore::UI {
 
-    static inline UIContext g_UIContext;
+    UIContext* CreateContext();
+    UIContext* CreateContext(WindowID id);
+    void DestroyContext(UIContext* context);
+    void BindContext(UIContext* context);
+    /*
+    * @brief SDLCore::Renderer::Presents needs to called to see the UI
+    */
+    void RenderContext(UIContext* context);
+
+    void SetContextWindow(UIContext* ctx, WindowID id);
+    UIContext* GetCurrentContext();
+
+    namespace {
+        /*
+        * @brief Begins frame internal. Creates frame if necessary
+        */
+        FrameNode* InternalBeginFrame(uintptr_t key);
+    }
 
     /**
     * @brief Begin a new FrameNode and push it onto the UI stack.
     */
     template<typename... Styles>
-    void BeginFrame(const Styles&... styles) {
-        auto node = std::make_shared<FrameNode>();
+    void BeginFrame(UIKey&& key, const Styles&... styles) {
+        // auto node = std::make_shared<FrameNode>();
 
         // Copy styles into node
-        (node->appliedStyles.push_back(styles), ...);
+        // 
 
-        if (!g_UIContext.nodeStack.empty()) {
-            g_UIContext.nodeStack.back()->AddChild(node);
+        // if (!g_UIContext.nodeStack.empty()) {
+        //     g_UIContext.nodeStack.back()->AddChild(node);
+        // }
+        // else {
+        //     g_UIContext.rootNode = node;
+        // }
+        // 
+        // node->Init(&g_UIContext);
+        // g_UIContext.nodeStack.push_back(node.get());
+        FrameNode* frame = InternalBeginFrame(key);
+        if (frame) {
+            (frame->m_appliedStyles.push_back(styles), ...);
         }
-        else {
-            g_UIContext.rootNode = node;
-        }
-        
-        node->Init(&g_IUContext);
-        g_UIContext.nodeStack.push_back(node.get());
     }
 
     /**
-     * @brief End the current FrameNode and pop from UI stack.
-     */
-    inline UIEvent EndFrame() {
-        if (g_UIContext.nodeStack.empty())
-            return UIEvent{};
-
-        FrameNode* node = static_cast<FrameNode*>(g_UIContext.nodeStack.back());
-        g_UIContext.nodeStack.pop_back();
-
-        return node ? node->GetEvent() : UIEvent{};
-    }
+    * @brief End the current FrameNode and pop from UI stack.
+    */
+    UIEvent EndFrame();
 
     /**
     * @brief Create a TextNode and add it to the stack top.
@@ -53,7 +68,7 @@ namespace SDLCore::UI {
         node->text = text;
 
         // Copy styles safely
-        (node->appliedStyles.push_back(styles), ...);
+        (node->m_appliedStyles.push_back(styles), ...);
 
         if (!g_UIContext.nodeStack.empty()) {
             g_UIContext.nodeStack.back()->AddChild(node);
@@ -68,49 +83,24 @@ namespace SDLCore::UI {
     */
     struct FrameScope
     {
-        FrameScope() {
-            BeginFrame();
-            m_node = g_UIContext.nodeStack.back();
-        }
+        FrameScope();
 
         template<typename... Styles>
-        FrameScope(const Styles&... styles) {
-            BeginFrame(styles...);
-            m_node = g_UIContext.nodeStack.back();
+        FrameScope(UIKey&& key, const Styles&... styles) {
+           // BeginFrame(styles...);
+           // m_node = g_UIContext.nodeStack.back();
         }
 
-        ~FrameScope() {
-            if (!m_manualEndDone)
-                SafeEnd();
-        }
+        ~FrameScope();
 
-        UIEvent EndGetEvent() {
-            UIEvent evt = SafeEnd();
-
-            if (m_nodeWasClosed)
-                m_manualEndDone = true;
-            else
-                Log::Warn("SDLCore::UI::FrameScope::EndGetEvent: Ignored because this scope is not the active UI frame (node is not top of stack)");
-
-            return evt;
-        }
+        UIEvent EndGetEvent();
 
     private:
         UINode* m_node = nullptr;
         bool m_manualEndDone = false;
         bool m_nodeWasClosed = false;
 
-        UIEvent SafeEnd() {
-            if (g_UIContext.nodeStack.empty())
-                return {};
-
-            if (g_UIContext.nodeStack.back() != m_node) {
-                return {};
-            }
-
-            m_nodeWasClosed = true;
-            return EndFrame();
-        }
+        UIEvent SafeEnd();
     };
 
 }
