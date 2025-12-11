@@ -21,8 +21,10 @@ namespace SDLCore::UI {
 
     void SetContextWindow(UIContext* ctx, WindowID id);
     UIContext* GetCurrentContext();
+    std::string GetContextStringHierarchy();
+    std::string GetContextStringHierarchy(UIContext* context);
 
-    namespace {
+    namespace Internal {
         /*
         * @brief Begins frame internal. Creates frame if necessary
         */
@@ -48,9 +50,9 @@ namespace SDLCore::UI {
         // 
         // node->Init(&g_UIContext);
         // g_UIContext.nodeStack.push_back(node.get());
-        FrameNode* frame = InternalBeginFrame(key);
+        FrameNode* frame = Internal::InternalBeginFrame(key.id);
         if (frame) {
-            (frame->m_appliedStyles.push_back(styles), ...);
+            (frame->AddStyle(styles), ...);
         }
     }
 
