@@ -1,4 +1,6 @@
 #pragma once
+#include <deque>
+
 #include <CoreLib/Math/Vector2.h>
 
 #include "IDManager.h"
@@ -27,15 +29,16 @@ namespace SDLCore::UI {
 		FrameNode* BeginFrame(uintptr_t id);
 		void EndFrame();
 
+		UINode* GetRootNode() const;
 		void SetWindowParams(WindowID id);
 
 		// uint16_t m_stackPosition = 0;
 		// std::vector<UINode*> m_nodeStack;/*< is created dynamicly*/
 		// std::vector<uintptr_t> m_nodeIDs;/*< ids of each UI element liniear*/
 
-		uint16_t m_lastChildPosition = 0;/*< is the position of the current child inside of last node*/
-		UINode* m_lastNode = nullptr;
-		std::vector<UINode*> m_nodeStack;
+		std::deque<uint16_t> m_lastChildPosition;/*< is the position of the current child inside of last node*/
+		std::deque<UINode*> m_nodeStack;
+		std::deque<UINode*> m_lastNodeStack;
 		std::shared_ptr<FrameNode> m_rootNode = nullptr;
 		WindowID m_windowID;
 		float m_windowContentScale = 1.0f;

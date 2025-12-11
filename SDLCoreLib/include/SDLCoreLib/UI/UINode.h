@@ -19,21 +19,27 @@ namespace SDLCore::UI {
     class UIContext;
 
     class UINode {
+        friend class UIContext;
     public:
         UINode(uintptr_t id, NodeType t);
-        virtual ~UINode() = default;
+        virtual ~UINode();
 
         /**
         * @brief Add a child node and assign parent pointer.
         */
         void AddChild(const std::shared_ptr<UINode>& child);
+        // copys style
+        void AddStyle(const UIStyle& style);
 
-        bool ContainsChildAtPos(uint16_t position, uintptr_t id);
+        bool ContainsChildAtPos(uint16_t position, uintptr_t id, UINode*& outNode);
 
-        UIEvent GetEvent() const;
         uintptr_t GetID() const;
+        UIEvent GetEvent() const;
+        NodeType GetType() const;
+        const std::vector<std::shared_ptr<UINode>>& GetChildren() const;
 
     protected:
+        void RemoveChildrenFromIndex(uint16_t position);
 
         /**
         * @brief Merge all appliedStyles into a final UIStyle object.
