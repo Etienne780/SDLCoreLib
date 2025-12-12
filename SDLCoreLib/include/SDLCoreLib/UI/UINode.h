@@ -6,26 +6,25 @@
 #include <CoreLib/Math/Vector4.h>
 #include <CoreLib/FormatUtils.h>
 
+#include "UI/Types/UINodeTypeRegistry.h"
 #include "UI/UIStyle.h"
 #include "UI/Types/UIEvent.h"
 
 namespace SDLCore::UI {
-
-    enum class NodeType {
-        Frame,
-        Text
-    };
 
     class UIContext;
 
     class UINode {
         friend class UIContext;
     public:
-        UINode(uintptr_t id, NodeType t);
+        UINode(uintptr_t id);
+        UINode(uintptr_t id, UINodeType type);
         virtual ~UINode();
 
         template<typename T, typename... Args>
         T* AddChild(Args&&... args) {
+            static_assert(std::is_base_of<UINode, T>::value, "T must derive from UINode");
+
             auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
             T* child = ptr.get();
             child->m_parent = this;
@@ -40,7 +39,7 @@ namespace SDLCore::UI {
 
         uintptr_t GetID() const;
         UIEvent GetEvent() const;
-        NodeType GetType() const;
+        UINodeType GetType() const;
         const std::vector<std::shared_ptr<UINode>>& GetChildren() const;
 
     protected:
@@ -53,7 +52,7 @@ namespace SDLCore::UI {
         UIStyle CreateStyle();
 
         uintptr_t m_id = 0;
-        NodeType m_type;
+        UINodeType m_type;
         UINode* m_parent = nullptr;
 
         std::vector<std::shared_ptr<UINode>> m_children;
@@ -62,6 +61,8 @@ namespace SDLCore::UI {
         UIEvent m_eventState;
 
         Vector2 m_position;
+    private: 
+        UINodeType GenerateUIType();
     };
 
     class FrameNode : public UINode {
@@ -96,10 +97,15 @@ namespace SDLCore::UI {
 }
 
 template<>
-static inline std::string FormatUtils::toString<SDLCore::UI::NodeType>(SDLCore::UI::NodeType type) {
-    switch (type) {
-    case SDLCore::UI::NodeType::Frame: return "Frame";
-    case SDLCore::UI::NodeType::Text:  return "Text";
-    default:                           return "UNKOWN";
+static inline std::string FormatUtils::toString<SDLCore::UI::UINodeType>(SDLCore::UI::UINodeType type) {
+    switch (type.value) {
+    case 0:     return "Frame";
+    case 1:     return "Text"; 
+    default: {
+        if (type.value < SDLCore::UI::UINodeTypeRegistry::GetRegisterTypeCount())
+            return "Custom";
+        else
+            return "UNKWON";
+    }
     }
 }

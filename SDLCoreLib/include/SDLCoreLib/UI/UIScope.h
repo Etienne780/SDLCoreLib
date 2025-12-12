@@ -25,84 +25,28 @@ namespace SDLCore::UI {
     std::string GetContextStringHierarchy(UIContext* context);
 
     namespace Internal {
-        /*
-        * @brief Begins frame internal. Creates frame if necessary
-        */
         FrameNode* InternalBeginFrame(uintptr_t key);
+        TextNode* InternalAddText(uintptr_t key);
     }
 
-    /**
-    * @brief Begin a new FrameNode and push it onto the UI stack.
-    */
     template<typename... Styles>
     void BeginFrame(UIKey&& key, const Styles&... styles) {
-        // auto node = std::make_shared<FrameNode>();
-
-        // Copy styles into node
-        // 
-
-        // if (!g_UIContext.nodeStack.empty()) {
-        //     g_UIContext.nodeStack.back()->AddChild(node);
-        // }
-        // else {
-        //     g_UIContext.rootNode = node;
-        // }
-        // 
-        // node->Init(&g_UIContext);
-        // g_UIContext.nodeStack.push_back(node.get());
-        FrameNode* frame = Internal::InternalBeginFrame(key.id);
-        if (frame) {
-            (frame->AddStyle(styles), ...);
+        FrameNode* node = Internal::InternalBeginFrame(key.id);
+        if (node) {
+            (node->AddStyle(styles), ...);
         }
     }
 
-    /**
-    * @brief End the current FrameNode and pop from UI stack.
-    */
     UIEvent EndFrame();
 
-    /**
-    * @brief Create a TextNode and add it to the stack top.
-    */
     template<typename... Styles>
-    void Text(const std::string& text, const Styles&... styles) {
-        auto node = std::make_shared<TextNode>();
-        node->text = text;
-
-        // Copy styles safely
-        (node->m_appliedStyles.push_back(styles), ...);
-
-        if (!g_UIContext.nodeStack.empty()) {
-            g_UIContext.nodeStack.back()->AddChild(node);
+    UIEvent Text(UIKey&& key, const std::string& text, const Styles&... styles) {
+        TextNode* node = Internal::InternalAddText(key.id);
+        if (node) {
+            node->text = text;
+            (node->AddStyle(styles), ...);
         }
-        else {
-            Log::Error("SDLCore::UI::Text: Text cannot be added as root element");
-        }
+        return UIEvent{};
     }
-
-    /**
-    * @brief RAII scope for FrameNode begin/end.
-    */
-    struct FrameScope
-    {
-        FrameScope();
-
-        template<typename... Styles>
-        FrameScope(UIKey&& key, const Styles&... styles) {
-           // BeginFrame(styles...);
-           // m_node = g_UIContext.nodeStack.back();
-        }
-
-        ~FrameScope();
-
-        UIEvent EndGetEvent();
-
-    private:
-        UINode* m_node = nullptr;
-        bool m_manualEndDone = false;
-        bool m_nodeWasClosed = false;
-
-        UIEvent SafeEnd();
-    };
 
 }
