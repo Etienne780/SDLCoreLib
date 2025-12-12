@@ -27,10 +27,17 @@ namespace SDLCore::UI {
         }
 
         void EndFrame() {
-            if (IsContextNull("GetNode: Could not end frame"))
+            if (IsContextNull("EndFrame: Could not end frame"))
                 return;
             return ctx->EndFrame();
         }
+
+        template<typename T, typename ...Args>
+        T* AddNode(uintptr_t id, Args&&... args) {
+            if (IsContextNull("AddNode: Could not add node"))
+                return nullptr;
+            return ctx->AddNode<T>(id, std::forward<Args>(args)...);
+            }
 
         UINode* GetRootNode() {
             if (IsContextNull("GetRootNode: Could not get root node"))
@@ -50,7 +57,11 @@ namespace SDLCore::UI {
     
     namespace Internal {
         FrameNode* InternalBeginFrame(uintptr_t key) {
-            return g_currentUIContext.BeginFrame(key); // element with key or new element
+            return g_currentUIContext.BeginFrame(key); // node with key or new node
+        }
+
+        TextNode* InternalAddText(uintptr_t key) {
+            return g_currentUIContext.AddNode<TextNode>(key);// node with key or new node
         }
     }
 
@@ -155,48 +166,8 @@ namespace SDLCore::UI {
     }
 
     UIEvent EndFrame() {
-        // if (g_UIContext.nodeStack.empty())
-        //    return UIEvent{};
-
-        // FrameNode* node = static_cast<FrameNode*>(g_UIContext.nodeStack.back());
-        // g_UIContext.nodeStack.pop_back();
-
-        //return node ? node->GetEvent() : UIEvent{};
         g_currentUIContext.EndFrame();
         return UIEvent{};
-    }
-
-    FrameScope::FrameScope() {
-        // BeginFrame();
-        // m_node = g_UIContext.nodeStack.back();
-    }
-
-    FrameScope::~FrameScope() {
-        if (!m_manualEndDone)
-            SafeEnd();
-    }
-
-    UIEvent FrameScope::EndGetEvent() {
-        UIEvent evt = SafeEnd();
-
-        if (m_nodeWasClosed)
-            m_manualEndDone = true;
-        else
-            Log::Warn("SDLCore::UI::FrameScope::EndGetEvent: Ignored because this scope is not the active UI frame (node is not top of stack)");
-
-        return evt;
-    }
-
-    UIEvent FrameScope::SafeEnd() {
-        // if (g_UIContext.nodeStack.empty())
-        //     return {};
-        // 
-        // if (g_UIContext.nodeStack.back() != m_node) {
-        //     return {};
-        // }
-        // 
-        // m_nodeWasClosed = true;
-        return EndFrame();
     }
 
 }

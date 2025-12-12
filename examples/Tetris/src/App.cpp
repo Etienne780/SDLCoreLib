@@ -36,6 +36,9 @@ void App::OnUpdate() {
             UI::BeginFrame(UI::UIKey("panel_1"), style);
             {
                 UI::BeginFrame(UI::UIKey("panel_1_1"), style);
+                {
+                    UI::Text(UI::UIKey("text"), "cool");
+                }
                 UI::EndFrame();
             }
             UI::EndFrame();

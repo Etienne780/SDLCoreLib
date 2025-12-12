@@ -4,9 +4,13 @@ namespace SDLCore::UI {
 
 	#pragma region UINode
 
-	UINode::UINode(uintptr_t id, NodeType t)
-		: m_id(id), m_type(t) {
-		Log::Debug("CreadedNode: id={} type={}", id, t);
+	UINode::UINode(uintptr_t id)
+		: UINode(id, GenerateUIType()){
+	}
+
+	UINode::UINode(uintptr_t id, UINodeType type) 
+		: m_id(id), m_type(type) {
+		Log::Debug("CreadedNode: id={} type={}", id, m_type);
 	}
 
 	UINode::~UINode() {
@@ -32,7 +36,7 @@ namespace SDLCore::UI {
 		return m_eventState;
 	}
 
-	NodeType UINode::GetType() const {
+	UINodeType UINode::GetType() const {
 		return m_type;
 	}
 
@@ -56,12 +60,18 @@ namespace SDLCore::UI {
 		return outStyle;
 	}
 
+	UINodeType UINode::GenerateUIType() {
+		static UINodeType type = UINodeTypeRegistry::RegisterType();
+		return type;
+	}
+
 	#pragma endregion
 
 	#pragma region FrameNode
 
 	FrameNode::FrameNode(uintptr_t key)
-		: UINode(key, NodeType::Frame) {
+		: UINode(key, UINodeType(0)) {
+		// hard codes Frame node to ui type 0
 	}
 
 	void FrameNode::Init(const UIContext* uiContext) {
@@ -78,7 +88,8 @@ namespace SDLCore::UI {
 	#pragma region TextNode
 
 	TextNode::TextNode(uintptr_t key)
-		: UINode(key, NodeType::Frame) {
+		: UINode(key, UINodeType(1)) {
+		// hard codes Frame node to ui type 1
 	}
 
 	#pragma endregion
