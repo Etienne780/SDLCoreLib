@@ -13,11 +13,6 @@ namespace SDLCore::UI {
 		Log::Debug("DestroyedNode: id={} type={}", m_id, m_type);
 	}
 
-	void UINode::AddChild(const std::shared_ptr<UINode>& child) {
-		child->m_parent = this;
-		m_children.push_back(child);
-	}
-
 	void UINode::AddStyle(const UIStyle& style) {
 		m_appliedStyles.push_back(style);
 	}

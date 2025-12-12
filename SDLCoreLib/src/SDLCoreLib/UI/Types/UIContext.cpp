@@ -8,28 +8,6 @@ namespace SDLCore::UI {
 		return new UIContext();
 	}
 
-    uint16_t UIContext::GetCurrentStackPosition() const {
-        return 0;
-    }
-
-    void UIContext::IncreaseStackCounter() {
-        // m_stackPosition++;
-    }
-
-    void UIContext::ResetStackCounter() {
-        // m_stackPosition = 0;
-    }
-
-    bool UIContext::IsNewKey(uintptr_t newId) {
-        // if (m_stackPosition < m_nodeIDs.size()) {
-        //     uintptr_t id = m_nodeIDs[m_stackPosition];
-        //     return id != newId;
-        // }
-        // Log::Error("SDLCore::UI::UIContext::IsNewKey: stack was outOfBounds");
-        return false;
-    }
-
-
     FrameNode* UIContext::BeginFrame(uintptr_t id) {
         if (m_lastNodeStack.empty() && m_rootNode) {
             if (m_rootNode->GetID() != id) {
@@ -58,13 +36,11 @@ namespace SDLCore::UI {
             if (!node)
                 return nullptr;
 
-            auto sharedFrame = std::make_shared<FrameNode>(id);
-            FrameNode* frame = sharedFrame.get();
+            FrameNode* frame = node->AddChild<FrameNode>(id);
             m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastChildPosition.push_back(0);
 
-            node->AddChild(sharedFrame);
             return frame;
         }
         else {
@@ -78,17 +54,14 @@ namespace SDLCore::UI {
                 return reinterpret_cast<FrameNode*>(currentNode);
             }
             else {
-                // element does not exist. create element and create stack
-                auto sharedFrame = std::make_shared<FrameNode>(id);
-                FrameNode* frame = sharedFrame.get();
-                m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
-                m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
-                m_lastChildPosition.push_back(0);
-
                 // remove pos and every entry after
                 node->RemoveChildrenFromIndex(pos);
 
-                node->AddChild(sharedFrame);
+                // element does not exist. create element and create stack
+                FrameNode* frame = node->AddChild<FrameNode>(id);
+                m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
+                m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
+                m_lastChildPosition.push_back(0);
                 return frame;
             }
         }
@@ -98,8 +71,6 @@ namespace SDLCore::UI {
 
     void UIContext::EndFrame() {
         if (!m_lastChildPosition.empty()) {
-
-            Log::Print("stack size {}, value {}, nodeStack size: {} value child count: {}", m_lastChildPosition.size(), m_lastChildPosition.back(), m_lastNodeStack.size(), m_lastNodeStack.back()->GetChildren().size());
             UINode* node = m_lastNodeStack.back();
             if (node && m_lastChildPosition.back() < node->GetChildren().size()) {
                 node->RemoveChildrenFromIndex(m_lastChildPosition.back());

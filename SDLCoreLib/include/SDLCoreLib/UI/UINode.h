@@ -24,10 +24,15 @@ namespace SDLCore::UI {
         UINode(uintptr_t id, NodeType t);
         virtual ~UINode();
 
-        /**
-        * @brief Add a child node and assign parent pointer.
-        */
-        void AddChild(const std::shared_ptr<UINode>& child);
+        template<typename T, typename... Args>
+        T* AddChild(Args&&... args) {
+            auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
+            T* child = ptr.get();
+            child->m_parent = this;
+            m_children.push_back(std::move(ptr));
+            return child;
+        }
+
         // copys style
         void AddStyle(const UIStyle& style);
 
