@@ -346,7 +346,7 @@ namespace SDLCore::Render {
     }
 
     void FillRect(const Vector4& trans) {
-        FillRect(trans.x, trans.y, trans.x, trans.y);
+        FillRect(trans.x, trans.y, trans.z, trans.w);
     }
 
     void FillRects(const Vector4* transforms, size_t count) {
