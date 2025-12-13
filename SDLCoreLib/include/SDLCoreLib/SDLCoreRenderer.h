@@ -604,8 +604,7 @@ namespace SDLCore::Render {
 	void SetTextClipWidth(float width);
 	float GetTextClipWidth();
 	void ResetTextClipWidth();
-	// font cach size should be atleast 20-30
-	float CalculateFontSize(const std::string& text, float targetWidth, float targetHeight);
+	float CalculateFontSizeForBounds(const std::string& text, float targetW, float targetH);
 
 	float GetCharWidth(char c);
 	float GetCharHeight(char c, bool ignoreBelowBaseline = false);
