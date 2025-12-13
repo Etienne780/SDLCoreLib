@@ -249,7 +249,6 @@ namespace SDLCore {
 	}
 
 	void Window::UpdateWindowEvents(Uint32 type) {
-		SDL_WindowID;
 		switch (type) {
 		case SDL_EVENT_WINDOW_MOVED:
 			if (m_sdlWindow)
