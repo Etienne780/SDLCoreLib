@@ -575,6 +575,9 @@ namespace SDLCore::Render {
 	Align GetTextAlignHor();
 	Align GetTextAlignVer();
 
+	void SetLineHeightMultiplier(float padding);
+	float GetLineHeightMultiplier();
+
 	/**
 	* @brief Calculates the width of a string when rendered with the active font.
 	* @param text The text string to measure.
@@ -588,6 +591,9 @@ namespace SDLCore::Render {
 	* @return The maximum height in pixels of the characters in the string. Returns 0 if no font is set.
 	*/
 	float GetTextHeight(const std::string& text);
+
+	float GetTextBlockWidth(const std::string& text);
+	float GetTextBlockHeight(const std::string& text);
 
 	#pragma endregion
 

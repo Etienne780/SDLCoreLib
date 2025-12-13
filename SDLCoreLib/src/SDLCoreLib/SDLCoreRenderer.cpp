@@ -18,12 +18,13 @@ namespace SDLCore::Render {
     static SDL_Color s_activeColor { 255, 255, 255, 255 };
     static float s_strokeWidth = 1;
     static bool s_innerStroke = true;
-    static Align s_currentTextHorAlign = Align::START;
-    static Align s_currentTextVerAlign = Align::START;
 
     // ========== Text ==========
     std::shared_ptr<SDLCore::Font> s_font = std::make_shared<SDLCore::Font>(true);// loads the default font
     float s_fontSize = s_font->GetSelectedSize();
+    static Align s_currentTextHorAlign = Align::START;
+    static Align s_currentTextVerAlign = Align::START;
+    float s_lineHeightMultiplier = 0.2f;
 
     SDL_Renderer* GetActiveRenderer() {
         auto rendererPtr = s_renderer.lock();
@@ -656,8 +657,8 @@ namespace SDLCore::Render {
     float CalculateHorOffset(const std::string& text, Align align) {
         switch (align) {
         case SDLCore::Align::START:     return 0;
-        case SDLCore::Align::CENTER:    return GetTextWidth(text) * 0.5f;
-        case SDLCore::Align::END:       return GetTextWidth(text);
+        case SDLCore::Align::CENTER:    return GetTextBlockWidth(text) * 0.5f;
+        case SDLCore::Align::END:       return GetTextBlockWidth(text);
         default:                                return 0;
         }
     }
@@ -666,8 +667,8 @@ namespace SDLCore::Render {
     float CalculateVerOffset(const std::string& text, Align align) {
         switch (align) {
         case SDLCore::Align::START:     return 0;
-        case SDLCore::Align::CENTER:    return GetTextHeight(text) * 0.5f;
-        case SDLCore::Align::END:       return GetTextHeight(text);
+        case SDLCore::Align::CENTER:    return GetTextBlockHeight(text) * 0.5f;
+        case SDLCore::Align::END:       return GetTextBlockHeight(text);
         default:                                return 0;
         }
     }
@@ -702,10 +703,18 @@ namespace SDLCore::Render {
         float penX = x;
         float penY = y;
 
-        float h = GetTextHeight(text);
+        float lineH = GetTextHeight(text) + s_lineHeightMultiplier * s_fontSize;
         for (char c : text) {
+            //skip line break chars
+            if (c == '\n') {
+                penY += lineH;
+                penX = x;
+                continue;
+            }
+
             auto* m = asset->GetGlyphMetrics(c);
-            if (!m) continue;
+            if (!m) 
+                continue;
 
             SDL_FRect dst{
               penX - offsetX,
@@ -746,6 +755,14 @@ namespace SDLCore::Render {
         s_font->SelectSize(s_fontSize);
     }
 
+    float GetActiveFontSize() {
+        return (s_font) ? s_font->GetSelectedSize() : s_fontSize;
+    }
+
+    std::shared_ptr<Font> GetActiveFont() {
+        return s_font;
+    }
+
     void SetTextAlignHor(Align hor) {
         s_currentTextHorAlign = hor;
     }
@@ -772,12 +789,12 @@ namespace SDLCore::Render {
         return s_currentTextVerAlign;
     }
 
-    float GetActiveFontSize() {
-        return (s_font) ? s_font->GetSelectedSize() : s_fontSize;
+    void SetLineHeightMultiplier(float padding) {
+        s_lineHeightMultiplier = padding; 
     }
 
-    std::shared_ptr<Font> GetActiveFont() {
-        return s_font;
+    float GetLineHeightMultiplier() {
+        return s_lineHeightMultiplier; 
     }
 
     float GetTextWidth(const std::string& text) {
@@ -811,9 +828,46 @@ namespace SDLCore::Render {
         float maxH = 0;
         for (char c : text) {
             if (auto* m = asset->GetGlyphMetrics(c))
-                maxH = std::max(maxH, static_cast<float>(m->BearingY()));
+                maxH = std::max(maxH, static_cast<float>(m->MetricsHeight()));
         }
         return maxH;
+    }
+
+    float GetTextBlockWidth(const std::string& text) {
+        if (!s_font) {
+            Log::Error("SDLCore::Renderer::GetTextBlockWidth: Failed to get text width, no font was set");
+            return 0.0f;
+        }
+
+        auto* asset = s_font->GetFontAsset();
+        if (!asset)
+            return 0.0f;
+
+        float maxWidth = 0.0f;
+        float lineWidth = 0.0f;
+
+        for (char c : text) {
+            if (c == '\n') {
+                maxWidth = std::max(maxWidth, lineWidth);
+                lineWidth = 0.0f;
+                continue;
+            }
+
+            if (auto* m = asset->GetGlyphMetrics(c))
+                lineWidth += m->advance;
+        }
+
+        maxWidth = std::max(maxWidth, lineWidth);
+
+        return maxWidth;
+    }
+
+    float GetTextBlockHeight(const std::string& text) {
+        float lineH = GetTextHeight(text) + s_lineHeightMultiplier * s_fontSize;
+        size_t lines = 1;
+        for (char c : text)
+            if (c == '\n') lines++;
+        return lineH * lines;
     }
 
     #pragma endregion
