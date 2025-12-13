@@ -575,8 +575,12 @@ namespace SDLCore::Render {
 	Align GetTextAlignHor();
 	Align GetTextAlignVer();
 
-	void SetLineHeightMultiplier(float padding);
+	void SetLineHeightMultiplier(float multiplier);
 	float GetLineHeightMultiplier();
+
+	// 0 = no limit
+	void SetMaxLines(size_t lines);
+	size_t GetMaxLines();
 
 	/**
 	* @brief Calculates the width of a string when rendered with the active font.

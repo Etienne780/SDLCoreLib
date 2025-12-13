@@ -25,6 +25,7 @@ namespace SDLCore::Render {
     static Align s_currentTextHorAlign = Align::START;
     static Align s_currentTextVerAlign = Align::START;
     float s_lineHeightMultiplier = 0.2f;
+    size_t s_maxLines = 0;// < 0 = no limits
 
     SDL_Renderer* GetActiveRenderer() {
         auto rendererPtr = s_renderer.lock();
@@ -704,9 +705,12 @@ namespace SDLCore::Render {
         float penY = y;
 
         float lineH = GetTextHeight(text) + s_lineHeightMultiplier * s_fontSize;
+        size_t currentLine = 0;
         for (char c : text) {
-            //skip line break chars
             if (c == '\n') {
+                currentLine++;
+                if (s_maxLines != 0 && currentLine >= s_maxLines)
+                    break;
                 penY += lineH;
                 penX = x;
                 continue;
@@ -789,12 +793,20 @@ namespace SDLCore::Render {
         return s_currentTextVerAlign;
     }
 
-    void SetLineHeightMultiplier(float padding) {
-        s_lineHeightMultiplier = padding; 
+    void SetLineHeightMultiplier(float multiplier) {
+        s_lineHeightMultiplier = multiplier;
     }
 
     float GetLineHeightMultiplier() {
         return s_lineHeightMultiplier; 
+    }
+
+    void SetMaxLines(size_t lines) {
+        s_maxLines = lines;
+    }
+
+    size_t GetMaxLines() {
+        return s_maxLines;
     }
 
     float GetTextWidth(const std::string& text) {
@@ -834,22 +846,23 @@ namespace SDLCore::Render {
     }
 
     float GetTextBlockWidth(const std::string& text) {
-        if (!s_font) {
-            Log::Error("SDLCore::Renderer::GetTextBlockWidth: Failed to get text width, no font was set");
+        if (!s_font) 
             return 0.0f;
-        }
-
         auto* asset = s_font->GetFontAsset();
-        if (!asset)
+        if (!asset) 
             return 0.0f;
 
         float maxWidth = 0.0f;
         float lineWidth = 0.0f;
+        size_t currentLine = 0;
 
         for (char c : text) {
             if (c == '\n') {
                 maxWidth = std::max(maxWidth, lineWidth);
                 lineWidth = 0.0f;
+                currentLine++;
+                if (s_maxLines != 0 && currentLine >= s_maxLines)
+                    break;
                 continue;
             }
 
@@ -858,15 +871,24 @@ namespace SDLCore::Render {
         }
 
         maxWidth = std::max(maxWidth, lineWidth);
-
         return maxWidth;
     }
 
     float GetTextBlockHeight(const std::string& text) {
         float lineH = GetTextHeight(text) + s_lineHeightMultiplier * s_fontSize;
+
         size_t lines = 1;
-        for (char c : text)
-            if (c == '\n') lines++;
+        for (char c : text) {
+            if (c == '\n') 
+                lines++;
+            if (s_maxLines != 0 && s_maxLines < lines)
+                break;
+        }
+
+        if (s_maxLines != 0) {
+            lines = std::min(lines, s_maxLines);
+        }
+
         return lineH * lines;
     }
 
