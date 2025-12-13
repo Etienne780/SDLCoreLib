@@ -36,7 +36,6 @@ group "Libraries"
     include "CoreLib"
     include "SDLCoreLib"
 
-
 ------------------------------------
 -- Examples Includes
 ------------------------------------
@@ -44,7 +43,7 @@ group "Examples"
     include "examples/Demo"
     include "examples/Tetris"
     include "examples/Pong"
-
+    include "examples/Template"
 
 -- Restore default group
 group ""
