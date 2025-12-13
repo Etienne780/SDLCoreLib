@@ -12,8 +12,8 @@ GOTO Done
 echo.
 echo Enter 'build.bat [action]' where action is one of the following:
 echo.
-echo   compile           Will generate make file then compile using the make file.
 echo   clean             Remove all binaries and intermediate binaries and project files.
+echo   compile           Will generate make file then compile using the make file.
 echo   codelite          Generate CodeLite project files
 echo   gmake             Generate GNU makefiles for POSIX, MinGW, and Cygwin
 echo   gmakelegacy       Generate GNU makefiles for POSIX, MinGW, and Cygwin
