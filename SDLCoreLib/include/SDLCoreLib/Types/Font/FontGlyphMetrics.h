@@ -47,6 +47,10 @@ namespace SDLCore {
         */
         int MetricsHeight() const;
 
+        int AscenderHeight() const;
+
+        int DescenderHeight() const;
+
         /**
         * @brief Returns the horizontal bearing (left side bearing).
         *

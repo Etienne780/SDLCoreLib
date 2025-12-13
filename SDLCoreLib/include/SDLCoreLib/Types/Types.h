@@ -134,6 +134,19 @@ namespace SDLCore {
 	TextureParams& operator&=(TextureParams& a, TextureParams b);
 	bool operator!(TextureParams a);
 
+	enum class Align {
+		NONE = 0,
+		START,
+		CENTER,
+		END
+	};
+
+	enum class Type {
+		NONE = 0,
+		CHARACTERS,
+		PIXELS
+	};
+
 }
 
 namespace std {
@@ -177,8 +190,7 @@ static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::Text
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::TextureParams>(SDLCore::TextureParams param) {
-	switch (param)
-	{
+	switch (param) {
 	case SDLCore::TextureParams::NONE: return "NONE";
 	case SDLCore::TextureParams::ROTATION: return "ROTATION";
 	case SDLCore::TextureParams::CENTER:  return "CENTER";
@@ -186,5 +198,26 @@ static inline std::string FormatUtils::toString<SDLCore::TextureParams>(SDLCore:
 	case SDLCore::TextureParams::FLIP: return "FLIP";
 	case SDLCore::TextureParams::TYPE: return "TYPE";
 	default: return "UNKNWON";
+	}
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::Align>(SDLCore::Align align) {
+	switch (align) {
+	case SDLCore::Align::NONE:	return "None";
+	case SDLCore::Align::START:	return "Start";
+	case SDLCore::Align::CENTER:return "Center";
+	case SDLCore::Align::END:	return "End";
+	default:					return "UNKOWN";
+	}
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::Type>(SDLCore::Type type) {
+	switch (type) {
+	case SDLCore::Type::NONE:		return "none";
+	case SDLCore::Type::CHARACTERS: return "Characters";
+	case SDLCore::Type::PIXELS:		return "Pixels";
+	default:						return "UNKOWN";
 	}
 }

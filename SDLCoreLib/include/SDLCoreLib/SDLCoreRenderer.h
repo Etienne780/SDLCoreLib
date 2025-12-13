@@ -6,6 +6,7 @@
 #include <CoreLib/Math/Vector2.h>
 #include <CoreLib/Math/Vector3.h>
 #include <CoreLib/Math/Vector4.h>
+#include <CoreLib/FormatUtils.h>
 
 #include "SDLCoreTypes.h"
 #include "Window.h"
@@ -132,11 +133,11 @@ namespace SDLCore::Render {
 	void SetClipRect(int x, int y, int w, int h);
 
 	/**
-	 * @brief Sets the clipping rectangle.
-	 * @param pos Position in pixels.
-	 * @param w Width in pixels.
-	 * @param h Height in pixels.
-	 */
+	* @brief Sets the clipping rectangle.
+	* @param pos Position in pixels.
+	* @param w Width in pixels.
+	* @param h Height in pixels.
+	*/
 	void SetClipRect(const Vector2& pos, int w, int h);
 
 	/**
@@ -524,17 +525,31 @@ namespace SDLCore::Render {
 	void Text(const std::string& text, float x, float y);
 
 	/**
-	 * @brief Draws formatted text at the specified position using the active font.
-	 * @param x X position in pixels.
-	 * @param y Y position in pixels.
-	 * @param args Variadic list of values inserted into the text format pattern ({} markers).
-	 * @note Each {} placeholder is replaced by the corresponding value. This approach is simple but
-	 *       may not be optimal for performance in frequent or high-volume calls.
-	 */
+	* @brief Draws formatted text at the specified position using the active font.
+	* @param x X position in pixels.
+	* @param y Y position in pixels.
+	* @param args Variadic list of values inserted into the text format pattern ({} markers).
+	* @note Each {} placeholder is replaced by the corresponding value. This approach is simple but
+	*       may not be optimal for performance in frequent or high-volume calls.
+	*/
 	template<typename... Args>
 	void TextF(float x, float y, Args&&... args) {
 		Text(Log::GetFormattedString(std::forward<Args>(args)...), x, y);
 	}
+
+	// font size 16
+	// text align start
+	// ellipse = "..."
+	// MaxLines = 0
+	// TextLimit = 0 type::none
+	// TextClipWidth = -1
+	/**
+	* @brief Resets all text-related rendering parameters to their default values.
+	*
+	* This resets font size(16), text alignment(START), ellipsis string("..."), maximum line count(0),
+	* text truncation settings(0, NONE) and clip width(-1) to their default states.
+	*/
+	void ResetTextParams();
 
 	/**
 	* @brief Sets the active font using a shared pointer.
@@ -567,19 +582,228 @@ namespace SDLCore::Render {
 	std::shared_ptr<Font> GetActiveFont();
 
 	/**
-	* @brief Calculates the width of a string when rendered with the active font.
-	* @param text The text string to measure.
-	* @return The width in pixels. Returns 0 if no font is set.
+	* @brief Sets the horizontal text alignment mode.
+	* @param horizontal Horizontal alignment value.
+	*/
+	void SetTextAlignHor(Align horizontal);
+
+	/**
+	* @brief Sets the vertical text alignment mode.
+	* @param vertical Vertical alignment value.
+	*/
+	void SetTextAlignVer(Align vertical);
+
+	/**
+	* @brief Sets both horizontal and vertical text alignment modes.
+	* @param horizontal Horizontal alignment.
+	* @param vertical Vertical alignment.
+	*/
+	void SetTextAlign(Align horizontal, Align vertical);
+
+	/**
+	* @brief Sets both horizontal and vertical alignment to the same value.
+	* @param aligment Alignment applied to both axes.
+	*/
+	void SetTextAlign(Align aligment);
+
+	/**
+	* @brief Returns the current horizontal text alignment.
+	* @return Horizontal alignment value.
+	*/
+	Align GetTextAlignHor();
+
+	/**
+	* @brief Returns the current vertical text alignment.
+	* @return Vertical alignment value.
+	*/
+	Align GetTextAlignVer();
+
+	/**
+	* @brief Sets the line height multiplier applied between text lines.
+	*
+	* The multiplier scales the additional spacing based on the active font size.
+	*
+	* @param multiplier Line height multiplier.
+	*/
+	void SetLineHeightMultiplier(float multiplier);
+
+	/**
+	* @brief Returns the currently configured line height multiplier.
+	* @return Line height multiplier value.
+	*/
+	float GetLineHeightMultiplier();
+
+	/**
+	* @brief Sets the maximum number of lines rendered for a text block.
+	*
+	* A value of 0 disables line limiting.
+	*
+	* @param lines Maximum number of lines to render.
+	*/
+	void SetMaxLines(size_t lines);
+
+	/**
+	* @brief Returns the maximum number of lines allowed for text rendering.
+	* @return Maximum line count, or 0 if unlimited.
+	*/
+	size_t GetMaxLines();
+
+	/**
+	* @brief Sets the ellipsis string used when text is truncated.
+	* @param ellipsis Ellipsis string appended to truncated text.
+	*/
+	void SetTextEllipsis(const std::string& ellipsis);
+
+	/**
+	* @brief Returns the currently configured ellipsis string.
+	* @return Ellipsis string.
+	*/
+	std::string GetEllipsis();
+
+	/**
+	* @brief Configures text truncation behavior.
+	*
+	* A value of 0 or type NONE disables truncation.
+	*
+	* @param amount Maximum character or pixel count.
+	* @param type Truncation mode (characters or pixels).
+	*/
+	void SetTextLimit(size_t amount, Type type = Type::CHARACTERS);
+
+	/**
+	* @brief Returns the configured text truncation amount.
+	* @return Truncation limit value.
+	*/
+	size_t GetTextLimitAmount();
+
+	/**
+	* @brief Returns the current text truncation mode.
+	* @return Truncation type.
+	*/
+	Type GetTextLimitType();
+
+	/**
+	* @brief Returns a truncated version of the given text according to the
+	* currently configured truncation settings.
+	*
+	* @param text Input text.
+	* @return Truncated text if limits are enabled, otherwise the original text.
+	*/
+	std::string GetTruncatedText(const std::string& text);
+
+	/**
+	* @brief Sets the clip width used for automatic word-based line breaking.
+	*
+	* A value of -1 disables width-based line breaking.
+	*
+	* @param width Maximum line width in pixels.
+	*/
+	void SetTextClipWidth(float width);
+
+	/**
+	* @brief Returns the currently active text clip width.
+	* @return Clip width in pixels, or -1 if disabled.
+	*/
+	float GetTextClipWidth();
+
+	/**
+	* @brief Disables width-based text clipping and line breaking.
+	*/
+	void ResetTextClipWidth();
+
+	/**
+	* @brief Estimates a font size that allows the given text to fit within specified width and height bounds.
+	*
+	* The calculation is based on the current font and its size. Ensure a valid font size is set prior to calling this function.
+	* This function only computes a suitable size; it does not modify the active font size.
+	*
+	* @param text The text string to fit within the bounds.
+	* @param targetW Maximum allowed width in pixels.
+	* @param targetH Maximum allowed height in pixels.
+	* @return Estimated font size in pixels that best fits the target dimensions.
+	*/
+	float CalculateFontSizeForBounds(const std::string& text, float targetW, float targetH);
+
+	/**
+	* @brief Returns the advance width of a single character.
+	* @param c Character to measure.
+	* @return Character width in pixels.
+	*/
+	float GetCharWidth(char c);
+
+	/**
+	* @brief Returns the height of a single character.
+	*
+	* @param c Character to measure.
+	* @param ignoreBelowBaseline If true, descenders are excluded.
+	* @return Character height in pixels.
+	*/
+	float GetCharHeight(char c, bool ignoreBelowBaseline = false);
+
+	/**
+	* @brief Calculates the width of a text string using the active font.
+	* @param text Text to measure.
+	* @return Width in pixels.
 	*/
 	float GetTextWidth(const std::string& text);
 
 	/**
-	* @brief Calculates the height of a string when rendered with the active font.
-	* @param text The text string to measure.
-	* @return The maximum height in pixels of the characters in the string. Returns 0 if no font is set.
+	* @brief Calculates the height of a text string using the active font.
+	*
+	* The height is based on the maximum ascender and optionally descender
+	* found in the string.
+	*
+	* @param text Text to measure.
+	* @param ignoreBelowBaseline If true, descenders are excluded.
+	* @return Text height in pixels.
 	*/
-	float GetTextHeight(const std::string& text);
+	float GetTextHeight(const std::string& text, bool ignoreBelowBaseline = false);
+
+	/**
+	* @brief Calculates the maximum width of a multi-line text block.
+	* @param text Text block to measure.
+	* @return Maximum line width in pixels.
+	*/
+	float GetTextBlockWidth(const std::string& text);
+
+	/**
+	* @brief Calculates the total height of a multi-line text block.
+	*
+	* Line height multipliers and maximum line limits are applied.
+	*
+	* @param text Text block to measure.
+	* @param ignoreBelowBaseline If true, descenders are excluded.
+	* @return Total text block height in pixels.
+	*/
+	float GetTextBlockHeight(const std::string& text, bool ignoreBelowBaseline = false);
+
+	/**
+	* @brief Calculates the height of a single rendered text line.
+	*
+	* Includes the configured line height multiplier.
+	*
+	* @param line Line of text to measure.
+	* @param ignoreBelowBaseline If true, descenders are excluded.
+	* @return Line height in pixels.
+	*/
+	float GetLineHeight(const std::string& line, bool ignoreBelowBaseline = false);
 
 	#pragma endregion
 
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::Render::BlendMode>(SDLCore::Render::BlendMode blendMode) {
+	switch (blendMode)
+	{
+	case SDLCore::Render::BlendMode::NONE:					return "None";
+	case SDLCore::Render::BlendMode::BLEND:					return "Blend";
+	case SDLCore::Render::BlendMode::BLEND_PREMULTIPLIED:	return "BlendPremultiplied";
+	case SDLCore::Render::BlendMode::ADD:					return "Add";
+	case SDLCore::Render::BlendMode::ADD_PREMULTIPLIED:		return "AddPremultiplied";
+	case SDLCore::Render::BlendMode::MOD:					return "Mod";
+	case SDLCore::Render::BlendMode::MUL:					return "Mul";
+	case SDLCore::Render::BlendMode::INVALID:				return "Invalid";
+	default:												return "UNKOWN";
+	}
 }

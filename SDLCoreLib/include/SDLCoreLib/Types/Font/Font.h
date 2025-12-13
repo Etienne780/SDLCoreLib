@@ -8,9 +8,9 @@ namespace SDLCore {
 
 	class Font {
 	public:
-		Font(bool useDefaultFont = false);
-		Font(const SystemFilePath& path, std::vector<float> sizes = {}, size_t cachedSizes = 10);
-		Font(const unsigned char* data, size_t dataSize, std::vector<float> fontSizes = {}, size_t cachedSizes = 10);
+		Font(bool useDefaultFont = false, size_t cachedSizes = 20);
+		Font(const SystemFilePath& path, std::vector<float> sizes = {}, size_t cachedSizes = 20);
+		Font(const unsigned char* data, size_t dataSize, std::vector<float> fontSizes = {}, size_t cachedSizes = 20);
 
 		Font* SelectSize(float size);
 		Font* SetCachSize(size_t size);
@@ -45,7 +45,7 @@ namespace SDLCore {
 		size_t m_maxFontSizesCached = 10;/**< number of font sizes that get stored at the same time */
 
 		size_t m_globalAccessCounter = 0;
-		float m_selectedSize = -1;
+		float m_selectedSize = -1.0f;
 
 		bool CreateFontAsset(float size);
 		bool CreateFontAssetFromMem(const unsigned char* data, size_t dataSize, float fontSize);
