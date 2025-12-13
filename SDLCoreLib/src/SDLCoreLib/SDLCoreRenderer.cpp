@@ -18,10 +18,12 @@ namespace SDLCore::Render {
     static SDL_Color s_activeColor { 255, 255, 255, 255 };
     static float s_strokeWidth = 1;
     static bool s_innerStroke = true;
+    static Align s_currentTextHorAlign = Align::START;
+    static Align s_currentTextVerAlign = Align::START;
 
     // ========== Text ==========
     std::shared_ptr<SDLCore::Font> s_font = std::make_shared<SDLCore::Font>(true);// loads the default font
-    float s_fontSize = 16;
+    float s_fontSize = s_font->GetSelectedSize();
 
     SDL_Renderer* GetActiveRenderer() {
         auto rendererPtr = s_renderer.lock();
@@ -649,7 +651,27 @@ namespace SDLCore::Render {
     #pragma endregion
 
     #pragma region Text
+
+    // Helper function to calculate the horizontal offset of the text
+    float CalculateHorOffset(const std::string& text, Align align) {
+        switch (align) {
+        case SDLCore::Align::START:     return 0;
+        case SDLCore::Align::CENTER:    return GetTextWidth(text) * 0.5f;
+        case SDLCore::Align::END:       return GetTextWidth(text);
+        default:                                return 0;
+        }
+    }
     
+    // Helper function to calculate the vertical offset of the text
+    float CalculateVerOffset(const std::string& text, Align align) {
+        switch (align) {
+        case SDLCore::Align::START:     return 0;
+        case SDLCore::Align::CENTER:    return GetTextHeight(text) * 0.5f;
+        case SDLCore::Align::END:       return GetTextHeight(text);
+        default:                                return 0;
+        }
+    }
+
     void Text(const std::string& text, float x, float y) {
         auto renderer = GetActiveRenderer("Text");
         if (!renderer)
@@ -674,6 +696,9 @@ namespace SDLCore::Render {
             s_activeColor.b);
         SDL_SetTextureAlphaMod(atlas, s_activeColor.a);
 
+        float offsetX = CalculateHorOffset(text, s_currentTextHorAlign);
+        float offsetY = CalculateVerOffset(text, s_currentTextVerAlign);
+
         float penX = x;
         float penY = y;
 
@@ -683,8 +708,8 @@ namespace SDLCore::Render {
             if (!m) continue;
 
             SDL_FRect dst{
-              static_cast<float>(penX),
-              static_cast<float>(penY),
+              penX - offsetX,
+              penY - offsetY,
               static_cast<float>(m->atlasWidth),
               static_cast<float>(m->atlasHeight)
             };
@@ -719,6 +744,32 @@ namespace SDLCore::Render {
         if (!s_font)
             s_font = std::make_shared<SDLCore::Font>(true);// loads the default font
         s_font->SelectSize(s_fontSize);
+    }
+
+    void SetTextAlignHor(Align hor) {
+        s_currentTextHorAlign = hor;
+    }
+
+    void SetTextAlignVer(Align ver) {
+        s_currentTextVerAlign = ver;
+    }
+
+    void SetTextAlign(Align hor, Align ver) {
+        SetTextAlignHor(hor);
+        SetTextAlignVer(ver);
+    }
+
+    void SetTextAlign(Align align) {
+        SetTextAlignHor(align);
+        SetTextAlignVer(align);
+    }
+
+    Align GetTextAlignHor() {
+        return s_currentTextHorAlign;
+    }
+
+    Align GetTextAlignVer() {
+        return s_currentTextVerAlign;
     }
 
     float GetActiveFontSize() {

@@ -45,7 +45,7 @@ namespace SDLCore {
 		size_t m_maxFontSizesCached = 10;/**< number of font sizes that get stored at the same time */
 
 		size_t m_globalAccessCounter = 0;
-		float m_selectedSize = -1;
+		float m_selectedSize = -1.0f;
 
 		bool CreateFontAsset(float size);
 		bool CreateFontAssetFromMem(const unsigned char* data, size_t dataSize, float fontSize);

@@ -134,6 +134,12 @@ namespace SDLCore {
 	TextureParams& operator&=(TextureParams& a, TextureParams b);
 	bool operator!(TextureParams a);
 
+	enum class Align {
+		START = 0,
+		CENTER,
+		END
+	};
+
 }
 
 namespace std {
@@ -186,5 +192,16 @@ static inline std::string FormatUtils::toString<SDLCore::TextureParams>(SDLCore:
 	case SDLCore::TextureParams::FLIP: return "FLIP";
 	case SDLCore::TextureParams::TYPE: return "TYPE";
 	default: return "UNKNWON";
+	}
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::Align>(SDLCore::Align align) {
+	switch (align)
+	{
+	case SDLCore::Align::START:	return "Start";
+	case SDLCore::Align::CENTER:return "Center";
+	case SDLCore::Align::END:	return "End";
+	default:					return "Unknown";
 	}
 }

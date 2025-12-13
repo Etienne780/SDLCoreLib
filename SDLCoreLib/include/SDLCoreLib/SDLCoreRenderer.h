@@ -6,6 +6,7 @@
 #include <CoreLib/Math/Vector2.h>
 #include <CoreLib/Math/Vector3.h>
 #include <CoreLib/Math/Vector4.h>
+#include <CoreLib/FormatUtils.h>
 
 #include "SDLCoreTypes.h"
 #include "Window.h"
@@ -566,6 +567,14 @@ namespace SDLCore::Render {
 	*/
 	std::shared_ptr<Font> GetActiveFont();
 
+	void SetTextAlignHor(Align horizontal);
+	void SetTextAlignVer(Align vertical);
+	void SetTextAlign(Align horizontal, Align vertical);
+	void SetTextAlign(Align aligment);
+
+	Align GetTextAlignHor();
+	Align GetTextAlignVer();
+
 	/**
 	* @brief Calculates the width of a string when rendered with the active font.
 	* @param text The text string to measure.
@@ -582,4 +591,20 @@ namespace SDLCore::Render {
 
 	#pragma endregion
 
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::Render::BlendMode>(SDLCore::Render::BlendMode blendMode) {
+	switch (blendMode)
+	{
+	case SDLCore::Render::BlendMode::NONE:					return "None";
+	case SDLCore::Render::BlendMode::BLEND:					return "Blend";
+	case SDLCore::Render::BlendMode::BLEND_PREMULTIPLIED:	return "BlendPremultiplied";
+	case SDLCore::Render::BlendMode::ADD:					return "Add";
+	case SDLCore::Render::BlendMode::ADD_PREMULTIPLIED:		return "AddPremultiplied";
+	case SDLCore::Render::BlendMode::MOD:					return "Mod";
+	case SDLCore::Render::BlendMode::MUL:					return "Mul";
+	case SDLCore::Render::BlendMode::INVALID:				return "Invalid";
+	default:												return "Unknown";
+	}
 }
