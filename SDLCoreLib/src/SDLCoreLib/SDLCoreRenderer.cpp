@@ -30,6 +30,7 @@ namespace SDLCore::Render {
     Type s_textLimitType = Type::NONE;
     size_t s_textMaxLimit = 0;          // max characters or Pixel
     std::string s_textEllipsis = "...";
+    float s_textClipWidth = -1.0f;
 
     SDL_Renderer* GetActiveRenderer() {
         auto rendererPtr = s_renderer.lock();
@@ -678,16 +679,133 @@ namespace SDLCore::Render {
         }
     }
 
-    void Text(const std::string& text, float x, float y) {
-        auto renderer = GetActiveRenderer("Text");
-        if (!renderer) return;
-        if (!s_font) return;
+    std::vector<std::string> BuildLines(const std::string& text) {
+        std::vector<std::string> lines;
+
+        if (s_textClipWidth == -1) {
+            std::istringstream stream(text);
+            std::string line;
+
+            while (std::getline(stream, line)) {
+                lines.push_back(line);
+                if (s_textMaxLines != 0 && lines.size() >= s_textMaxLines)
+                    break;
+            }
+
+            return lines;
+        }
+
+        if (!s_font)
+            return lines;
 
         auto* asset = s_font->GetFontAsset();
-        if (!asset) return;
+        if (!asset)
+            return lines;
+
+        std::string currentLine;
+        float currentLineWidth = 0.0f;
+
+        std::string currentWord;
+        float currentWordWidth = 0.0f;
+
+        auto flushLine = [&]() {
+            if (!currentLine.empty()) {
+                lines.push_back(currentLine);
+                currentLine.clear();
+                currentLineWidth = 0.0f;
+            }
+        };
+
+        auto flushWord = [&]() {
+            if (currentWord.empty())
+                return;
+
+            // Word fits into current line
+            if (currentLineWidth + currentWordWidth <= s_textClipWidth) {
+                currentLine += currentWord;
+                currentLineWidth += currentWordWidth;
+            }
+            // Word does not fit, new line
+            else {
+                flushLine();
+
+                // Word still too large. char fallback
+                if (currentWordWidth > s_textClipWidth) {
+                    for (char c : currentWord) {
+                        auto* m = asset->GetGlyphMetrics(c);
+                        if (!m)
+                            continue;
+
+                        float cw = static_cast<float>(m->advance);
+                        if (currentLineWidth + cw > s_textClipWidth) {
+                            flushLine();
+                        }
+
+                        currentLine += c;
+                        currentLineWidth += cw;
+                    }
+                }
+                else {
+                    currentLine = currentWord;
+                    currentLineWidth = currentWordWidth;
+                }
+            }
+
+            currentWord.clear();
+            currentWordWidth = 0.0f;
+        };
+
+        for (char c : text) {
+            if (c == '\n') {
+                flushWord();
+                flushLine();
+                continue;
+            }
+
+            auto* m = asset->GetGlyphMetrics(c);
+            if (!m)
+                continue;
+
+            float charWidth = static_cast<float>(m->advance);
+
+            // Word separator
+            if (c == ' ' || c == '\t') {
+                currentWord += c;
+                currentWordWidth += charWidth;
+                flushWord();
+                continue;
+            }
+
+            // Normal character
+            currentWord += c;
+            currentWordWidth += charWidth;
+        }
+
+        flushWord();
+        flushLine();
+
+        if (s_textMaxLines != 0 && lines.size() > s_textMaxLines)
+            lines.resize(s_textMaxLines);
+
+        return lines;
+    }
+
+    void Text(const std::string& text, float x, float y) {
+        auto renderer = GetActiveRenderer("Text");
+        if (!renderer) 
+            return;
+        if (!s_font) {
+            Log::Error("SDLCore::Renderer::Text: Faild to render text for text'{}', no font was set", text);
+            return;
+        }
+
+        auto* asset = s_font->GetFontAsset();
+        if (!asset) 
+            return;
 
         SDL_Texture* atlas = asset->GetGlyphAtlasTexture(s_winID);
-        if (!atlas) return;
+        if (!atlas) 
+            return;
 
         SDL_SetTextureColorMod(atlas, s_activeColor.r, s_activeColor.g, s_activeColor.b);
         SDL_SetTextureAlphaMod(atlas, s_activeColor.a);
@@ -696,24 +814,29 @@ namespace SDLCore::Render {
             ? GetTruncatedText(text)
             : text;
 
-        float blockOffsetX = CalculateHorOffset(currentText, s_textHorAlign);
-        float blockOffsetY = CalculateVerOffset(currentText, s_textVerAlign);
+        std::vector<std::string> lines = BuildLines(currentText);
+        if (lines.empty())
+            return;
 
-        std::istringstream stream(currentText);
-        std::string line;
+        float blockOffsetY = 0.0f;
+        for (const auto& l : lines)
+            blockOffsetY += CalculateVerOffset(currentText, s_textVerAlign);
+
         float penY = y;
         size_t currentLine = 0;
 
-        while (std::getline(stream, line)) {
+        for (const auto& line : lines) {
             if (s_textMaxLines != 0 && currentLine >= s_textMaxLines)
                 break;
 
+            float blockOffsetX = CalculateHorOffset(line, s_textHorAlign);
             float lineH = GetLineHeight(line, true);
             float penX = x;
 
             for (char c : line) {
                 auto* m = asset->GetGlyphMetrics(c);
-                if (!m) continue;
+                if (!m)
+                    continue;
 
                 SDL_FRect dst{
                     penX - blockOffsetX,
@@ -721,14 +844,15 @@ namespace SDLCore::Render {
                     static_cast<float>(m->atlasWidth),
                     static_cast<float>(m->atlasHeight)
                 };
+
                 SDL_FRect src{
                     static_cast<float>(m->atlasX),
                     static_cast<float>(m->atlasY),
                     static_cast<float>(m->atlasWidth),
                     static_cast<float>(m->atlasHeight)
                 };
-                SDL_RenderTexture(renderer.get(), atlas, &src, &dst);
 
+                SDL_RenderTexture(renderer.get(), atlas, &src, &dst);
                 penX += m->advance;
             }
 
@@ -876,6 +1000,18 @@ namespace SDLCore::Render {
         default:
             return text;
         }
+    }
+
+    void SetTextClipWidth(float w) {
+        s_textClipWidth = w;
+    }
+
+    float GetTextClipWidth() {
+        return s_textClipWidth; 
+    }
+    
+    void ResetTextClipWidth() {
+        s_textClipWidth = -1.0f;
     }
 
     float GetCharWidth(char c) {

@@ -133,11 +133,11 @@ namespace SDLCore::Render {
 	void SetClipRect(int x, int y, int w, int h);
 
 	/**
-	 * @brief Sets the clipping rectangle.
-	 * @param pos Position in pixels.
-	 * @param w Width in pixels.
-	 * @param h Height in pixels.
-	 */
+	* @brief Sets the clipping rectangle.
+	* @param pos Position in pixels.
+	* @param w Width in pixels.
+	* @param h Height in pixels.
+	*/
 	void SetClipRect(const Vector2& pos, int w, int h);
 
 	/**
@@ -591,6 +591,11 @@ namespace SDLCore::Render {
 	Type GetTextLimitType();
 
 	std::string GetTruncatedText(const std::string& text);
+
+	// clip rect -1 is no, w =  linebreaks
+	void SetTextClipWidth(float width);
+	float GetTextClipWidth();
+	void ResetTextClipWidth();
 
 	float GetCharWidth(char c);
 	float GetCharHeight(char c, bool ignoreBelowBaseline = false);
