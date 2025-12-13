@@ -76,3 +76,56 @@ SDLCoreLib uses **Premake** for project generation. To build a project:
 
 ```bat
 build.bat clean
+```
+### Available Actions
+```bat
+compile      Generate project files and build using Visual Studio 2022
+clean        Remove all binaries, intermediate files, and generated projects
+codelite     Generate CodeLite project files
+gmake        Generate GNU Makefiles
+vs2022       Generate Visual Studio 2022 project files
+xcode4       Generate Xcode project files
+help         Show this help message
+```
+The compile action will automatically call msbuild to build the solution.
+
+## Adding New Projects
+To add a new project, copy the `examples/Template` folder and rename it to your desired project name, e.g., `examples/Tetris`. Update the `premake5.lua` file inside the new project folder with the project-specific settings:
+```lua
+project "Tetris"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++17"
+    staticruntime "On"
+
+    SetTargetAndObjDirs("%{prj.name}")
+
+    files {
+        "src/**.cpp",
+        "src/**.c",
+        "include/**.h",
+        "include/**.hpp",
+        "main.cpp"
+    }
+
+    includedirs {
+        "include",
+        "include/%{prj.name}",
+        "../SDLCoreLib/include",
+        "../CoreLib/include"
+    }
+
+    links {
+        "CoreLib",
+        "SDLCoreLib"
+    }
+    
+    IncludeSDLCoreLib()
+    CopySDLDLLs()
+```
+Finally, register the project in your main workspace in the root `premake5.lua` file:
+```lua
+group "Examples"
+    include "examples/Tetris"
+```
+The `group "Examples"` is optional. It is used to create a clear separation between example projects and libraries. `include` can also be called outside of the group if you prefer not to have the project grouped.
