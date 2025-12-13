@@ -7,8 +7,10 @@
 
 namespace SDLCore {
 
-	Font::Font(bool useDefaultFont) {
+	Font::Font(bool useDefaultFont, size_t cachedSizes) 
+		: m_maxFontSizesCached(cachedSizes) {
 		SetDefaultFont(useDefaultFont);
+		CalculateCachedFonts();
 	}
 
 	Font::Font(const SystemFilePath& path, std::vector<float> sizes, size_t cachedSizes)

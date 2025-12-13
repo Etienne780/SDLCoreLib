@@ -20,7 +20,7 @@ namespace SDLCore::Render {
     static bool s_innerStroke = true;
 
     // ========== Text ==========
-    std::shared_ptr<SDLCore::Font> s_font = std::make_shared<SDLCore::Font>(true);// loads the default font
+    std::shared_ptr<SDLCore::Font> s_font = std::make_shared<SDLCore::Font>(true, 30);// loads the default font
     float s_fontSize = s_font->GetSelectedSize();
     static Align s_textHorAlign = Align::START;
     static Align s_textVerAlign = Align::START;
@@ -29,7 +29,8 @@ namespace SDLCore::Render {
     size_t s_textMaxLines = 0;// < 0 = no limits
     Type s_textLimitType = Type::NONE;
     size_t s_textMaxLimit = 0;          // max characters or Pixel
-    std::string s_textEllipsis = "...";
+    std::string s_textEllipsisDefault = "...";
+    std::string s_textEllipsis = s_textEllipsisDefault;
     float s_textClipWidth = -1.0f;
 
     SDL_Renderer* GetActiveRenderer() {
@@ -861,6 +862,22 @@ namespace SDLCore::Render {
         }
     }
 
+
+    // font size 16
+    // text align start
+    // ellipse = "..."
+    // MaxLines = 0
+    // TextLimit = 0 type::none
+    // TextClipWidth = -1
+    void ResetTextParams() {
+        SetFontSize(16.0f);
+        SetTextAlign(Align::START);
+        SetTextEllipsis(s_textEllipsisDefault);
+        SetMaxLines(0);
+        SetTextLimit(0, Type::NONE);
+        SetTextClipWidth(-1);
+    }
+
     void SetFont(std::shared_ptr<Font> font) {
         s_font = font;
         s_font->SelectSize(s_fontSize);
@@ -1012,6 +1029,33 @@ namespace SDLCore::Render {
     
     void ResetTextClipWidth() {
         s_textClipWidth = -1.0f;
+    }
+
+    float CalculateFontSize(const std::string& text, float targetW, float targetH) {
+        if (targetW <= 1 || targetH <= 1 || text.empty())
+            return 1;
+        
+        float low = 0.1;
+        float high = targetH;
+        float bestFit = low;
+
+        int maxIter = 20;
+        for (int i = 0; i < maxIter; i++) {
+            float mid = (low + high) / 2.0;
+            SetFontSize(mid);
+            float tw = GetTextBlockWidth(text);
+
+            if (tw <= targetW && mid <= targetH) {
+                bestFit = mid;
+                low = mid;
+            }
+            else {
+                high = mid;
+            }
+        }
+
+        SetFontSize(bestFit);
+        return bestFit;
     }
 
     float GetCharWidth(char c) {

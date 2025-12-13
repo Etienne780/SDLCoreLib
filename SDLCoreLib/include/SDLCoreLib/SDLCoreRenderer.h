@@ -537,6 +537,14 @@ namespace SDLCore::Render {
 		Text(Log::GetFormattedString(std::forward<Args>(args)...), x, y);
 	}
 
+	// font size 16
+	// text align start
+	// ellipse = "..."
+	// MaxLines = 0
+	// TextLimit = 0 type::none
+	// TextClipWidth = -1
+	void ResetTextParams();
+
 	/**
 	* @brief Sets the active font using a shared pointer.
 	* @param font The font to set as active.
@@ -596,6 +604,8 @@ namespace SDLCore::Render {
 	void SetTextClipWidth(float width);
 	float GetTextClipWidth();
 	void ResetTextClipWidth();
+	// font cach size should be atleast 20-30
+	float CalculateFontSize(const std::string& text, float targetWidth, float targetHeight);
 
 	float GetCharWidth(char c);
 	float GetCharHeight(char c, bool ignoreBelowBaseline = false);
