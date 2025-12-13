@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Types/Font/FontGlyphMetrics.h"
 
 namespace SDLCore {
@@ -16,6 +17,14 @@ namespace SDLCore {
 
     int GlypeMetrics::MetricsHeight() const {
         return maxY - minY;
+    }
+
+    int GlypeMetrics::AscenderHeight() const {
+        return std::max(0, maxY);
+    }
+
+    int GlypeMetrics::DescenderHeight() const {
+        return std::max(0, -minY);
     }
 
     int GlypeMetrics::BearingX() const {

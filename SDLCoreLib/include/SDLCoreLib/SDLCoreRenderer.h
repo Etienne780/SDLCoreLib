@@ -582,6 +582,19 @@ namespace SDLCore::Render {
 	void SetMaxLines(size_t lines);
 	size_t GetMaxLines();
 
+	void SetTextEllipsis(const std::string& ellipsis);
+	std::string GetEllipsis();
+
+	// amount = 0 means no turncat
+	void SetTextLimit(size_t amount, Type type = Type::CHARACTERS);
+	size_t GetTextLimitAmount();
+	Type GetTextLimitType();
+
+	std::string GetTruncatedText(const std::string& text);
+
+	float GetCharWidth(char c);
+	float GetCharHeight(char c, bool ignoreBelowBaseline = false);
+
 	/**
 	* @brief Calculates the width of a string when rendered with the active font.
 	* @param text The text string to measure.
@@ -594,10 +607,12 @@ namespace SDLCore::Render {
 	* @param text The text string to measure.
 	* @return The maximum height in pixels of the characters in the string. Returns 0 if no font is set.
 	*/
-	float GetTextHeight(const std::string& text);
+	float GetTextHeight(const std::string& text, bool ignoreBelowBaseline = false);
 
 	float GetTextBlockWidth(const std::string& text);
-	float GetTextBlockHeight(const std::string& text);
+	float GetTextBlockHeight(const std::string& text, bool ignoreBelowBaseline = false);
+
+	float GetLineHeight(const std::string& line, bool ignoreBelowBaseline = false);
 
 	#pragma endregion
 
@@ -615,6 +630,6 @@ static inline std::string FormatUtils::toString<SDLCore::Render::BlendMode>(SDLC
 	case SDLCore::Render::BlendMode::MOD:					return "Mod";
 	case SDLCore::Render::BlendMode::MUL:					return "Mul";
 	case SDLCore::Render::BlendMode::INVALID:				return "Invalid";
-	default:												return "Unknown";
+	default:												return "UNKOWN";
 	}
 }

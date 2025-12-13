@@ -22,10 +22,14 @@ namespace SDLCore::Render {
     // ========== Text ==========
     std::shared_ptr<SDLCore::Font> s_font = std::make_shared<SDLCore::Font>(true);// loads the default font
     float s_fontSize = s_font->GetSelectedSize();
-    static Align s_currentTextHorAlign = Align::START;
-    static Align s_currentTextVerAlign = Align::START;
-    float s_lineHeightMultiplier = 0.2f;
-    size_t s_maxLines = 0;// < 0 = no limits
+    static Align s_textHorAlign = Align::START;
+    static Align s_textVerAlign = Align::START;
+    float s_textLineHeightMultiplier = 0.2f;
+
+    size_t s_textMaxLines = 0;// < 0 = no limits
+    Type s_textLimitType = Type::NONE;
+    size_t s_textMaxLimit = 0;          // max characters or Pixel
+    std::string s_textEllipsis = "...";
 
     SDL_Renderer* GetActiveRenderer() {
         auto rendererPtr = s_renderer.lock();
@@ -663,82 +667,73 @@ namespace SDLCore::Render {
         default:                                return 0;
         }
     }
-    
+
     // Helper function to calculate the vertical offset of the text
     float CalculateVerOffset(const std::string& text, Align align) {
         switch (align) {
         case SDLCore::Align::START:     return 0;
-        case SDLCore::Align::CENTER:    return GetTextBlockHeight(text) * 0.5f;
-        case SDLCore::Align::END:       return GetTextBlockHeight(text);
+        case SDLCore::Align::CENTER:    return GetTextBlockHeight(text, true) * 0.5f;
+        case SDLCore::Align::END:       return GetTextBlockHeight(text, true);
         default:                                return 0;
         }
     }
 
     void Text(const std::string& text, float x, float y) {
         auto renderer = GetActiveRenderer("Text");
-        if (!renderer)
-            return;
-
-        if (!s_font) {
-            Log::Error("SDLCore::Renderer::Text: Faild to draw text '{}', no font was set", text);
-            return;
-        }
+        if (!renderer) return;
+        if (!s_font) return;
 
         auto* asset = s_font->GetFontAsset();
-        if (!asset)
-            return;
+        if (!asset) return;
 
         SDL_Texture* atlas = asset->GetGlyphAtlasTexture(s_winID);
-        if (!atlas)
-            return;
+        if (!atlas) return;
 
-        SDL_SetTextureColorMod(atlas, 
-            s_activeColor.r, 
-            s_activeColor.g, 
-            s_activeColor.b);
+        SDL_SetTextureColorMod(atlas, s_activeColor.r, s_activeColor.g, s_activeColor.b);
         SDL_SetTextureAlphaMod(atlas, s_activeColor.a);
 
-        float offsetX = CalculateHorOffset(text, s_currentTextHorAlign);
-        float offsetY = CalculateVerOffset(text, s_currentTextVerAlign);
+        std::string currentText = (s_textMaxLimit != 0 && s_textLimitType != Type::NONE)
+            ? GetTruncatedText(text)
+            : text;
 
-        float penX = x;
+        float blockOffsetX = CalculateHorOffset(currentText, s_textHorAlign);
+        float blockOffsetY = CalculateVerOffset(currentText, s_textVerAlign);
+
+        std::istringstream stream(currentText);
+        std::string line;
         float penY = y;
-
-        float lineH = GetTextHeight(text) + s_lineHeightMultiplier * s_fontSize;
         size_t currentLine = 0;
-        for (char c : text) {
-            if (c == '\n') {
-                currentLine++;
-                if (s_maxLines != 0 && currentLine >= s_maxLines)
-                    break;
-                penY += lineH;
-                penX = x;
-                continue;
+
+        while (std::getline(stream, line)) {
+            if (s_textMaxLines != 0 && currentLine >= s_textMaxLines)
+                break;
+
+            float lineH = GetLineHeight(line, true);
+            float penX = x;
+
+            for (char c : line) {
+                auto* m = asset->GetGlyphMetrics(c);
+                if (!m) continue;
+
+                SDL_FRect dst{
+                    penX - blockOffsetX,
+                    penY - blockOffsetY,
+                    static_cast<float>(m->atlasWidth),
+                    static_cast<float>(m->atlasHeight)
+                };
+                SDL_FRect src{
+                    static_cast<float>(m->atlasX),
+                    static_cast<float>(m->atlasY),
+                    static_cast<float>(m->atlasWidth),
+                    static_cast<float>(m->atlasHeight)
+                };
+                SDL_RenderTexture(renderer.get(), atlas, &src, &dst);
+
+                penX += m->advance;
             }
 
-            auto* m = asset->GetGlyphMetrics(c);
-            if (!m) 
-                continue;
-
-            SDL_FRect dst{
-              penX - offsetX,
-              penY - offsetY,
-              static_cast<float>(m->atlasWidth),
-              static_cast<float>(m->atlasHeight)
-            };
-            float d = static_cast<float>(m->MetricsHeight());
-            float res = d * s_fontSize;
-
-            SDL_FRect src{
-              static_cast<float>(m->atlasX),
-              static_cast<float>(m->atlasY),
-              static_cast<float>(m->atlasWidth),
-              static_cast<float>(m->atlasHeight)
-            };
-
-            SDL_RenderTexture(renderer.get(), atlas, &src, &dst);
-           
-            penX += m->advance;
+            penY += lineH;
+            currentLine++;
         }
     }
 
@@ -768,11 +763,11 @@ namespace SDLCore::Render {
     }
 
     void SetTextAlignHor(Align hor) {
-        s_currentTextHorAlign = hor;
+        s_textHorAlign = hor;
     }
 
     void SetTextAlignVer(Align ver) {
-        s_currentTextVerAlign = ver;
+        s_textVerAlign = ver;
     }
 
     void SetTextAlign(Align hor, Align ver) {
@@ -786,27 +781,133 @@ namespace SDLCore::Render {
     }
 
     Align GetTextAlignHor() {
-        return s_currentTextHorAlign;
+        return s_textHorAlign;
     }
 
     Align GetTextAlignVer() {
-        return s_currentTextVerAlign;
+        return s_textVerAlign;
     }
 
     void SetLineHeightMultiplier(float multiplier) {
-        s_lineHeightMultiplier = multiplier;
+        s_textLineHeightMultiplier = multiplier;
     }
 
     float GetLineHeightMultiplier() {
-        return s_lineHeightMultiplier; 
+        return s_textLineHeightMultiplier; 
     }
 
     void SetMaxLines(size_t lines) {
-        s_maxLines = lines;
+        s_textMaxLines = lines;
     }
 
     size_t GetMaxLines() {
-        return s_maxLines;
+        return s_textMaxLines;
+    }
+
+    void SetTextEllipsis(const std::string& ellipsis) {
+        s_textEllipsis = ellipsis;
+    }
+
+    std::string GetEllipsis() {
+        return s_textEllipsis;
+    }
+
+    void SetTextLimit(size_t amount, Type type) {
+        s_textMaxLimit = amount;
+        s_textLimitType = type;
+    }
+
+    size_t GetTextLimitAmount() {
+        return s_textMaxLimit;
+    }
+
+    Type GetTextLimitType() {
+        return s_textLimitType;
+    }
+
+    std::string GetTruncatedText(const std::string& text) {
+        if (s_textMaxLimit == 0)
+            return text;
+
+        switch (s_textLimitType) {
+        case SDLCore::Type::CHARACTERS: {
+            if (text.size() <= s_textMaxLimit)
+                return text;
+            return text.substr(0, s_textMaxLimit) + s_textEllipsis;
+        }
+
+        case SDLCore::Type::PIXELS: {
+            if (!s_font) {
+                Log::Error("SDLCore::Renderer::GetTruncatedText: Failed to get truncated text for '{}', no font set", text);
+                return text;
+            }
+
+            auto* asset = s_font->GetFontAsset();
+            if (!asset)
+                return text;
+
+            float width = 0.0f;
+            std::string result;
+
+            for (char c : text) {
+                //add line break chars
+                if (c == '\n')
+                    result += c;
+
+                auto* metric = asset->GetGlyphMetrics(c);
+                if (!metric)
+                    continue;
+
+                float charWidth = static_cast<float>(metric->advance);
+                if (width + charWidth > s_textMaxLimit) {
+                    if (!result.empty())
+                        result += s_textEllipsis;
+                    return result;
+                }
+
+                result += c;
+                width += charWidth;
+            }
+
+            return result;
+        }
+
+        case SDLCore::Type::NONE:
+        default:
+            return text;
+        }
+    }
+
+    float GetCharWidth(char c) {
+        if (!s_font) {
+            Log::Error("SDLCore::Renderer::GetCharWidth: Faild to get char width for char'{}', no font was set", c);
+            return 0.0f;
+        }
+
+        auto* asset = s_font->GetFontAsset();
+        if (!asset)
+            return 0.0f;
+
+        auto* m = asset->GetGlyphMetrics(c);
+        return (m) ? m->advance : 0.0f;
+    }
+
+    float GetCharHeight(char c, bool ignoreBelowBaseline) {
+        if (!s_font) {
+            Log::Error("SDLCore::Renderer::GetCharHeight: Faild to get char height for char'{}', no font was set", c);
+            return 0.0f;
+        }
+
+        auto* asset = s_font->GetFontAsset();
+        if (!asset)
+            return 0.0f;
+
+        auto* metric = asset->GetGlyphMetrics(c);
+        if (!metric)
+            return 0.0f;
+
+        int result = (ignoreBelowBaseline) ? metric->AscenderHeight() : metric->MetricsHeight();
+        return static_cast<float>(result);
     }
 
     float GetTextWidth(const std::string& text) {
@@ -818,7 +919,7 @@ namespace SDLCore::Render {
         float width = 0.0f;
         auto* asset = s_font->GetFontAsset();
         if (!asset)
-            return false;
+            return 0.0f;
 
         for (char c : text) {
             if (auto* m = asset->GetGlyphMetrics(c))
@@ -827,27 +928,35 @@ namespace SDLCore::Render {
         return width;
     }
 
-    float GetTextHeight(const std::string& text) {
-        if (!s_font) {
-            Log::Error("SDLCore::Renderer::GetTextHeight: Faild to get text height for text'{}', no font was set", text);
-            return 0.0f;
-        }
+    float GetTextHeight(const std::string& text, bool ignoreBelowBaseline) {
+        if (!s_font) return 0.0f;
 
         auto* asset = s_font->GetFontAsset();
-        if (!asset)
-            return false;
+        if (!asset) return 0.0f;
 
-        float maxH = 0;
+        int maxAscender = 0;
+        int minDescender = 0;
+
         for (char c : text) {
-            if (auto* m = asset->GetGlyphMetrics(c))
-                maxH = std::max(maxH, static_cast<float>(m->MetricsHeight()));
+            if (auto* m = asset->GetGlyphMetrics(c)) {
+                maxAscender = std::max(maxAscender, m->AscenderHeight());
+                minDescender = std::min(minDescender, m->DescenderHeight());
+            }
         }
-        return maxH;
+
+        if (ignoreBelowBaseline)
+            return static_cast<float>(maxAscender);
+        else
+            return static_cast<float>(maxAscender - minDescender);
     }
 
+
     float GetTextBlockWidth(const std::string& text) {
-        if (!s_font) 
+        if (!s_font) {
+            Log::Error("SDLCore::Renderer::GetTextBlockWidth: Faild to get text block width for text'{}', no font was set", text);
             return 0.0f;
+        }
+
         auto* asset = s_font->GetFontAsset();
         if (!asset) 
             return 0.0f;
@@ -861,7 +970,7 @@ namespace SDLCore::Render {
                 maxWidth = std::max(maxWidth, lineWidth);
                 lineWidth = 0.0f;
                 currentLine++;
-                if (s_maxLines != 0 && currentLine >= s_maxLines)
+                if (s_textMaxLines != 0 && currentLine >= s_textMaxLines)
                     break;
                 continue;
             }
@@ -874,22 +983,43 @@ namespace SDLCore::Render {
         return maxWidth;
     }
 
-    float GetTextBlockHeight(const std::string& text) {
-        float lineH = GetTextHeight(text) + s_lineHeightMultiplier * s_fontSize;
+    float GetTextBlockHeight(const std::string& text, bool ignoreBelowBaseline) {
+        if (!s_font) return 0.0f;
 
-        size_t lines = 1;
-        for (char c : text) {
-            if (c == '\n') 
-                lines++;
-            if (s_maxLines != 0 && s_maxLines < lines)
+        std::istringstream stream(text);
+        std::string line;
+        float totalHeight = 0.0f;
+        size_t lines = 0;
+
+        while (std::getline(stream, line)) {
+            float lineH = GetTextHeight(line, ignoreBelowBaseline) + s_textLineHeightMultiplier * s_fontSize;
+            totalHeight += lineH;
+            lines++;
+            if (s_textMaxLines != 0 && lines >= s_textMaxLines)
                 break;
         }
 
-        if (s_maxLines != 0) {
-            lines = std::min(lines, s_maxLines);
+        totalHeight -= s_textLineHeightMultiplier * s_fontSize;
+        return totalHeight;
+    }
+
+    float GetLineHeight(const std::string& line, bool ignoreBelowBaseline) {
+        if (!s_font) {
+            Log::Error("SDLCore::Renderer::GetLineHeight: Faild to get line height for line'{}', no font was set", line);
+            return 0.0f;
         }
 
-        return lineH * lines;
+        auto* asset = s_font->GetFontAsset();
+        if (!asset)
+            return 0.0f;
+
+        int maxH = 0;
+        for (char c : line) {
+            if (auto* m = asset->GetGlyphMetrics(c)) {
+                maxH = std::max(maxH, ignoreBelowBaseline ? m->AscenderHeight() : m->MetricsHeight());
+            }
+        }
+        return static_cast<float>(maxH) + s_textLineHeightMultiplier * s_fontSize;
     }
 
     #pragma endregion
