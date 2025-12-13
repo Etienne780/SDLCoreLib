@@ -712,15 +712,15 @@ namespace SDLCore::Render {
 	void ResetTextClipWidth();
 
 	/**
-	* @brief Calculates a font size that fits the given text within the specified bounds.
+	* @brief Estimates a font size that allows the given text to fit within specified width and height bounds.
 	*
-	* This function performs a measurement-only calculation and does not modify
-	* the active font size.
+	* The calculation is based on the current font and its size. Ensure a valid font size is set prior to calling this function.
+	* This function only computes a suitable size; it does not modify the active font size.
 	*
-	* @param text Text to measure.
-	* @param targetW Target width in pixels.
-	* @param targetH Target height in pixels.
-	* @return Calculated font size.
+	* @param text The text string to fit within the bounds.
+	* @param targetW Maximum allowed width in pixels.
+	* @param targetH Maximum allowed height in pixels.
+	* @return Estimated font size in pixels that best fits the target dimensions.
 	*/
 	float CalculateFontSizeForBounds(const std::string& text, float targetW, float targetH);
 
