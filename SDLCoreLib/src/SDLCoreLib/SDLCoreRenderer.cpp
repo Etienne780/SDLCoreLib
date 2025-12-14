@@ -27,7 +27,7 @@ namespace SDLCore::Render {
     float s_textLineHeightMultiplier = 0.2f;
 
     size_t s_textMaxLines = 0;// < 0 = no limits
-    Type s_textLimitType = Type::NONE;
+    UnitType s_textLimitType = UnitType::NONE;
     size_t s_textMaxLimit = 0;          // max characters or Pixel
     std::string s_textEllipsisDefault = "...";
     std::string s_textEllipsis = s_textEllipsisDefault;
@@ -811,7 +811,7 @@ namespace SDLCore::Render {
         SDL_SetTextureColorMod(atlas, s_activeColor.r, s_activeColor.g, s_activeColor.b);
         SDL_SetTextureAlphaMod(atlas, s_activeColor.a);
 
-        std::string currentText = (s_textMaxLimit != 0 && s_textLimitType != Type::NONE)
+        std::string currentText = (s_textMaxLimit != 0 && s_textLimitType != UnitType::NONE)
             ? GetTruncatedText(text)
             : text;
 
@@ -867,7 +867,7 @@ namespace SDLCore::Render {
         SetTextAlign(Align::START);
         SetTextEllipsis(s_textEllipsisDefault);
         SetMaxLines(0);
-        SetTextLimit(0, Type::NONE);
+        SetTextLimit(0, UnitType::NONE);
         SetTextClipWidth(-1);
     }
 
@@ -946,7 +946,7 @@ namespace SDLCore::Render {
         return s_textEllipsis;
     }
 
-    void SetTextLimit(size_t amount, Type type) {
+    void SetTextLimit(size_t amount, UnitType type) {
         s_textMaxLimit = amount;
         s_textLimitType = type;
     }
@@ -955,7 +955,7 @@ namespace SDLCore::Render {
         return s_textMaxLimit;
     }
 
-    Type GetTextLimitType() {
+    UnitType GetTextLimitType() {
         return s_textLimitType;
     }
 
@@ -964,13 +964,13 @@ namespace SDLCore::Render {
             return text;
 
         switch (s_textLimitType) {
-        case SDLCore::Type::CHARACTERS: {
+        case SDLCore::UnitType::CHARACTERS: {
             if (text.size() <= s_textMaxLimit)
                 return text;
             return text.substr(0, s_textMaxLimit) + s_textEllipsis;
         }
 
-        case SDLCore::Type::PIXELS: {
+        case SDLCore::UnitType::PIXELS: {
             if (!s_font) {
                 Log::Error("SDLCore::Renderer::GetTruncatedText: Failed to get truncated text for '{}', no font set", text);
                 return text;
@@ -1006,7 +1006,7 @@ namespace SDLCore::Render {
             return result;
         }
 
-        case SDLCore::Type::NONE:
+        case SDLCore::UnitType::NONE:
         default:
             return text;
         }
