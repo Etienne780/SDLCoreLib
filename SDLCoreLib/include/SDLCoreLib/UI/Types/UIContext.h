@@ -18,6 +18,10 @@ namespace SDLCore::UI {
 	public:
 		static UIContext* CreateContext();
 
+		WindowID GetWindowID() const;
+		float GetWindowScale() const;
+		Vector2 GetWindowSize() const;
+
 	private:
 		UIContext() = default;
 

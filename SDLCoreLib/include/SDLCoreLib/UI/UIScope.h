@@ -34,7 +34,7 @@ namespace SDLCore::UI {
         FrameNode* node = Internal::InternalBeginFrame(key.id);
         if (node) {
             (node->AddStyle(styles), ...);
-            node->ApplyStyle();
+            GetCurrentContext();
         }
     }
 
@@ -46,6 +46,7 @@ namespace SDLCore::UI {
         if (node) {
             node->text = text;
             (node->AddStyle(styles), ...);
+            node->ApplyStyle(GetCurrentContext());
         }
         return UIEvent{};
     }

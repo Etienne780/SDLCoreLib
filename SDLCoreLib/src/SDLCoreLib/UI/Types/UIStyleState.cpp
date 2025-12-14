@@ -34,4 +34,12 @@ namespace SDLCore::UI {
 		prop.SetIsImportant(important);
 	}
 
+	std::unordered_map<UIPropertyID, PropertyValue>& UIStyleState::GetAllProperties() {
+		return m_properties;
+	}
+
+	const std::unordered_map<UIPropertyID, PropertyValue>& UIStyleState::GetAllProperties() const {
+		return m_properties;
+	}
+
 }

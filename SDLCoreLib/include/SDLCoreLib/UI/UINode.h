@@ -13,6 +13,7 @@
 namespace SDLCore::UI {
 
     class UIContext;
+    class FrameNode;
 
     class UINode {
         friend class UIContext;
@@ -27,7 +28,7 @@ namespace SDLCore::UI {
 
             auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
             T* child = ptr.get();
-            child->m_parent = this;
+            child->m_parent = reinterpret_cast<FrameNode*>(this);
             m_children.push_back(std::move(ptr));
             return child;
         }
@@ -38,7 +39,7 @@ namespace SDLCore::UI {
         /*
         * @brief Create and applys the style from all of the added styles
         */
-        void ApplyStyle();
+        void ApplyStyle(UIContext* context);
 
         /*
         * @brief checks if a child at a given position has the id, if true outNode is this child
@@ -68,19 +69,23 @@ namespace SDLCore::UI {
         */
         UIStyle CreateStyle();
 
-        virtual void ApplyStyleCalled() = 0;
+        virtual void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) = 0;
 
         uintptr_t m_id = 0;
         UINodeType m_type;
-        UINode* m_parent = nullptr;
+        FrameNode* m_parent = nullptr;
 
         std::vector<std::shared_ptr<UINode>> m_children;
         std::vector<UIStyle> m_appliedStyles;
+        UIState m_state = UIState::NORMAL;
         UIStyle m_finalStyle;
         UIEvent m_eventState;
         bool m_childHasEvent = false;
 
         Vector2 m_position;
+        UILayoutDirection m_layoutDir = UILayoutDirection::ROW;
+        UIAlignment m_horizontalAligment = UIAlignment::START;
+        UIAlignment m_verticalAligment = UIAlignment::START;
     private: 
         UINodeType GenerateUIType();
     };
@@ -89,16 +94,18 @@ namespace SDLCore::UI {
     public:
         FrameNode(uintptr_t key);
 
-        void ApplyStyleCalled() override;
+        void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) override;
 
-        Vector2 size;
-        Vector4 padding;
-        Vector4 margin;
+        Vector2 m_size;
+        Vector4 m_padding;
+        Vector4 m_margin;
 
-        Vector4 backgroundColor;
-        Vector4 borderColor;
+        Vector4 m_backgroundColor;
+        Vector4 m_borderColor;
 
     private:
+        static float AlignOffset(UIAlignment align, float freeSpace);
+        Vector2 CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h);
         void CalculateLayout(const UIContext* uiContext);
     };
 
@@ -106,11 +113,11 @@ namespace SDLCore::UI {
     public:
         TextNode(uintptr_t key);
 
-        void ApplyStyleCalled() override;
+        void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) override;
 
-        std::string text;
-        float textSize = 0;
-        Vector4 textColor;
+        std::string m_text;
+        float m_textSize = 0;
+        Vector4 m_textColor;
     };
 
 }

@@ -16,15 +16,11 @@ namespace SDLCore::UI {
 	}
 
 	UIProperty* UIPropertyRegistry::TryGetProperty(UIPropertyID id) {
-		RegisterBaseProperties();
-
 		auto it = m_registeredProperties.find(id);
 		return (it == m_registeredProperties.end()) ? nullptr : &it->second;
 	}
 	
 	const std::unordered_map<UIPropertyID, UIProperty>& UIPropertyRegistry::GetAllProperties() {
-		RegisterBaseProperties();
-
 		return m_registeredProperties;
 	}
 
@@ -61,6 +57,8 @@ namespace SDLCore::UI {
         alignVertical = RegisterProperty("align_vertical", "vertical alignment",
             PropertyValue(UIAlignment::START));
 
+
+        // not implemented
         backgroundTexture = RegisterProperty("background_texture", "background texture id",
             PropertyValue(UITextureID{}));
 
