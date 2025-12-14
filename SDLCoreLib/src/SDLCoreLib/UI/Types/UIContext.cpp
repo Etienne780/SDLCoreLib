@@ -8,6 +8,18 @@ namespace SDLCore::UI {
 		return new UIContext();
 	}
 
+    WindowID UIContext::GetWindowID() const {
+        return m_windowID;
+    }
+
+    float UIContext::GetWindowScale() const {
+        return m_windowContentScale;
+    }
+
+    Vector2 UIContext::GetWindowSize() const {
+        return m_windowSize;
+    }
+
     FrameNode* UIContext::BeginFrame(uintptr_t id) {
         if (m_lastNodeStack.empty() && m_rootNode) {
             if (m_rootNode->GetID() != id) {
@@ -70,8 +82,6 @@ namespace SDLCore::UI {
     }
 
     UIEvent UIContext::EndFrame() {
-        
-
         if (!m_lastChildPosition.empty() && !m_lastNodeStack.empty()) {
             UINode* node = m_lastNodeStack.back();
             if (node && m_lastChildPosition.back() < node->GetChildren().size()) {

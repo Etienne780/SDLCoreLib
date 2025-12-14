@@ -9,7 +9,7 @@ namespace SDLCore::UI {
 
 	class UIStyle {
 	public:
-		UIStyle() = default;
+		UIStyle();
 		UIStyle(const std::string& name);
 		UIStyle(std::string&& name);
 		
@@ -19,17 +19,19 @@ namespace SDLCore::UI {
 		std::string ToString() const;
 
 		/*
-		* @brief Merges this style with on top of outStyle
+		* @brief Merges this style on top of outStyle
 		*/
 		void Merge(UIStyle& outStyle) const;
 
 		std::string GetName() const;
-		UIStyleState GetStyleState(UIState state);
+		const UIStyleState& GetStyleState(UIState state);
 
 		/*
 		* @brief Sets the state that will be used when setting properties
 		*/
 		UIStyle& SetActiveState(UIState state);
+
+		// all properties registered by the UIPropertyRegistry should be in the SDLCore::UI::Properties namespace
 		UIStyle& SetValue(UIPropertyID attID, PropertyValue value, bool important = false);
 
 	private:

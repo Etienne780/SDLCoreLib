@@ -100,6 +100,10 @@ namespace SDLCore::UI {
         }
 
         g_currentUIContext.ctx = context;
+        // update window params
+        WindowID id = context->GetWindowID();
+        if(!id.IsInvalid())
+            g_currentUIContext.SetWindowParams(id);
     }
 
     void RenderContext(UIContext* context) {
@@ -166,8 +170,7 @@ namespace SDLCore::UI {
     }
 
     UIEvent EndFrame() {
-        g_currentUIContext.EndFrame();
-        return UIEvent{};
+        return g_currentUIContext.EndFrame();
     }
 
 }
