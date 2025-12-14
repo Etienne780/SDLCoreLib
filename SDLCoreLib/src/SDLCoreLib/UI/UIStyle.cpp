@@ -1,13 +1,20 @@
 #include "UI/UIStyle.h"
+#include "UI/Types/UIPropertyRegistry.h"
 
 namespace SDLCore::UI {
 
+	UIStyle::UIStyle() {
+		UIPropertyRegistry::RegisterBaseProperties();
+	}
+
 	UIStyle::UIStyle(const std::string& name) 
 		: m_name(name) {
+		UIPropertyRegistry::RegisterBaseProperties();
 	}
 
 	UIStyle::UIStyle(std::string&& name) 
 		: m_name(name) {
+		UIPropertyRegistry::RegisterBaseProperties();
 	}
 
 	std::string UIStyle::ToString() const {
@@ -15,22 +22,16 @@ namespace SDLCore::UI {
 	}
 
 	void UIStyle::Merge(UIStyle& outStyle) const {
-		for (auto& [state, style] : this->m_uiStates) {
+		for (auto& [state, styleState] : this->m_uiStates) {
 			UIStyleState* outStyleState = outStyle.GetState(state);
 
-			// outStyleState->alignmentHor.ApplyWithPriority(style.alignmentHor);
-			// outStyleState->alignmentVer.ApplyWithPriority(style.alignmentVer);
-			// outStyleState->backgroundColor.ApplyWithPriority(style.backgroundColor);
-			// outStyleState->backgroundTexture.ApplyWithPriority(style.backgroundTexture);
-			// outStyleState->borderColor.ApplyWithPriority(style.borderColor);
-			// outStyleState->borderThickness.ApplyWithPriority(style.borderThickness);
-			// outStyleState->height.ApplyWithPriority(style.height);
-			// outStyleState->layoutDirection.ApplyWithPriority(style.layoutDirection);
-			// outStyleState->margin.ApplyWithPriority(style.margin);
-			// outStyleState->padding.ApplyWithPriority(style.padding);
-			// outStyleState->sizeUnitH.ApplyWithPriority(style.sizeUnitH);
-			// outStyleState->sizeUnitW.ApplyWithPriority(style.sizeUnitW);
-			// outStyleState->width.ApplyWithPriority(style.width);
+			using propMap = std::unordered_map<UIPropertyID, PropertyValue>;
+			const propMap& sourceProps = styleState.GetAllProperties();
+			propMap& targetProps = outStyleState->GetAllProperties();
+
+			for (auto& [id, prop] : sourceProps) {
+				targetProps[id].ApplyWithPriority(prop);
+			}
 		}
 	}
 
@@ -38,7 +39,7 @@ namespace SDLCore::UI {
 		return m_name;
 	}
 
-	UIStyleState UIStyle::GetStyleState(UIState state) {
+	const UIStyleState& UIStyle::GetStyleState(UIState state) {
 		UIStyleState* styleState = GetState(state);
 		return *styleState;
 	}
