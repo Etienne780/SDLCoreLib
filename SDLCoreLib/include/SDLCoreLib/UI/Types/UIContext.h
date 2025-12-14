@@ -6,6 +6,7 @@
 #include "IDManager.h"
 #include "Types/Types.h"
 #include "UI/Types/UITypes.h"
+#include "UI/Types/UIEvent.h"
 
 namespace SDLCore::UI {
 
@@ -21,7 +22,7 @@ namespace SDLCore::UI {
 		UIContext() = default;
 
 		FrameNode* BeginFrame(uintptr_t id);
-		void EndFrame();
+		UIEvent EndFrame();
 		
 		template<typename T, typename ...Args>
 		T* AddNode(uintptr_t id, Args&&... args) {
@@ -54,8 +55,10 @@ namespace SDLCore::UI {
 		UINode* GetRootNode() const;
 		void SetWindowParams(WindowID id);
 
+		static UIEvent* ProcessEvent(UINode* node);
+
 		std::deque<uint16_t> m_lastChildPosition;/*< is the position of the current child inside of last node*/
-		std::deque<UINode*> m_nodeStack;
+		std::deque<UINode*> m_nodeStack;/*< is for creating nodes. if a node is this stack, than those nodes are currently created*/
 		std::deque<UINode*> m_lastNodeStack;
 		std::shared_ptr<FrameNode> m_rootNode = nullptr;
 		WindowID m_windowID;

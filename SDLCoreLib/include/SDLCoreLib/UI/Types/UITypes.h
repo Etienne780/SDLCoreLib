@@ -9,7 +9,7 @@
 
 namespace SDLCore::UI {
 
-	enum class UIState {
+	enum class UIState : uint16_t {
 		NORMAL = 0,
 		HOVER,
 		ACTIVE,
@@ -17,13 +17,13 @@ namespace SDLCore::UI {
 		DISABLED
 	};
 
-	enum class UIAlignment {
+	enum UIAlignment : uint16_t {
 		START = 0,
 		CENTER,
 		END
 	};
 
-	enum class UILayoutDirection {
+	enum UILayoutDirection : uint16_t {
 		ROW = 0,// is equal to using ROW_START
 		COLUMN,// is equal to using COLUMN_START
 		ROW_START,
@@ -33,7 +33,7 @@ namespace SDLCore::UI {
 	};
 	using UILayoutDir = UILayoutDirection;
 
-	enum class UISizeUnit {
+	enum UISizeUnit : uint16_t {
 		PX = 0,
 		PERCENTAGE,
 		PERCENTAGE_W,
@@ -46,6 +46,7 @@ namespace SDLCore::UI {
 	struct UINumberTag {};
 	struct UINodeTag {};
 	struct UINodeTypeTag {};
+	struct UIPropertyTag {};
 
 	/**
 	* @brief Identifier for a color (used by the UIStyles).
@@ -72,6 +73,12 @@ namespace SDLCore::UI {
 	using UINumberID = SDLCoreID<UINumberTag>;
 
 	/**
+	* @brief Identifier for an property (used by the UIStyles).
+	*        Internally stored as an uint32_t
+	*/
+	using UIPropertyID = SDLCoreID<UIPropertyTag>;
+
+	/**
 	* @brief Identifier for a node (used by the UIContext).
 	*        Internally stored as an uint32_t
 	*/
@@ -85,6 +92,7 @@ namespace SDLCore::UI {
 
 	class PropertyValue {
 	public:
+		using ValueVariant = std::variant<int, float, double, Vector2, Vector4, Texture, std::shared_ptr<Font>, UIColorID, UIFontID, UITextureID, UINumberID>;
 		enum class Type {
 			INT, FLOAT, DOUBLE, VECTOR2, VECTOR4, TEXTURE, FONT, COLOR_ID, FONT_ID, TEXTURE_ID, NUMBER_ID
 		};
@@ -101,12 +109,16 @@ namespace SDLCore::UI {
 		PropertyValue(UIFontID id);
 		PropertyValue(UITextureID id);
 		PropertyValue(UINumberID id);
+		PropertyValue(Type type, const ValueVariant& value);
 
 		void ApplyWithPriority(const PropertyValue& other);
+
+		bool IsSameType(Type type) const;
 
 		Type GetType() const;
 		bool GetIsSet() const;
 		bool GetIsImportant() const;
+		ValueVariant GetVariant() const;
 
 		PropertyValue& SetIsImportant(bool value);
 
@@ -121,6 +133,7 @@ namespace SDLCore::UI {
 		PropertyValue& SetValue(UIFontID id);
 		PropertyValue& SetValue(UITextureID id);
 		PropertyValue& SetValue(UINumberID id);
+		PropertyValue& SetValue(Type type, const ValueVariant& value);
 
 		/**
 		* @brief Attempts to retrieve the stored value as a specific type.
@@ -141,13 +154,23 @@ namespace SDLCore::UI {
 		}
 
 	private:
-		using ValueVariant = std::variant<int, float, double, Vector2, Vector4, Texture, std::shared_ptr<Font>, UIColorID, UIFontID, UITextureID, UINumberID>;
 		ValueVariant m_value;
 		Type m_valueType = Type::INT;
 		bool m_isSet = false;
 		bool m_isImportant = false;
 
+		enum class PropertyTypeClass {
+			Numeric,
+			Vector2,
+			Vector4,
+			Texture,
+			Font,
+			Unknown
+		};
+
 		PropertyValue& SetIsSet(bool value);
+
+		static PropertyTypeClass GetTypeClass(PropertyValue::Type t);
 
 		/**
 		* @brief Helper function that returns a readable type name for type_info.
@@ -234,6 +257,11 @@ static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::UI::
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::UI::UINumberTag>>(SDLCore::UI::UINumberID id) {
+	return id.ToString();
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::UI::UIPropertyTag>>(SDLCore::UI::UIPropertyID id) {
 	return id.ToString();
 }
 

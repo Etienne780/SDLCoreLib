@@ -35,21 +35,40 @@ namespace SDLCore::UI {
         // copys style
         void AddStyle(const UIStyle& style);
 
+        /*
+        * @brief Create and applys the style from all of the added styles
+        */
+        void ApplyStyle();
+
+        /*
+        * @brief checks if a child at a given position has the id, if true outNode is this child
+        */
         bool ContainsChildAtPos(uint16_t position, uintptr_t id, UINode*& outNode);
 
         uintptr_t GetID() const;
         UIEvent GetEvent() const;
+        UIEvent* GetEventPtr();
         UINodeType GetType() const;
+        UINode* GetParent();
         const std::vector<std::shared_ptr<UINode>>& GetChildren() const;
+        bool GetChildHasEvent() const;
+
+        /*
+        * @brief used internaly to find out what elements have events
+        * 
+        * should not be set manuly
+        */
+        void SetChildHasEvent(bool value);
 
     protected:
         void RemoveChildrenFromIndex(uint16_t position);
 
         /**
-        * @brief Merge all appliedStyles into a final UIStyle object.
-        * @return Resolved UIStyle
+        * @brief Merge all appliedStyles into the final UIStyle object.
         */
         UIStyle CreateStyle();
+
+        virtual void ApplyStyleCalled() = 0;
 
         uintptr_t m_id = 0;
         UINodeType m_type;
@@ -59,6 +78,7 @@ namespace SDLCore::UI {
         std::vector<UIStyle> m_appliedStyles;
         UIStyle m_finalStyle;
         UIEvent m_eventState;
+        bool m_childHasEvent = false;
 
         Vector2 m_position;
     private: 
@@ -69,10 +89,7 @@ namespace SDLCore::UI {
     public:
         FrameNode(uintptr_t key);
 
-        /*
-        * @brief Inits the Frame
-        */
-        void Init(const UIContext* uiContext);
+        void ApplyStyleCalled() override;
 
         Vector2 size;
         Vector4 padding;
@@ -88,6 +105,8 @@ namespace SDLCore::UI {
     class TextNode : public UINode {
     public:
         TextNode(uintptr_t key);
+
+        void ApplyStyleCalled() override;
 
         std::string text;
         float textSize = 0;

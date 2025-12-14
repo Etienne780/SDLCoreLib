@@ -10,6 +10,8 @@ void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
     win->SetIcon(tex);
+
+    SDLCore::UI::UIPropertyRegistry::RegisterBaseProperties();
 }
 
 void App::OnUpdate() {
@@ -18,11 +20,12 @@ void App::OnUpdate() {
         static int test = 0;
 
         using namespace SDLCore;
+        namespace Prop = SDLCore::UI::Properties;
         UI::SetContextWindow(context, m_winID);
         UI::BindContext(context);
 
         UI::UIStyle style("Test-Style");
-        style.SetSize(10, 10);
+        style.SetValue(Prop::alignVertical, UI::UIAlignment::START);
 
         if (test == 3) {
             Log::Debug("New Element middle test");

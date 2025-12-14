@@ -69,8 +69,10 @@ namespace SDLCore::UI {
         return nullptr;
     }
 
-    void UIContext::EndFrame() {
-        if (!m_lastChildPosition.empty()) {
+    UIEvent UIContext::EndFrame() {
+        
+
+        if (!m_lastChildPosition.empty() && !m_lastNodeStack.empty()) {
             UINode* node = m_lastNodeStack.back();
             if (node && m_lastChildPosition.back() < node->GetChildren().size()) {
                 node->RemoveChildrenFromIndex(m_lastChildPosition.back());
@@ -85,8 +87,15 @@ namespace SDLCore::UI {
         if (!m_nodeStack.empty())
             m_nodeStack.pop_back();
 
-        if (!m_lastNodeStack.empty())
+        if (!m_lastNodeStack.empty()) {
             m_lastNodeStack.pop_back();
+            return *ProcessEvent(m_lastNodeStack.back());
+        }
+
+#ifndef NDEBUG
+        Log::Warn("SDLCore::UI::UIContext::EndFrame: EndFrame called without a fitting BeginFrame!");
+#endif 
+        return UIEvent{};
     }
 
     UINode* UIContext::GetRootNode() const {
@@ -110,6 +119,37 @@ namespace SDLCore::UI {
 
         m_windowContentScale = win->GetContentScale();
         m_windowSize = win->GetSize();
+    }
+
+    UIEvent* UIContext::ProcessEvent(UINode* node) {
+        if (!node) {
+            static UIEvent dummy;
+            return &dummy;
+        }
+
+        // skips this element if a child has a event
+        const auto& children = node->GetChildren();
+        for (const auto& child : children) {
+            if (!child)
+                continue;
+
+            if (child->GetChildHasEvent()) {
+                node->SetChildHasEvent(true);
+                return node->GetEventPtr();
+            }
+
+            if (UIEvent* childEvent = child->GetEventPtr()) {
+                if (childEvent->IsHover()) {
+                    node->SetChildHasEvent(true);
+                    return node->GetEventPtr();
+                }
+            }
+        }
+        
+        node->SetChildHasEvent(false);
+        UIEvent* event = node->GetEventPtr();
+        
+        return event;
     }
 
 }

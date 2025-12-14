@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 
+#include "UI/Types/UIPropertyRegistry.h"
 #include "UI/Types/UITypes.h"
 #include "UI/Types/UIStyleState.h"
 
@@ -29,15 +30,7 @@ namespace SDLCore::UI {
 		* @brief Sets the state that will be used when setting properties
 		*/
 		UIStyle& SetActiveState(UIState state);
-
-		UIStyle& SetSizeUnit(UISizeUnit unitW, UISizeUnit unitH, bool important = false);
-		UIStyle& SetSizeUnitW(UISizeUnit unit, bool important = false);
-		UIStyle& SetSizeUnitH(UISizeUnit unit, bool important = false);
-
-		UIStyle& SetSize(float w, float h, bool important = false);
-		UIStyle& SetSize(Vector2 size, bool important = false);
-		UIStyle& SetWidth(float width, bool important = false);
-		UIStyle& SetHeight(float height, bool important = false);
+		UIStyle& SetValue(UIPropertyID attID, PropertyValue value, bool important = false);
 
 	private:
 		std::string m_name = "UNKOWN";
