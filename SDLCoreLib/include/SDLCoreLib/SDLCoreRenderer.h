@@ -668,7 +668,7 @@ namespace SDLCore::Render {
 	* @param amount Maximum character or pixel count.
 	* @param type Truncation mode (characters or pixels).
 	*/
-	void SetTextLimit(size_t amount, Type type = Type::CHARACTERS);
+	void SetTextLimit(size_t amount, UnitType type = UnitType::CHARACTERS);
 
 	/**
 	* @brief Returns the configured text truncation amount.
@@ -680,7 +680,7 @@ namespace SDLCore::Render {
 	* @brief Returns the current text truncation mode.
 	* @return Truncation type.
 	*/
-	Type GetTextLimitType();
+	UnitType GetTextLimitType();
 
 	/**
 	* @brief Returns a truncated version of the given text according to the

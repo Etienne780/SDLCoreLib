@@ -141,7 +141,7 @@ namespace SDLCore {
 		END
 	};
 
-	enum class Type {
+	enum class UnitType {
 		NONE = 0,
 		CHARACTERS,
 		PIXELS
@@ -213,11 +213,11 @@ static inline std::string FormatUtils::toString<SDLCore::Align>(SDLCore::Align a
 }
 
 template<>
-static inline std::string FormatUtils::toString<SDLCore::Type>(SDLCore::Type type) {
+static inline std::string FormatUtils::toString<SDLCore::UnitType>(SDLCore::UnitType type) {
 	switch (type) {
-	case SDLCore::Type::NONE:		return "none";
-	case SDLCore::Type::CHARACTERS: return "Characters";
-	case SDLCore::Type::PIXELS:		return "Pixels";
+	case SDLCore::UnitType::NONE:		return "none";
+	case SDLCore::UnitType::CHARACTERS: return "Characters";
+	case SDLCore::UnitType::PIXELS:		return "Pixels";
 	default:						return "UNKOWN";
 	}
 }
