@@ -26,9 +26,9 @@ namespace SDLCore::UI {
             return ctx->BeginFrame(key);
         }
 
-        void EndFrame() {
+        UIEvent EndFrame() {
             if (IsContextNull("EndFrame: Could not end frame"))
-                return;
+                return UIEvent{};
             return ctx->EndFrame();
         }
 
@@ -37,7 +37,7 @@ namespace SDLCore::UI {
             if (IsContextNull("AddNode: Could not add node"))
                 return nullptr;
             return ctx->AddNode<T>(id, std::forward<Args>(args)...);
-            }
+        }
 
         UINode* GetRootNode() {
             if (IsContextNull("GetRootNode: Could not get root node"))

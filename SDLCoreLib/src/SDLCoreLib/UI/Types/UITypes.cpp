@@ -52,6 +52,11 @@ namespace SDLCore::UI {
 		: m_value(id), m_valueType(Type::NUMBER_ID) {
 	}
 
+	PropertyValue::PropertyValue(PropertyValue::Type type, const ValueVariant& value)
+		: m_value(value), m_valueType(type) {
+	}
+
+
 	void PropertyValue::ApplyWithPriority(const PropertyValue& other) {
 		if (!other.GetIsSet())
 			return;
@@ -60,6 +65,10 @@ namespace SDLCore::UI {
 			return;
 
 		*this = other;
+	}
+
+	bool PropertyValue::IsSameType(Type other) const {
+		return GetTypeClass(m_valueType) == GetTypeClass(other);
 	}
 
 	PropertyValue::Type PropertyValue::GetType() const {
@@ -74,9 +83,40 @@ namespace SDLCore::UI {
 		return m_isImportant;
 	}
 
+	PropertyValue::ValueVariant PropertyValue::GetVariant() const {
+		return m_value;
+	}
+
 	PropertyValue& PropertyValue::SetIsSet(bool value) {
 		m_isSet = value;
 		return *this;
+	}
+
+	PropertyValue::PropertyTypeClass PropertyValue::GetTypeClass(PropertyValue::Type t) {
+		switch (t) {
+		case Type::INT:
+		case Type::FLOAT:
+		case Type::DOUBLE:
+		case Type::NUMBER_ID:
+			return PropertyTypeClass::Numeric;
+
+		case Type::VECTOR2:
+			return PropertyTypeClass::Vector2;
+
+		case Type::VECTOR4:
+			return PropertyTypeClass::Vector4;
+
+		case Type::TEXTURE:
+		case Type::TEXTURE_ID:
+			return PropertyTypeClass::Texture;
+
+		case Type::FONT:
+		case Type::FONT_ID:
+			return PropertyTypeClass::Font;
+
+		default:
+			return PropertyTypeClass::Unknown;
+		}
 	}
 
 	PropertyValue& PropertyValue::SetIsImportant(bool value) {
@@ -157,6 +197,13 @@ namespace SDLCore::UI {
 	PropertyValue& PropertyValue::SetValue(UINumberID id) {
 		m_valueType = Type::NUMBER_ID;
 		m_value = id;
+		SetIsSet(true);
+		return *this;
+	}
+
+	PropertyValue& PropertyValue::SetValue(Type type, const ValueVariant& value) {
+		m_valueType = type;
+		m_value = value;
 		SetIsSet(true);
 		return *this;
 	}
