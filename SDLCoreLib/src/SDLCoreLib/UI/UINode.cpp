@@ -21,6 +21,14 @@ namespace SDLCore::UI {
 		m_appliedStyles.push_back(style);
 	}
 
+	void UINode::ApplyStyle() {
+		m_finalStyle = CreateStyle();
+
+
+
+		ApplyStyleCalled();
+	}
+
 	bool UINode::ContainsChildAtPos(uint16_t pos, uintptr_t id, UINode*& outNode) {
 		if (pos >= m_children.size())
 			return false;
@@ -35,13 +43,29 @@ namespace SDLCore::UI {
 	UIEvent UINode::GetEvent() const {
 		return m_eventState;
 	}
+	
+	UIEvent* UINode::GetEventPtr() {
+		return &m_eventState;
+	}
 
 	UINodeType UINode::GetType() const {
 		return m_type;
 	}
 
+	UINode* UINode::GetParent() {
+		return m_parent;
+	}
+
 	const std::vector<std::shared_ptr<UINode>>& UINode::GetChildren() const {
 		return m_children;
+	}
+
+	bool UINode::GetChildHasEvent() const {
+		return m_childHasEvent;
+	}
+	
+	void UINode::SetChildHasEvent(bool value) {
+		m_childHasEvent = value;
 	}
 
 	void UINode::RemoveChildrenFromIndex(uint16_t pos) {
@@ -74,9 +98,8 @@ namespace SDLCore::UI {
 		// hard codes Frame node to ui type 0
 	}
 
-	void FrameNode::Init(const UIContext* uiContext) {
-		m_finalStyle = CreateStyle();
-		CalculateLayout(uiContext);
+	void FrameNode::ApplyStyleCalled() {
+		
 	}
 
 	void FrameNode::CalculateLayout(const UIContext* uiContext) {
@@ -90,6 +113,10 @@ namespace SDLCore::UI {
 	TextNode::TextNode(uintptr_t key)
 		: UINode(key, UINodeType(1)) {
 		// hard codes Frame node to ui type 1
+	}
+
+	void TextNode::ApplyStyleCalled() {
+	
 	}
 
 	#pragma endregion
