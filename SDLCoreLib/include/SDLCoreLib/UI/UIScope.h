@@ -14,10 +14,6 @@ namespace SDLCore::UI {
     UIContext* CreateContext(WindowID id);
     void DestroyContext(UIContext* context);
     void BindContext(UIContext* context);
-    /*
-    * @brief SDLCore::Renderer::Presents needs to called to see the UI
-    */
-    void RenderContext(UIContext* context);
 
     void SetContextWindow(UIContext* ctx, WindowID id);
     UIContext* GetCurrentContext();
@@ -38,6 +34,9 @@ namespace SDLCore::UI {
         }
     }
 
+    /*
+    * @brief if the root nodes ends than the UI wil be rendererd. SDLCore::Render::Present() needs to be called ot see
+    */
     UIEvent EndFrame();
 
     template<typename... Styles>
