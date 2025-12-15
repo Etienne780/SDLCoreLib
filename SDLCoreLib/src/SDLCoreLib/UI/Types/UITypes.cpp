@@ -106,7 +106,7 @@ namespace SDLCore::UI {
 
 		case Type::BOOL:
 			return PropertyTypeClass::BOOL;
-
+			
 		case Type::VECTOR2:
 			return PropertyTypeClass::Vector2;
 
