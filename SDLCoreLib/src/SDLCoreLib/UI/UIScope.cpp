@@ -134,7 +134,7 @@ namespace SDLCore::UI {
 
         const auto& children = node->GetChildren();
         if (children.size() > 0) {
-            stream << "Begin Node: " << FormatUtils::toString(node->GetType()) << std::endl;
+            stream << "Begin Node: " << FormatUtils::toString(node->GetName()) << std::endl;
 
             for (const auto& n : children) {
                 BuildHierarchy(stream, n.get(), depth + 1);
@@ -147,7 +147,7 @@ namespace SDLCore::UI {
             stream << "End Node" << std::endl;
         }
         else {
-            stream << "Node: " << FormatUtils::toString(node->GetType()) << std::endl;
+            stream << "Node: " << FormatUtils::toString(node->GetName()) << std::endl;
         }
     }
 

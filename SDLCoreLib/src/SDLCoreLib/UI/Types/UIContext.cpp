@@ -98,8 +98,9 @@ namespace SDLCore::UI {
             m_nodeStack.pop_back();
 
         if (!m_lastNodeStack.empty()) {
+            UIEvent* uiEvent = ProcessEvent(m_lastNodeStack.back());
             m_lastNodeStack.pop_back();
-            return *ProcessEvent(m_lastNodeStack.back());
+            return *uiEvent;
         }
 
 #ifndef NDEBUG

@@ -6,7 +6,6 @@
 #include <CoreLib/Math/Vector4.h>
 #include <CoreLib/FormatUtils.h>
 
-#include "UI/Types/UINodeTypeRegistry.h"
 #include "UI/UIStyle.h"
 #include "UI/Types/UIEvent.h"
 
@@ -18,8 +17,7 @@ namespace SDLCore::UI {
     class UINode {
         friend class UIContext;
     public:
-        UINode(uintptr_t id);
-        UINode(uintptr_t id, UINodeType type);
+        UINode(uintptr_t id, std::string&& name);
         virtual ~UINode();
 
         template<typename T, typename... Args>
@@ -47,9 +45,11 @@ namespace SDLCore::UI {
         bool ContainsChildAtPos(uint16_t position, uintptr_t id, UINode*& outNode);
 
         uintptr_t GetID() const;
+        const std::string& GeTypeName() const;
+        uint32_t GetTypeID() const;
         UIEvent GetEvent() const;
         UIEvent* GetEventPtr();
-        UINodeType GetType() const;
+        std::string GetName() const;
         UINode* GetParent();
         const std::vector<std::shared_ptr<UINode>>& GetChildren() const;
         bool GetChildHasEvent() const;
@@ -72,7 +72,8 @@ namespace SDLCore::UI {
         virtual void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) = 0;
 
         uintptr_t m_id = 0;
-        UINodeType m_type;
+        std::string m_name = "-";
+        uint32_t m_typeID = SDLCORE_INVALID_ID;
         FrameNode* m_parent = nullptr;
 
         std::vector<std::shared_ptr<UINode>> m_children;
@@ -86,8 +87,9 @@ namespace SDLCore::UI {
         UILayoutDirection m_layoutDir = UILayoutDirection::ROW;
         UIAlignment m_horizontalAligment = UIAlignment::START;
         UIAlignment m_verticalAligment = UIAlignment::START;
-    private: 
-        UINodeType GenerateUIType();
+    private:
+        static inline uint32_t m_typeIDCounter = 0;
+        static uint32_t GetUITypeID(const std::string& name);
     };
 
     class FrameNode : public UINode {
@@ -120,18 +122,4 @@ namespace SDLCore::UI {
         Vector4 m_textColor;
     };
 
-}
-
-template<>
-static inline std::string FormatUtils::toString<SDLCore::UI::UINodeType>(SDLCore::UI::UINodeType type) {
-    switch (type.value) {
-    case 0:     return "Frame";
-    case 1:     return "Text"; 
-    default: {
-        if (type.value < SDLCore::UI::UINodeTypeRegistry::GetRegisterTypeCount())
-            return "Custom";
-        else
-            return "UNKWON";
-    }
-    }
 }

@@ -1,22 +1,22 @@
+#include <unordered_map>
 #include "UI/Types/UIStyleState.h"
 #include "UI/Types/UIContext.h"
 #include "UI/UINode.h"
 
 namespace SDLCore::UI {
 
+	static std::unordered_map<std::string, uint32_t> nameToID;
+
 	#pragma region UINode
 
-	UINode::UINode(uintptr_t id)
-		: UINode(id, GenerateUIType()){
-	}
-
-	UINode::UINode(uintptr_t id, UINodeType type) 
-		: m_id(id), m_type(type) {
-		Log::Debug("CreadedNode: id={} type={}", id, m_type);
+	UINode::UINode(uintptr_t id, std::string&& name) 
+		: m_id(id), m_name(std::move(name)) {
+		m_typeID = GetUITypeID(m_name);
+		Log::Debug("CreadedNode: id={} name={}", id, m_name);
 	}
 
 	UINode::~UINode() {
-		Log::Debug("DestroyedNode: id={} type={}", m_id, m_type);
+		Log::Debug("DestroyedNode: id={} name={}", m_id, m_name);
 	}
 
 	void UINode::AddStyle(const UIStyle& style) {
@@ -54,6 +54,14 @@ namespace SDLCore::UI {
 		return m_id;
 	}
 
+	const std::string& UINode::GeTypeName() const {
+		return m_name;
+	}
+
+	uint32_t UINode::GetTypeID() const {
+		return m_typeID;
+	}
+
 	UIEvent UINode::GetEvent() const {
 		return m_eventState;
 	}
@@ -62,8 +70,8 @@ namespace SDLCore::UI {
 		return &m_eventState;
 	}
 
-	UINodeType UINode::GetType() const {
-		return m_type;
+	std::string UINode::GetName() const {
+		return m_name;
 	}
 
 	UINode* UINode::GetParent() {
@@ -98,9 +106,15 @@ namespace SDLCore::UI {
 		return outStyle;
 	}
 
-	UINodeType UINode::GenerateUIType() {
-		static UINodeType type = UINodeTypeRegistry::RegisterType();
-		return type;
+	uint32_t UINode::GetUITypeID(const std::string& name) {
+		auto it = nameToID.find(name);
+		if (it == nameToID.end()) {
+			uint32_t newID = m_typeIDCounter;
+			nameToID[name] = newID;
+			m_typeIDCounter++;
+			return newID;
+		}
+		return it->second;
 	}
 
 	#pragma endregion
@@ -108,7 +122,7 @@ namespace SDLCore::UI {
 	#pragma region FrameNode
 
 	FrameNode::FrameNode(uintptr_t key)
-		: UINode(key, UINodeType(0)) {
+		: UINode(key, "Frame") {
 		// hard codes Frame node to ui type 0
 	}
 
@@ -209,7 +223,7 @@ namespace SDLCore::UI {
 	#pragma region TextNode
 
 	TextNode::TextNode(uintptr_t key)
-		: UINode(key, UINodeType(1)) {
+		: UINode(key, "Text") {
 		// hard codes Frame node to ui type 1
 	}
 
