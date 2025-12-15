@@ -537,12 +537,6 @@ namespace SDLCore::Render {
 		Text(Log::GetFormattedString(std::forward<Args>(args)...), x, y);
 	}
 
-	// font size 16
-	// text align start
-	// ellipse = "..."
-	// MaxLines = 0
-	// TextLimit = 0 type::none
-	// TextClipWidth = -1
 	/**
 	* @brief Resets all text-related rendering parameters to their default values.
 	*
