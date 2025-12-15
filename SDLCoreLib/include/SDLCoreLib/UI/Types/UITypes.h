@@ -92,15 +92,16 @@ namespace SDLCore::UI {
 
 	class PropertyValue {
 	public:
-		using ValueVariant = std::variant<int, float, double, Vector2, Vector4, Texture, std::shared_ptr<Font>, UIColorID, UIFontID, UITextureID, UINumberID>;
+		using ValueVariant = std::variant<int, float, double, bool, Vector2, Vector4, Texture, std::shared_ptr<Font>, UIColorID, UIFontID, UITextureID, UINumberID>;
 		enum class Type {
-			INT, FLOAT, DOUBLE, VECTOR2, VECTOR4, TEXTURE, FONT, COLOR_ID, FONT_ID, TEXTURE_ID, NUMBER_ID
+			INT, FLOAT, DOUBLE, BOOL, VECTOR2, VECTOR4, TEXTURE, FONT, COLOR_ID, FONT_ID, TEXTURE_ID, NUMBER_ID
 		};
 
 		PropertyValue();
 		PropertyValue(int i);
 		PropertyValue(float f);
 		PropertyValue(double d);
+		PropertyValue(bool b);
 		PropertyValue(const Vector2& vec);
 		PropertyValue(const Vector4& vec);
 		PropertyValue(const Texture& tex);
@@ -161,6 +162,7 @@ namespace SDLCore::UI {
 
 		enum class PropertyTypeClass {
 			Numeric,
+			BOOL,
 			Vector2,
 			Vector4,
 			Texture,
@@ -276,6 +278,7 @@ static inline std::string FormatUtils::toString<SDLCore::UI::PropertyValue::Type
 	case SDLCore::UI::PropertyValue::Type::INT:			return "int";
 	case SDLCore::UI::PropertyValue::Type::FLOAT:		return "float";
 	case SDLCore::UI::PropertyValue::Type::DOUBLE:		return "double";
+	case SDLCore::UI::PropertyValue::Type::BOOL:		return "bool";
 	case SDLCore::UI::PropertyValue::Type::VECTOR2:		return "Vector2";
 	case SDLCore::UI::PropertyValue::Type::VECTOR4:		return "Vector4";
 	case SDLCore::UI::PropertyValue::Type::TEXTURE:		return "Texture";
