@@ -17,7 +17,7 @@ namespace SDLCore::UI {
     class UINode {
         friend class UIContext;
     public:
-        UINode(uintptr_t id, const std::string& typeName);
+        UINode(int childPos, uintptr_t id, const std::string& typeName);
         virtual ~UINode();
 
         template<typename T, typename... Args>
@@ -72,6 +72,7 @@ namespace SDLCore::UI {
         virtual void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) = 0;
 
         uintptr_t m_id = 0;
+        int m_childPos = -1;/*< position inside of the children */
         std::string m_typeName = "-";
         uint32_t m_typeID = SDLCORE_INVALID_ID;
         FrameNode* m_parent = nullptr;
@@ -84,37 +85,40 @@ namespace SDLCore::UI {
         bool m_childHasEvent = false;
 
         Vector2 m_position;
+        Vector2 m_size;
+        Vector4 m_padding;
+        Vector4 m_margin;
+
         UILayoutDirection m_layoutDir = UILayoutDirection::ROW;
         UIAlignment m_horizontalAligment = UIAlignment::START;
         UIAlignment m_verticalAligment = UIAlignment::START;
     private:
         static inline uint32_t m_typeIDCounter = 0;
         static uint32_t GetUITypeID(const std::string& name);
+
+        float GetAccumulatedChildSize(bool horizontal, int upToIndex) const;
+        float GetTotalChildrenSize(bool horizontal) const;
+        float AlignOffset(bool isHor, UIAlignment align, float freeSpace);
+        Vector2 CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h);
+        void CalculateLayout(const UIContext* uiContext);
     };
 
     class FrameNode : public UINode {
     public:
-        FrameNode(uintptr_t key);
+        FrameNode(int childPos, uintptr_t key);
 
         void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) override;
         static uint32_t GetType();
-
-        Vector2 m_size;
-        Vector4 m_padding;
-        Vector4 m_margin;
 
         Vector4 m_backgroundColor;
         Vector4 m_borderColor;
 
     private:
-        static float AlignOffset(UIAlignment align, float freeSpace);
-        Vector2 CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h);
-        void CalculateLayout(const UIContext* uiContext);
     };
 
     class TextNode : public UINode {
     public:
-        TextNode(uintptr_t key);
+        TextNode(int childPos, uintptr_t key);
 
         void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) override;
         static uint32_t GetType();
