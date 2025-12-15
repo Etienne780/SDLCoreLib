@@ -71,6 +71,9 @@ namespace SDLCore::UI {
         borderThickness = RegisterProperty("border_thickness", "border thickness",
             PropertyValue(0.0f));
 
+        borderThickness = RegisterProperty("border_thickness", "border thickness",
+            PropertyValue(true));
+
         // ============ Text ============
         font = RegisterProperty("font", "font id", 
             PropertyValue(UIFontID{ 0 }));// default font
