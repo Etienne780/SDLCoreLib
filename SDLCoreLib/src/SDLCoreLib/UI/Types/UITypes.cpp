@@ -20,6 +20,10 @@ namespace SDLCore::UI {
 		: m_value(d), m_valueType(Type::DOUBLE) {
 	}
 
+	PropertyValue::PropertyValue(bool b)
+		: m_value(b), m_valueType(Type::BOOL) {
+	}
+
 	PropertyValue::PropertyValue(const Vector2& vec)
 		: m_value(vec), m_valueType(Type::VECTOR2) {
 	}
@@ -99,6 +103,9 @@ namespace SDLCore::UI {
 		case Type::DOUBLE:
 		case Type::NUMBER_ID:
 			return PropertyTypeClass::Numeric;
+
+		case Type::BOOL:
+			return PropertyTypeClass::BOOL;
 
 		case Type::VECTOR2:
 			return PropertyTypeClass::Vector2;
