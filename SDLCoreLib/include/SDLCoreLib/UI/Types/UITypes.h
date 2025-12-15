@@ -45,7 +45,6 @@ namespace SDLCore::UI {
 	struct UITextureTag {};
 	struct UINumberTag {};
 	struct UINodeTag {};
-	struct UINodeTypeTag {};
 	struct UIPropertyTag {};
 
 	/**
@@ -83,12 +82,6 @@ namespace SDLCore::UI {
 	*        Internally stored as an uint32_t
 	*/
 	using UINodeID = SDLCoreID<UINodeTag>;
-	
-	/**
-	* @brief Identifier for a node Type (used by the UINodes).
-	*        Internally stored as an uint32_t
-	*/
-	using UINodeType = SDLCoreID<UINodeTypeTag>;
 
 	class PropertyValue {
 	public:

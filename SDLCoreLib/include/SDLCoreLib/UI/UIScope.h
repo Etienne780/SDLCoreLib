@@ -44,7 +44,7 @@ namespace SDLCore::UI {
     UIEvent Text(UIKey&& key, const std::string& text, const Styles&... styles) {
         TextNode* node = Internal::InternalAddText(key.id);
         if (node) {
-            node->text = text;
+            node->m_text = text;
             (node->AddStyle(styles), ...);
             node->ApplyStyle(GetCurrentContext());
         }
