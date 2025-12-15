@@ -9,14 +9,15 @@ namespace SDLCore::UI {
 
 	#pragma region UINode
 
-	UINode::UINode(uintptr_t id, std::string&& name) 
-		: m_id(id), m_name(std::move(name)) {
-		m_typeID = GetUITypeID(m_name);
-		Log::Debug("CreadedNode: id={} name={}", id, m_name);
+	UINode::UINode(uintptr_t id, const std::string& typeName)
+		: m_id(id), m_typeName(typeName){
+		m_typeID = GetUITypeID(m_typeName);
+
+		Log::Debug("CreadedNode: id={} name={}", id, m_typeName);
 	}
 
 	UINode::~UINode() {
-		Log::Debug("DestroyedNode: id={} name={}", m_id, m_name);
+		Log::Debug("DestroyedNode: id={} name={}", m_id, m_typeName);
 	}
 
 	void UINode::AddStyle(const UIStyle& style) {
@@ -55,7 +56,7 @@ namespace SDLCore::UI {
 	}
 
 	const std::string& UINode::GeTypeName() const {
-		return m_name;
+		return m_typeName;
 	}
 
 	uint32_t UINode::GetTypeID() const {
@@ -71,7 +72,7 @@ namespace SDLCore::UI {
 	}
 
 	std::string UINode::GetName() const {
-		return m_name;
+		return m_typeName;
 	}
 
 	UINode* UINode::GetParent() {
@@ -121,8 +122,9 @@ namespace SDLCore::UI {
 
 	#pragma region FrameNode
 
+	static std::string frameNodeName = "Frame";
 	FrameNode::FrameNode(uintptr_t key)
-		: UINode(key, "Frame") {
+		: UINode(key, frameNodeName) {
 		// hard codes Frame node to ui type 0
 	}
 
@@ -150,6 +152,10 @@ namespace SDLCore::UI {
 		m_margin.Set(0);
 		styleState.TryGetValue<Vector4>(Properties::padding, m_padding);
 		styleState.TryGetValue<Vector4>(Properties::margin, m_margin);
+	}
+
+	uint32_t FrameNode::GetType() {
+		return nameToID[frameNodeName];
 	}
 
 	Vector2 FrameNode::CalculateSize(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h) {
@@ -222,14 +228,19 @@ namespace SDLCore::UI {
 
 	#pragma region TextNode
 
+	static std::string textNodeName = "Text";
 	TextNode::TextNode(uintptr_t key)
-		: UINode(key, "Text") {
+		: UINode(key, textNodeName) {
 		// hard codes Frame node to ui type 1
 	}
 
 	void TextNode::ApplyStyleCalled(UIContext* ctx, const UIStyleState& styleState) {
 		if (!ctx)
 			return;
+	}
+
+	uint32_t TextNode::GetType() {
+		return nameToID[textNodeName];
 	}
 
 	#pragma endregion

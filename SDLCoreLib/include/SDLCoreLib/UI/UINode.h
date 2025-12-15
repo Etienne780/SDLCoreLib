@@ -17,7 +17,7 @@ namespace SDLCore::UI {
     class UINode {
         friend class UIContext;
     public:
-        UINode(uintptr_t id, std::string&& name);
+        UINode(uintptr_t id, const std::string& typeName);
         virtual ~UINode();
 
         template<typename T, typename... Args>
@@ -72,7 +72,7 @@ namespace SDLCore::UI {
         virtual void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) = 0;
 
         uintptr_t m_id = 0;
-        std::string m_name = "-";
+        std::string m_typeName = "-";
         uint32_t m_typeID = SDLCORE_INVALID_ID;
         FrameNode* m_parent = nullptr;
 
@@ -97,6 +97,7 @@ namespace SDLCore::UI {
         FrameNode(uintptr_t key);
 
         void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) override;
+        static uint32_t GetType();
 
         Vector2 m_size;
         Vector4 m_padding;
@@ -116,6 +117,7 @@ namespace SDLCore::UI {
         TextNode(uintptr_t key);
 
         void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) override;
+        static uint32_t GetType();
 
         std::string m_text;
         float m_textSize = 0;
