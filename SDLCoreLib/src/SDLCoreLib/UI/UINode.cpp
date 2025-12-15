@@ -9,8 +9,8 @@ namespace SDLCore::UI {
 
 	#pragma region UINode
 
-	UINode::UINode(uintptr_t id, const std::string& typeName)
-		: m_id(id), m_typeName(typeName){
+	UINode::UINode(int childPos, uintptr_t id, const std::string& typeName)
+		: m_childPos(childPos), m_id(id), m_typeName(typeName){
 		m_typeID = GetUITypeID(m_typeName);
 
 		Log::Debug("CreadedNode: id={} name={}", id, m_typeName);
@@ -41,7 +41,30 @@ namespace SDLCore::UI {
 		m_horizontalAligment = static_cast<UIAlignment>(alignHorizontal);
 		m_verticalAligment = static_cast<UIAlignment>(alignVertical);
 
+		float width = 0.0f;
+		float height = 0.0f;
+
+		styleState.TryGetValue<float>(Properties::width, width);
+		styleState.TryGetValue<float>(Properties::height, height);
+
+		int sizeUnitW = 0;// 0 = PX
+		int sizeUnitH = 0;
+		styleState.TryGetValue<int>(Properties::sizeUnitW, sizeUnitW);
+		styleState.TryGetValue<int>(Properties::sizeUnitH, sizeUnitH);
+
+		m_size = CalculateSize(ctx,
+			static_cast<UISizeUnit>(sizeUnitW),
+			static_cast<UISizeUnit>(sizeUnitH),
+			width, height);
+
+		m_padding.Set(0);
+		m_margin.Set(0);
+		styleState.TryGetValue<Vector4>(Properties::padding, m_padding);
+		styleState.TryGetValue<Vector4>(Properties::margin, m_margin);
+
 		ApplyStyleCalled(ctx, styleState);
+		// calculates the position after scale
+		CalculateLayout(ctx);
 	}
 
 	bool UINode::ContainsChildAtPos(uint16_t pos, uintptr_t id, UINode*& outNode) {
@@ -118,47 +141,7 @@ namespace SDLCore::UI {
 		return it->second;
 	}
 
-	#pragma endregion
-
-	#pragma region FrameNode
-
-	static std::string frameNodeName = "Frame";
-	FrameNode::FrameNode(uintptr_t key)
-		: UINode(key, frameNodeName) {
-		// hard codes Frame node to ui type 0
-	}
-
-	void FrameNode::ApplyStyleCalled(UIContext* ctx, const UIStyleState& styleState) {
-		if (!ctx)
-			return;
-
-		float width = 0.0f;
-		float height = 0.0f;
-
-		styleState.TryGetValue<float>(Properties::width, width);
-		styleState.TryGetValue<float>(Properties::height, height);
-
-		int sizeUnitW = 0;// 0 = PX
-		int sizeUnitH = 0;
-		styleState.TryGetValue<int>(Properties::sizeUnitW, sizeUnitW);
-		styleState.TryGetValue<int>(Properties::sizeUnitH, sizeUnitH);
-
-		m_size = CalculateSize(ctx,
-			static_cast<UISizeUnit>(sizeUnitW), 
-			static_cast<UISizeUnit>(sizeUnitH), 
-			width, height);
-
-		m_padding.Set(0);
-		m_margin.Set(0);
-		styleState.TryGetValue<Vector4>(Properties::padding, m_padding);
-		styleState.TryGetValue<Vector4>(Properties::margin, m_margin);
-	}
-
-	uint32_t FrameNode::GetType() {
-		return nameToID[frameNodeName];
-	}
-
-	Vector2 FrameNode::CalculateSize(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h) {
+	Vector2 UINode::CalculateSize(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h) {
 		if (!ctx)
 			return Vector2(0.0f, 0.0f);
 
@@ -169,7 +152,7 @@ namespace SDLCore::UI {
 				return horizontal ? m_parent->m_size.x : m_parent->m_size.y;
 			}
 			return horizontal ? ctx->GetWindowSize().x : ctx->GetWindowSize().y;
-		};
+			};
 
 		auto calc = [&](bool horizontal, UISizeUnit unit, float value) -> float {
 			switch (unit) {
@@ -188,7 +171,7 @@ namespace SDLCore::UI {
 			default:
 				return 0.0f;
 			}
-		};
+			};
 
 		return Vector2(
 			calc(true, unitW, w),
@@ -196,32 +179,103 @@ namespace SDLCore::UI {
 		);
 	}
 
-	float FrameNode::AlignOffset(UIAlignment align, float freeSpace) {
+	float UINode::GetAccumulatedChildSize(bool horizontal, int upToIndex) const {
+		if (!m_parent)
+			return 0.0f;
+
+		const auto& childs = m_parent->GetChildren();
+		float size = 0.0f;
+
+		for (int i = 0; i < upToIndex && i < static_cast<int>(childs.size()); ++i) {
+			size += horizontal ? childs[i]->m_size.x : childs[i]->m_size.y;
+		}
+
+		return size;
+	}
+
+	float UINode::GetTotalChildrenSize(bool horizontal) const {
+		if (!m_parent)
+			return 0.0f;
+
+		const auto& childs = m_parent->GetChildren();
+		float size = 0.0f;
+
+		for (const auto& c : childs) {
+			size += horizontal ? c->m_size.x : c->m_size.y;
+		}
+
+		return size;
+	}
+
+	float UINode::AlignOffset(bool isHor, UIAlignment align, float freeSpace) {
+		if (!m_parent)
+			return 0.0f;
+
+		const auto& childs = m_parent->GetChildren();
+
 		switch (align) {
-		case UIAlignment::START:  return 0.0f;
-		case UIAlignment::CENTER: return freeSpace * 0.5f;
-		case UIAlignment::END:    return freeSpace;
-		default:                 return 0.0f;
+
+		case UIAlignment::START:
+			// Flow: position after previous siblings
+			if (m_childPos > 0 && m_childPos < static_cast<int>(childs.size())) {
+				return GetAccumulatedChildSize(isHor, m_childPos);
+			}
+			return 0.0f;
+
+		case UIAlignment::CENTER: {
+			const float totalSize = GetTotalChildrenSize(isHor);
+			const float start = (freeSpace - totalSize) * 0.5f;
+			return start + GetAccumulatedChildSize(isHor, m_childPos);
+		}
+
+		case UIAlignment::END: {
+			const float totalSize = GetTotalChildrenSize(isHor);
+			const float start = freeSpace - totalSize;
+			return start + GetAccumulatedChildSize(isHor, m_childPos);
+		}
+
+		default:
+			return 0.0f;
 		}
 	}
 
-	void FrameNode::CalculateLayout(const UIContext* uiContext) {
+	void UINode::CalculateLayout(const UIContext* uiContext) {
 		if (!uiContext)
 			return;
 
-		// Root node
-		if (!m_parent) {
-			m_position = Vector2(0.0f, 0.0f);
+		m_position.Set(0);
+
+		// Root node, always at 0, 0
+		if (!m_parent)
 			return;
-		}
 
 		const Vector2 parentSize = m_parent->m_size;
 
 		const float freeX = parentSize.x - m_size.x;
 		const float freeY = parentSize.y - m_size.y;
 
-		m_position.x = m_parent->m_position.x + AlignOffset(m_horizontalAligment, freeX);
-		m_position.y = m_parent->m_position.y + AlignOffset(m_verticalAligment, freeY);
+		m_position.x = m_parent->m_position.x + AlignOffset(true, m_horizontalAligment, freeX);
+		m_position.y = m_parent->m_position.y + AlignOffset(false, m_verticalAligment, freeY);
+	}
+
+	#pragma endregion
+
+	#pragma region FrameNode
+
+	static std::string frameNodeName = "Frame";
+	FrameNode::FrameNode(int childPos, uintptr_t key)
+		: UINode(childPos, key, frameNodeName) {
+		// hard codes Frame node to ui type 0
+	}
+
+	void FrameNode::ApplyStyleCalled(UIContext* ctx, const UIStyleState& styleState) {
+		if (!ctx)
+			return;
+
+	}
+
+	uint32_t FrameNode::GetType() {
+		return nameToID[frameNodeName];
 	}
 
 	#pragma endregion
@@ -229,14 +283,15 @@ namespace SDLCore::UI {
 	#pragma region TextNode
 
 	static std::string textNodeName = "Text";
-	TextNode::TextNode(uintptr_t key)
-		: UINode(key, textNodeName) {
+	TextNode::TextNode(int childPos, uintptr_t key)
+		: UINode(childPos, key, textNodeName) {
 		// hard codes Frame node to ui type 1
 	}
 
 	void TextNode::ApplyStyleCalled(UIContext* ctx, const UIStyleState& styleState) {
 		if (!ctx)
 			return;
+
 	}
 
 	uint32_t TextNode::GetType() {

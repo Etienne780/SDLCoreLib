@@ -50,7 +50,7 @@ namespace SDLCore::UI {
 			parentNode->RemoveChildrenFromIndex(pos);
 
 			// element does not exist. create element and create stack
-			T* childNode = parentNode->AddChild<T>(id, std::forward<Args>(args)...);
+			T* childNode = parentNode->AddChild<T>(static_cast<int>(pos), id, std::forward<Args>(args)...);
 			// no stack increas cause add node has no end func
 			return childNode;
 			

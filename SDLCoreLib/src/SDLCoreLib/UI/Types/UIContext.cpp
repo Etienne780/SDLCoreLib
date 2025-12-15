@@ -35,7 +35,7 @@ namespace SDLCore::UI {
         }
         
         if (!m_rootNode) {
-            m_rootNode = std::make_shared<FrameNode>(id);
+            m_rootNode = std::make_shared<FrameNode>(-1, id);
             FrameNode* frame = m_rootNode.get();
             m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
@@ -48,7 +48,10 @@ namespace SDLCore::UI {
             if (!node)
                 return nullptr;
 
-            FrameNode* frame = node->AddChild<FrameNode>(id);
+            int currentChildPos = (!m_lastChildPosition.empty()) ? 
+                static_cast<int>(m_lastChildPosition.back()) : 0;
+
+            FrameNode* frame = node->AddChild<FrameNode>(currentChildPos, id);
             m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastChildPosition.push_back(0);
@@ -70,7 +73,7 @@ namespace SDLCore::UI {
                 node->RemoveChildrenFromIndex(pos);
 
                 // element does not exist. create element and create stack
-                FrameNode* frame = node->AddChild<FrameNode>(id);
+                FrameNode* frame = node->AddChild<FrameNode>(static_cast<int>(pos), id);
                 m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
                 m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
                 m_lastChildPosition.push_back(0);
