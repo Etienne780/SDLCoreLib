@@ -738,6 +738,18 @@ namespace SDLCore::Render {
 	float CalculateFontSizeForBounds(const std::string& text, float targetW, float targetH);
 
 	/**
+	* @brief Estimates a font size that allows the given text to fit within specified width and height bounds.
+	*
+	* The calculation is based on the current font and its size. Ensure a valid font size is set prior to calling this function.
+	* This function only computes a suitable size; it does not modify the active font size.
+	*
+	* @param text The text string to fit within the bounds.
+	* @param targetSize Maximum allowed size in pixels.
+	* @return Estimated font size in pixels that best fits the target dimensions.
+	*/
+	float CalculateFontSizeForBounds(const std::string& text, const Vector2& targetSize);
+
+	/**
 	* @brief Returns the advance width of a single character.
 	* @param c Character to measure.
 	* @return Character width in pixels.
