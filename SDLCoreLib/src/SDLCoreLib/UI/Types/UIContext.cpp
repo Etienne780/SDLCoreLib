@@ -111,7 +111,7 @@ namespace SDLCore::UI {
             m_lastNodeStack.pop_back();
             // last node poped
             if (m_lastNodeStack.empty()) {
-                RenderNodes(m_rootNode.get());
+                RenderNodes(this, m_rootNode.get());
             }
 
             return *uiEvent;
@@ -178,10 +178,12 @@ namespace SDLCore::UI {
         return event;
     }
 
-    void UIContext::RenderNodes(UINode* rootNode) {
+    void UIContext::RenderNodes(UIContext* ctx, UINode* rootNode) {
 
         std::function<void(UINode*)> RenderRecursive;
         RenderRecursive = [&](UINode* root) {
+            root->CalculateLayout(ctx);
+
             if (!root || !root->IsActive()) 
                 return;
 
