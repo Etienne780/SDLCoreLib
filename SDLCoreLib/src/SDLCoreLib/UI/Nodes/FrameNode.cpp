@@ -1,5 +1,6 @@
 #include <string>
 
+#include "UI/Types/UIContext.h"
 #include "SDLCoreRenderer.h"
 #include "UI/Nodes/FrameNode.h"
 
@@ -18,7 +19,7 @@ namespace SDLCore::UI {
 		styleState.TryGetValue<Vector4>(Properties::backgroundColor, m_backgroundColor);
 	}
 
-	void FrameNode::RenderNode() const {
+	void FrameNode::RenderNode(UIContext* ctx) const {
 		namespace RE = SDLCore::Render;
 
 		RE::SetColor(m_backgroundColor);
