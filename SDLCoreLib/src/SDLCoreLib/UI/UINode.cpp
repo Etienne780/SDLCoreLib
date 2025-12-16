@@ -17,11 +17,22 @@ namespace SDLCore::UI {
 		Log::Debug("DestroyedNode: id={} name={}", m_id, m_typeName);
 	}
 
+	void UINode::ClearStyles() {
+		m_appliedStyles.clear();
+	}
+
+	void UINode::ReserveStyles(size_t count) {
+		m_appliedStyles.reserve(count);
+	}
+
 	void UINode::AddStyle(const UIStyle& style) {
 		m_appliedStyles.push_back(style);
 	}
 
 	void UINode::ApplyStyle(UIContext* ctx) {
+		if (!ctx)
+			return;
+
 		m_finalStyle = CreateStyle();
 
 		const UIStyleState& styleState = m_finalStyle.GetStyleState(m_state);
@@ -275,8 +286,8 @@ namespace SDLCore::UI {
 		const float freeX = parentSize.x - m_size.x;
 		const float freeY = parentSize.y - m_size.y;
 
-		m_position.x = m_parent->m_position.x + AlignOffset(true, m_horizontalAligment, freeX);
-		m_position.y = m_parent->m_position.y + AlignOffset(false, m_verticalAligment, freeY);
+		m_position.x = m_parent->m_position.x + AlignOffset(true, m_parent->m_horizontalAligment, freeX);
+		m_position.y = m_parent->m_position.y + AlignOffset(false, m_parent->m_verticalAligment, freeY);
 	}
 
 }

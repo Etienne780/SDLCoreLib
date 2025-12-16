@@ -15,13 +15,14 @@ namespace SDLCore::UI {
 		if (!ctx)
 			return;
 
+		styleState.TryGetValue<Vector4>(Properties::backgroundColor, m_backgroundColor);
 	}
 
 	void FrameNode::RenderNode() const {
 		namespace RE = SDLCore::Render;
 
-		RE::SetColor(255, 0, 0, 100);
-		RE::FillRect(root->GetPosition(), root->GetSize());
+		RE::SetColor(m_backgroundColor);
+		RE::FillRect(this->GetPosition(), this->GetSize());
 	}
 
 	uint32_t FrameNode::GetType() {

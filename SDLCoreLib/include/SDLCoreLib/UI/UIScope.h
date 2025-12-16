@@ -31,6 +31,9 @@ namespace SDLCore::UI {
     void BeginFrame(UIKey&& key, const Styles&... styles) {
         FrameNode* node = Internal::InternalBeginFrame(key.id);
         if (node) {
+            node->ClearStyles();
+            constexpr size_t numStyles = sizeof...(styles);
+            node->ReserveStyles(numStyles);
             (node->AddStyle(styles), ...);
             node->ApplyStyle(GetCurrentContext());
         }
@@ -46,6 +49,10 @@ namespace SDLCore::UI {
         TextNode* node = Internal::InternalAddText(key.id);
         if (node) {
             node->m_text = text;
+
+            node->ClearStyles();
+            constexpr size_t numStyles = sizeof...(styles);
+            node->ReserveStyles(numStyles);
             (node->AddStyle(styles), ...);
             node->ApplyStyle(GetCurrentContext());
         }
