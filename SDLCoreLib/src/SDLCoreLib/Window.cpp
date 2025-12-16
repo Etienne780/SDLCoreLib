@@ -75,8 +75,10 @@ namespace SDLCore {
 			DestroyWindow();
 		}
 
-		if (m_width < 0) m_width = 0;
-		if (m_height < 0) m_height = 0;
+		if (m_width < 0) 
+			m_width = 0;
+		if (m_height < 0) 
+			m_height = 0;
 
 		SDL_Window* rawWindow = SDL_CreateWindow(m_name.c_str(), m_width, m_height, GetWindowFlags());
 		if (!rawWindow) {
@@ -84,7 +86,6 @@ namespace SDLCore {
 			return false;
 		}
 
-		UpdateDisplayParams(SDL_GetDisplayForWindow(rawWindow));
 		m_sdlWindow = std::shared_ptr<SDL_Window>(rawWindow, [](SDL_Window*) {});
 
 		if (!SetWindowProperties()) {
@@ -250,13 +251,16 @@ namespace SDLCore {
 
 	void Window::UpdateWindowEvents(Uint32 type) {
 		switch (type) {
+		case SDL_EVENT_WINDOW_DISPLAY_CHANGED:
+			m_sdlDisplayID = SDL_GetDisplayForWindow(m_sdlWindow.get());
+			break;
+		case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
+		case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+			m_contentScale = SDL_GetWindowDisplayScale(m_sdlWindow.get());
+			break;
 		case SDL_EVENT_WINDOW_MOVED:
-			if (m_sdlWindow)
-				UpdateDisplayParams(SDL_GetDisplayForWindow(m_sdlWindow.get()));
 			break;
 		case SDL_EVENT_WINDOW_RESIZED:
-			if(m_sdlWindow)
-				UpdateDisplayParams(SDL_GetDisplayForWindow(m_sdlWindow.get()));
 			CallOnWindowResize();
 			break;
 		case SDL_EVENT_WINDOW_MINIMIZED:
@@ -305,13 +309,6 @@ namespace SDLCore {
 		else {
 			return SDL_ShowCursor();
 		}
-	}
-
-	void Window::UpdateDisplayParams(SDL_DisplayID displayID) {
-		m_sdlDisplayID = displayID;
-
-		if(m_sdlWindow)
-			m_contentScale = SDL_GetWindowDisplayScale(m_sdlWindow.get());
 	}
 
 	SDL_WindowFlags Window::GetWindowFlags() const {
