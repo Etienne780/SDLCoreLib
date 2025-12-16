@@ -24,12 +24,10 @@ namespace SDLCore::UI {
 	};
 
 	enum UILayoutDirection : uint16_t {
-		ROW = 0,// is equal to using ROW_START
-		COLUMN,// is equal to using COLUMN_START
-		ROW_START,
-		ROW_END,
-		COLUMN_START, 
-		COLUMN_END
+		ROW = 0,
+		COLUMN,
+		ROW_REVERSE,
+		COLUMN_REVERSE
 	};
 	using UILayoutDir = UILayoutDirection;
 
@@ -216,10 +214,8 @@ static inline std::string FormatUtils::toString<SDLCore::UI::UILayoutDirection>(
 	switch (dir) {
 	case SDLCore::UI::UILayoutDirection::ROW:			return "Row";
 	case SDLCore::UI::UILayoutDirection::COLUMN:		return "Column";
-	case SDLCore::UI::UILayoutDirection::ROW_START:		return "Row_start";
-	case SDLCore::UI::UILayoutDirection::ROW_END:		return "Row_end";
-	case SDLCore::UI::UILayoutDirection::COLUMN_START:	return "Column_start";
-	case SDLCore::UI::UILayoutDirection::COLUMN_END:	return "Column_end";
+	case SDLCore::UI::UILayoutDirection::ROW_REVERSE:	return "Row_reverse";
+	case SDLCore::UI::UILayoutDirection::COLUMN_REVERSE:return "Column_reverse";
 	default:											return "UNKOWN";
 	}
 }

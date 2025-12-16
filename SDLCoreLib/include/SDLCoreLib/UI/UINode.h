@@ -25,7 +25,7 @@ namespace SDLCore::UI {
     public:
         UINode(int childPos, uintptr_t id, const std::string& typeName);
         virtual ~UINode();
-        virtual void RenderNode() const = 0;
+        virtual void RenderNode(UIContext* ctx) const = 0;
 
         template<typename T, typename... Args>
         T* AddChild(Args&&... args) {

@@ -187,7 +187,7 @@ namespace SDLCore::UI {
             if (!root || !root->IsActive()) 
                 return;
 
-            root->RenderNode();
+            root->RenderNode(ctx);
             for (const std::shared_ptr<UINode>& child : root->GetChildren()) {
                 RenderRecursive(child.get());
             }
