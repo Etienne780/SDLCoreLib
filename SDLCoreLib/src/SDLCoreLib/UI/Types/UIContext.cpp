@@ -1,5 +1,8 @@
+#include <functional>
+
 #include "Application.h"
 #include "UI/UINode.h"
+#include "UI/Nodes/FrameNode.h"
 #include "UI/Types/UIContext.h"
 
 namespace SDLCore::UI {
@@ -30,6 +33,7 @@ namespace SDLCore::UI {
                 // pushes root node on to stack
                 m_lastNodeStack.push_back(reinterpret_cast<UINode*>(m_rootNode.get()));
                 m_lastChildPosition.push_back(0);
+                m_rootNode->SetNodeActive();
                 return m_rootNode.get();
             }
         }
@@ -66,6 +70,7 @@ namespace SDLCore::UI {
                 // element with id exists at position. set it as last position
                 m_lastNodeStack.push_back(currentNode);
                 m_lastChildPosition.push_back(0);
+                currentNode->SetNodeActive();
                 return reinterpret_cast<FrameNode*>(currentNode);
             }
             else {
@@ -84,6 +89,7 @@ namespace SDLCore::UI {
         return nullptr;
     }
 
+#include "SDLCoreTime.h"
     UIEvent UIContext::EndFrame() {
         if (!m_lastChildPosition.empty() && !m_lastNodeStack.empty()) {
             UINode* node = m_lastNodeStack.back();
@@ -103,6 +109,11 @@ namespace SDLCore::UI {
         if (!m_lastNodeStack.empty()) {
             UIEvent* uiEvent = ProcessEvent(m_lastNodeStack.back());
             m_lastNodeStack.pop_back();
+            // last node poped
+            if (m_lastNodeStack.empty()) {
+                RenderNodes(m_rootNode.get());
+            }
+
             return *uiEvent;
         }
 
@@ -136,7 +147,8 @@ namespace SDLCore::UI {
     }
 
     UIEvent* UIContext::ProcessEvent(UINode* node) {
-        if (!node) {
+        // skip inactive nodes
+        if (!node || !node->IsActive()) {
             static UIEvent dummy;
             return &dummy;
         }
@@ -165,5 +177,23 @@ namespace SDLCore::UI {
         
         return event;
     }
+
+    void UIContext::RenderNodes(UINode* rootNode) {
+
+        std::function<void(UINode*)> RenderRecursive;
+        RenderRecursive = [&](UINode* root) {
+            if (!root || !root->IsActive()) 
+                return;
+
+            root->RenderNode()
+
+            for (const std::shared_ptr<UINode>& child : root->GetChildren()) {
+                RenderRecursive(child.get());
+            }
+        };
+
+        RenderRecursive(rootNode);
+    }
+
 
 }

@@ -15,6 +15,11 @@ void App::OnStart() {
 void App::OnUpdate() {
 
     {
+        namespace RE = SDLCore::Render;
+        RE::SetWindowRenderer(m_winID);
+        RE::SetColor(0);
+        RE::Clear();
+
         static int test = 0;
 
         using namespace SDLCore;
@@ -22,8 +27,18 @@ void App::OnUpdate() {
         UI::SetContextWindow(context, m_winID);
         UI::BindContext(context);
 
+        UI::UIStyle styleRoot("root");
+        styleRoot.SetValue(Prop::sizeUnitW, UI::UISizeUnit::PERCENTAGE);
+        styleRoot.SetValue(Prop::sizeUnitH, UI::UISizeUnit::PERCENTAGE);
+        styleRoot.SetValue(Prop::width, 100.0f);
+        styleRoot.SetValue(Prop::height, 100.0f);
+
         UI::UIStyle style("Test-Style");
         style.SetValue(Prop::alignVertical, UI::UIAlignment::START);
+        style.SetValue(Prop::sizeUnitW, UI::UISizeUnit::PX);
+        style.SetValue(Prop::sizeUnitH, UI::UISizeUnit::PX);
+        style.SetValue(Prop::width, 200.0f);
+        style.SetValue(Prop::height, 200.0f);
 
         if (test == 3) {
             Log::Debug("New Element middle test");
@@ -32,7 +47,7 @@ void App::OnUpdate() {
             Log::Debug("Delete Element");
         }
 
-        UI::BeginFrame(UI::UIKey("root"));
+        UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
             UI::BeginFrame(UI::UIKey("panel_1"), style);
             {
@@ -45,7 +60,7 @@ void App::OnUpdate() {
             UI::EndFrame();
 
             if (test >= 3) {
-                UI::BeginFrame(UI::UIKey("new element"));
+                UI::BeginFrame(UI::UIKey("new element"), style);
                 UI::EndFrame();
             }
 
@@ -60,6 +75,8 @@ void App::OnUpdate() {
         Log::Print(UI::GetContextStringHierarchy(context));
 
         test++;
+
+        RE::Present();
     }
 
     /*
