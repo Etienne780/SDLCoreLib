@@ -525,6 +525,13 @@ namespace SDLCore::Render {
 	void Text(const std::string& text, float x, float y);
 
 	/**
+	* @brief Draws a string of text at the specified position using the active font.
+	* @param text The text to draw.
+	* @param pos x, y position of the text in pixels
+	*/
+	void Text(const std::string& text, const Vector2& pos);
+
+	/**
 	* @brief Draws formatted text at the specified position using the active font.
 	* @param x X position in pixels.
 	* @param y Y position in pixels.
@@ -535,6 +542,18 @@ namespace SDLCore::Render {
 	template<typename... Args>
 	void TextF(float x, float y, Args&&... args) {
 		Text(Log::GetFormattedString(std::forward<Args>(args)...), x, y);
+	}
+
+	/**
+	* @brief Draws formatted text at the specified position using the active font.
+	* @param pos x, y position of the text in pixels
+	* @param args Variadic list of values inserted into the text format pattern ({} markers).
+	* @note Each {} placeholder is replaced by the corresponding value. This approach is simple but
+	*       may not be optimal for performance in frequent or high-volume calls.
+	*/
+	template<typename... Args>
+	void TextF(const Vector2& pos, Args&&... args) {
+		Text(Log::GetFormattedString(std::forward<Args>(args)...), pos.x, pos.y);
 	}
 
 	/**
@@ -717,6 +736,18 @@ namespace SDLCore::Render {
 	* @return Estimated font size in pixels that best fits the target dimensions.
 	*/
 	float CalculateFontSizeForBounds(const std::string& text, float targetW, float targetH);
+
+	/**
+	* @brief Estimates a font size that allows the given text to fit within specified width and height bounds.
+	*
+	* The calculation is based on the current font and its size. Ensure a valid font size is set prior to calling this function.
+	* This function only computes a suitable size; it does not modify the active font size.
+	*
+	* @param text The text string to fit within the bounds.
+	* @param targetSize Maximum allowed size in pixels.
+	* @return Estimated font size in pixels that best fits the target dimensions.
+	*/
+	float CalculateFontSizeForBounds(const std::string& text, const Vector2& targetSize);
 
 	/**
 	* @brief Returns the advance width of a single character.

@@ -661,7 +661,7 @@ namespace SDLCore::Render {
     #pragma region Text
 
     // Helper function to calculate the horizontal offset of the text
-    float CalculateHorOffset(const std::string& text, Align align) {
+    static float CalculateHorOffset(const std::string& text, Align align) {
         switch (align) {
         case SDLCore::Align::START:     return 0;
         case SDLCore::Align::CENTER:    return GetTextBlockWidth(text) * 0.5f;
@@ -671,7 +671,7 @@ namespace SDLCore::Render {
     }
 
     // Helper function to calculate the vertical offset of the text
-    float CalculateVerOffset(const std::string& text, Align align) {
+    static float CalculateVerOffset(const std::string& text, Align align) {
         switch (align) {
         case SDLCore::Align::START:     return 0;
         case SDLCore::Align::CENTER:    return GetTextBlockHeight(text, true) * 0.5f;
@@ -680,7 +680,7 @@ namespace SDLCore::Render {
         }
     }
 
-    std::vector<std::string> BuildLines(const std::string& text) {
+    static std::vector<std::string> BuildLines(const std::string& text) {
         std::vector<std::string> lines;
 
         if (s_textClipWidth == -1) {
@@ -862,6 +862,10 @@ namespace SDLCore::Render {
         }
     }
 
+    void Text(const std::string& text, const Vector2& pos) {
+        Text(text, pos.x, pos.y);
+    }
+
     void ResetTextParams() {
         SetFontSize(16.0f);
         SetTextAlign(Align::START);
@@ -1038,6 +1042,10 @@ namespace SDLCore::Render {
 
         float scale = std::min(targetW / baseW, targetH / baseH);
         return baseSize * scale;
+    }
+
+    float CalculateFontSizeForBounds(const std::string& text, const Vector2& targetSize) {
+        return CalculateFontSizeForBounds(text, targetSize.x, targetSize.x);
     }
 
     float GetCharWidth(char c) {
