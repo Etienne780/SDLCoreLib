@@ -60,6 +60,47 @@ namespace SDLCore::Render {
 	*/
 	void Present();
 
+	/**
+	* @brief Sets a uniform render scale on the active SDL renderer.
+	* @param scaleX Horizontal scale factor.
+	* @param scaleY Vertical scale factor.
+	*
+	* Applies a global scaling transformation to all subsequent render operations.
+	* This affects both positions and sizes and is evaluated relative to the origin (0,0).
+	* Intended for world/camera scaling, not for DPI or UI layout scaling.
+	*/
+	void SetRenderScale(float scaleX, float scaleY);
+
+	/**
+	* @brief Sets a uniform render scale on both axes.
+	* @param scale Scale factor applied to both X and Y axes.
+	*
+	* Convenience overload that applies the same scaling factor to both axes.
+	* Equivalent to calling SetRenderScale(scale, scale).
+	*/
+	void SetRenderScale(float scale);
+
+	/**
+	* @brief Sets the render scale using a 2D vector.
+	* @param scale Vector containing horizontal (x) and vertical (y) scale factors.
+	*
+	* Convenience overload for vector-based scale input.
+	* Internally forwards to SetRenderScale(scale.x, scale.y).
+	*/
+	void SetRenderScale(const Vector2& scale);
+
+	/**
+	* @brief Retrieves the current render scale of the active SDL renderer.
+	* @return A Vector2 containing the horizontal (x) and vertical (y) render scale factors.
+	*
+	* Returns the global scaling factors currently applied to the renderer.
+	* The render scale affects all subsequent draw calls by scaling positions
+	* and sizes relative to the origin (0,0).
+	* This value reflects world/camera scaling and should not be interpreted
+	* as DPI or window content scale.
+	*/
+	Vector2 GetRenderScale();
+
 	#pragma region ViewportAndClipping
 
 	/**

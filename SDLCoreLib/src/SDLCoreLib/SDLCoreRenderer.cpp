@@ -136,6 +136,34 @@ namespace SDLCore::Render {
         }
     }
 
+    void SetRenderScale(float scaleX, float scaleY) {
+        auto renderer = GetActiveRenderer("SetRenderScale");
+        if (!renderer)
+            return;
+        if (!SDL_SetRenderScale(renderer.get(),scaleX, scaleY)) {
+            Log::Error("SDLCore::Renderer::SetRenderScale: Failed to SetRenderScale: {}", SDL_GetError());
+        }
+    }
+
+    void SetRenderScale(float scale) {
+        SetRenderScale(scale, scale);
+    }
+
+    void SetRenderScale(const Vector2& scale) {
+        SetRenderScale(scale.x, scale.y);
+    }
+
+    Vector2 GetRenderScale() {
+        Vector2 scale{ 0, 0 };
+        auto renderer = GetActiveRenderer("GetRenderScale");
+        if (!renderer)
+            return scale;
+        if (!SDL_GetRenderScale(renderer.get(), &scale.x, &scale.y)) {
+            Log::Error("SDLCore::Renderer::GetRenderScale: Failed to SetRenderScale: {}", SDL_GetError());
+        }
+        return scale;
+    }
+
     SDLCore::Rect GetViewport() {
         SDL_Rect viewport{ 0, 0, 0, 0 };
         auto renderer = GetActiveRenderer("GetViewport");
