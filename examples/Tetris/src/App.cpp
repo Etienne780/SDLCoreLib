@@ -10,6 +10,8 @@ void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
     win->SetIcon(tex);
+
+    SDLCore::Render::SetBlendMode(SDLCore::Render::BlendMode::BLEND);
 }
 
 void App::OnUpdate() {
@@ -28,17 +30,25 @@ void App::OnUpdate() {
         UI::BindContext(context);
 
         UI::UIStyle styleRoot("root");
+        styleRoot.SetValue(Prop::layoutDirection, UI::UILayoutDir::ROW);
+        styleRoot.SetValue(Prop::alignHorizontal, UI::UIAlignment::CENTER);
+        styleRoot.SetValue(Prop::alignVertical, UI::UIAlignment::CENTER);
         styleRoot.SetValue(Prop::sizeUnitW, UI::UISizeUnit::PERCENTAGE);
         styleRoot.SetValue(Prop::sizeUnitH, UI::UISizeUnit::PERCENTAGE);
         styleRoot.SetValue(Prop::width, 100.0f);
         styleRoot.SetValue(Prop::height, 100.0f);
 
-        UI::UIStyle style("Test-Style");
-        style.SetValue(Prop::alignVertical, UI::UIAlignment::START);
-        style.SetValue(Prop::sizeUnitW, UI::UISizeUnit::PX);
-        style.SetValue(Prop::sizeUnitH, UI::UISizeUnit::PX);
-        style.SetValue(Prop::width, 200.0f);
-        style.SetValue(Prop::height, 200.0f);
+        UI::UIStyle red;
+        red.SetValue(Prop::backgroundColor, Vector4(255, 0, 0, 100));
+
+        UI::UIStyle blue;
+        blue.SetValue(Prop::backgroundColor, Vector4(255, 0, 0, 255));
+
+        UI::UIStyle green;
+        green.SetValue(Prop::backgroundColor, Vector4(255, 0, 0, 255));
+
+        UI::UIStyle px200;
+        px200.SetValue(Prop::width, 100.0f).SetValue(Prop::height, 100.0f);
 
         if (test == 3) {
             Log::Debug("New Element middle test");
@@ -47,27 +57,13 @@ void App::OnUpdate() {
             Log::Debug("Delete Element");
         }
 
-        UI::BeginFrame(UI::UIKey("root"), styleRoot);
+        UI::BeginFrame(UI::UIKey("root"), styleRoot, red);
         {
-            UI::BeginFrame(UI::UIKey("panel_1"), style);
-            {
-                UI::BeginFrame(UI::UIKey("panel_1_1"), style);
-                {
-                    UI::Text(UI::UIKey("text"), "cool");
-                }
-                UI::EndFrame();
-            }
+            UI::BeginFrame(UI::UIKey("1"), px200, blue);
             UI::EndFrame();
 
-            if (test >= 3) {
-                UI::BeginFrame(UI::UIKey("new element"), style);
-                UI::EndFrame();
-            }
-
-            if (test < 5) {
-                UI::BeginFrame(UI::UIKey("panel_2"), style);
-                UI::EndFrame();
-            }
+            UI::BeginFrame(UI::UIKey("2"), px200, green);
+            UI::EndFrame();
         }
         UI::EndFrame();
 

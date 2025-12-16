@@ -19,6 +19,7 @@ namespace SDLCore::UI {
 
 	void TextNode::RenderNode() const {
 		namespace RE = SDLCore::Render;
+		RE::SetFontSize(24);
 		RE::SetColor(255);
 		RE::Text(m_text, this->GetPosition());
 	}

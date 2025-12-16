@@ -38,6 +38,10 @@ namespace SDLCore::UI {
             return child;
         }
 
+        void ClearStyles();
+
+        void ReserveStyles(size_t count);
+
         // copys style
         void AddStyle(const UIStyle& style);
 
