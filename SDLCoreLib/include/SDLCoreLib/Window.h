@@ -737,11 +737,6 @@ namespace SDLCore {
 		*/
 		bool UpdateCursorVisibility() const;
 
-		/*
-		* Updates all display related values
-		*/
-		void UpdateDisplayParams(SDL_DisplayID displayID);
-
 		/**
 		* @brief Gets SDL window flags based on current settings
 		* @return SDL_WindowFlags
