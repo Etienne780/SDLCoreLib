@@ -81,6 +81,10 @@ namespace SDLCore::UI {
         Vector4 GetPadding() const;
         Vector4 GetMargin() const;
 
+        UILayoutDirection GetLayoutDirection() const;
+        UIAlignment GetHorizontalAlignment() const;
+        UIAlignment GetVerticalAlignment() const;
+
     protected:
         void RemoveChildrenFromIndex(uint16_t position);
 

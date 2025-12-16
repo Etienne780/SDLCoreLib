@@ -10,19 +10,16 @@ void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
     win->SetIcon(tex);
-
-    SDLCore::Render::SetBlendMode(SDLCore::Render::BlendMode::BLEND);
 }
 
 void App::OnUpdate() {
 
-    {
+    if (!m_winID.IsInvalid()) {
         namespace RE = SDLCore::Render;
         RE::SetWindowRenderer(m_winID);
+        RE::SetBlendMode(SDLCore::Render::BlendMode::BLEND);
         RE::SetColor(0);
         RE::Clear();
-
-        static int test = 0;
 
         using namespace SDLCore;
         namespace Prop = SDLCore::UI::Properties;
@@ -39,23 +36,19 @@ void App::OnUpdate() {
         styleRoot.SetValue(Prop::height, 100.0f);
 
         UI::UIStyle red;
-        red.SetValue(Prop::backgroundColor, Vector4(255, 0, 0, 100));
-
-        UI::UIStyle blue;
-        blue.SetValue(Prop::backgroundColor, Vector4(255, 0, 0, 255));
+        red.SetValue(Prop::backgroundColor, Vector4(255, 0, 0, 255));
 
         UI::UIStyle green;
-        green.SetValue(Prop::backgroundColor, Vector4(255, 0, 0, 255));
+        green.SetValue(Prop::backgroundColor, Vector4(0, 255, 0, 255));
+
+        UI::UIStyle blue;
+        blue.SetValue(Prop::backgroundColor, Vector4(0, 0, 255, 255));
+
+        UI::UIStyle yellow;
+        yellow.SetValue(Prop::backgroundColor, Vector4(255, 255, 0, 255));
 
         UI::UIStyle px200;
-        px200.SetValue(Prop::width, 100.0f).SetValue(Prop::height, 100.0f);
-
-        if (test == 3) {
-            Log::Debug("New Element middle test");
-        }
-        else if (test == 5) {
-            Log::Debug("Delete Element");
-        }
+        px200.SetValue(Prop::width, 150.0f).SetValue(Prop::height, 150.0f);
 
         UI::BeginFrame(UI::UIKey("root"), styleRoot, red);
         {
@@ -64,14 +57,13 @@ void App::OnUpdate() {
 
             UI::BeginFrame(UI::UIKey("2"), px200, green);
             UI::EndFrame();
+
+            UI::BeginFrame(UI::UIKey("3"), px200, yellow);
+            UI::EndFrame();
         }
         UI::EndFrame();
 
-        Log::Print("Test {}", test);
         Log::Print(UI::GetContextStringHierarchy(context));
-
-        test++;
-
         RE::Present();
     }
 

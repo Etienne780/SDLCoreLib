@@ -312,6 +312,8 @@ namespace SDLCore {
 
 		if(m_sdlWindow)
 			m_contentScale = SDL_GetWindowDisplayScale(m_sdlWindow.get());
+
+		Log::Print();
 	}
 
 	SDL_WindowFlags Window::GetWindowFlags() const {
