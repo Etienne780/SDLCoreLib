@@ -862,6 +862,10 @@ namespace SDLCore::Render {
         }
     }
 
+    void Text(const std::string& text, const Vector2& pos) {
+        Text(text, pos.x, pos.y);
+    }
+
     void ResetTextParams() {
         SetFontSize(16.0f);
         SetTextAlign(Align::START);

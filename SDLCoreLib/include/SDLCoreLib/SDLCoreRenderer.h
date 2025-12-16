@@ -525,6 +525,13 @@ namespace SDLCore::Render {
 	void Text(const std::string& text, float x, float y);
 
 	/**
+	* @brief Draws a string of text at the specified position using the active font.
+	* @param text The text to draw.
+	* @param pos x, y position of the text in pixels
+	*/
+	void Text(const std::string& text, const Vector2& pos);
+
+	/**
 	* @brief Draws formatted text at the specified position using the active font.
 	* @param x X position in pixels.
 	* @param y Y position in pixels.
@@ -535,6 +542,18 @@ namespace SDLCore::Render {
 	template<typename... Args>
 	void TextF(float x, float y, Args&&... args) {
 		Text(Log::GetFormattedString(std::forward<Args>(args)...), x, y);
+	}
+
+	/**
+	* @brief Draws formatted text at the specified position using the active font.
+	* @param pos x, y position of the text in pixels
+	* @param args Variadic list of values inserted into the text format pattern ({} markers).
+	* @note Each {} placeholder is replaced by the corresponding value. This approach is simple but
+	*       may not be optimal for performance in frequent or high-volume calls.
+	*/
+	template<typename... Args>
+	void TextF(const Vector2& pos, Args&&... args) {
+		Text(Log::GetFormattedString(std::forward<Args>(args)...), pos.x, pos.y);
 	}
 
 	/**
