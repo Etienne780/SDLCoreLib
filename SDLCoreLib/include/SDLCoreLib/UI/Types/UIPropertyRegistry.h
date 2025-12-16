@@ -25,28 +25,125 @@ namespace SDLCore::UI {
 }
 
 namespace SDLCore::UI::Properties {
-    // size / layout
-    inline UIPropertyID sizeUnitW;    // width size unit (PX, %, etc.)
-    inline UIPropertyID sizeUnitH;    // height size unit (PX, %, etc.)
 
-    inline UIPropertyID width;        // width of an element
-    inline UIPropertyID height;       // height of an element
+    // ================= Size / Layout =================
 
-    inline UIPropertyID padding;      // inner spacing
-    inline UIPropertyID margin;       // outer spacing
+    /*
+    * @brief Width size unit (int, UISizeUnit)
+    *
+    * Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
+    */
+    inline UIPropertyID sizeUnitW;
 
-    inline UIPropertyID layoutDirection;  // layout flow direction (row / column)
-    inline UIPropertyID alignHorizontal;  // horizontal alignment (start / center / end)
-    inline UIPropertyID alignVertical;    // vertical alignment (start / center / end)
+    /*
+    * @brief Height size unit (int, UISizeUnit)
+    *
+    * Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
+    */
+    inline UIPropertyID sizeUnitH;
 
-    // visuals
-    inline UIPropertyID backgroundTexture;  // background texture id
-    inline UIPropertyID backgroundColor;    // background color
-    inline UIPropertyID borderColor;        // border color
-    inline UIPropertyID borderThickness;    // border thickness
+    /*
+    * @brief Width of an element (float)
+    *
+    * Usage: style.SetValue<float>(100.0f)
+    */
+    inline UIPropertyID width;
 
-    // text
-    inline UIPropertyID font;         // font id
-    inline UIPropertyID fontSize;     // font size
-    inline UIPropertyID textColor;    // text color
+    /*
+    * @brief Height of an element (float)
+    *
+    * Usage: style.SetValue<float>(50.0f)
+    */
+    inline UIPropertyID height;
+
+    /*
+    * @brief Inner spacing (Vector4)
+    *
+    * Usage: style.SetValue<Vector4>(Vector4(4))
+    */
+    inline UIPropertyID padding;
+
+    /*
+    * @brief Outer spacing (Vector4)
+    *
+    * Usage: style.SetValue<Vector4>(Vector4(8))
+    */
+    inline UIPropertyID margin;
+
+    /*
+    * @brief Layout flow direction for children (int, UILayoutDirection)
+    *
+    * Usage: style.SetValue<int>(static_cast<int>(UILayoutDirection::ROW))
+    */
+    inline UIPropertyID layoutDirection;
+
+    /*
+    * @brief Horizontal alignment of children (int, UIAlignment)
+    *
+    * Usage: style.SetValue<int>(static_cast<int>(UIAlignment::CENTER))
+    */
+    inline UIPropertyID alignHorizontal;
+
+    /*
+    * @brief Vertical alignment of children (int, UIAlignment)
+    *
+    * Usage: style.SetValue<int>(static_cast<int>(UIAlignment::START))
+    */
+    inline UIPropertyID alignVertical;
+
+
+    // ================= Visuals =================
+
+    /*
+    * @brief Background texture ID (UITextureID)
+    *
+    * Usage: style.SetValue<UITextureID>(UITextureID{0})
+    */
+    inline UIPropertyID backgroundTexture;
+
+    /*
+    * @brief Background color (Vector4)
+    *
+    * Usage: style.SetValue<Vector4>(Vector4(255))
+    */
+    inline UIPropertyID backgroundColor;
+
+    /*
+    * @brief Border color (Vector4)
+    *
+    * Usage: style.SetValue<Vector4>(Vector4(255))
+    */
+    inline UIPropertyID borderColor;
+
+    /*
+    * @brief Border thickness (float)
+    *
+    * Usage: style.SetValue<float>(2.0f)
+    */
+    inline UIPropertyID borderThickness;
+
+
+    // ================= Text =================
+
+    /*
+    * @brief Font ID (UIFontID)
+    *
+    * Usage: style.SetValue<UIFontID>(UIFontID{0})
+    */
+    inline UIPropertyID font;
+
+    /*
+    * @brief Font size (float)
+    *
+    * Usage: style.SetValue<float>(16.0f)
+    */
+    inline UIPropertyID fontSize;
+
+    /*
+    * @brief Text color (Vector4)
+    *
+    * Usage: style.SetValue<Vector4>(Vector4(255))
+    */
+    inline UIPropertyID textColor;
+
 }
