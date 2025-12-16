@@ -106,9 +106,6 @@ namespace SDLCore::UI {
             g_currentUIContext.SetWindowParams(id);
     }
 
-    void RenderContext(UIContext* context) {
-    }
-
     void SetContextWindow(UIContext* ctx, WindowID id) {
         if (!ctx) {
             Log::Error("SDLCore::UI::SetContextWindow: Cannot assign window '{}': context is null", id);

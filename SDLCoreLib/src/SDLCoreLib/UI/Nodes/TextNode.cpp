@@ -1,5 +1,6 @@
 #include <string>
 
+#include "UI/Types/UIContext.h"
 #include "SDLCoreRenderer.h"
 #include "UI/Nodes/TextNode.h"
 
@@ -17,7 +18,7 @@ namespace SDLCore::UI {
 
 	}
 
-	void TextNode::RenderNode() const {
+	void TextNode::RenderNode(UIContext* ctx) const {
 		namespace RE = SDLCore::Render;
 		RE::SetFontSize(24);
 		RE::SetColor(255);

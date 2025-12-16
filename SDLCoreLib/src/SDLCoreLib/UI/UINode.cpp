@@ -183,37 +183,35 @@ namespace SDLCore::UI {
 		return it->second;
 	}
 
-	Vector2 UINode::CalculateSize(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h) {
+	Vector2 UINode::CalculateSize(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h)
+	{
 		if (!ctx)
 			return Vector2(0.0f, 0.0f);
 
-		const float winScale = ctx->GetWindowScale();
-
 		auto resolveBaseSize = [&](bool horizontal) -> float {
-			if (m_parent) {
+			if (m_parent)
 				return horizontal ? m_parent->m_size.x : m_parent->m_size.y;
-			}
 			return horizontal ? ctx->GetWindowSize().x : ctx->GetWindowSize().y;
-		};
+			};
 
 		auto calc = [&](bool horizontal, UISizeUnit unit, float value) -> float {
 			switch (unit) {
 			case UISizeUnit::PX:
-				return value * winScale;
+				return value;
 
 			case UISizeUnit::PERCENTAGE:
-				return (resolveBaseSize(horizontal) * value / 100.0f) * winScale;
+				return resolveBaseSize(horizontal) * value / 100.0f;
 
 			case UISizeUnit::PERCENTAGE_W:
-				return (resolveBaseSize(true) * value / 100.0f) * winScale;
+				return resolveBaseSize(true) * value / 100.0f;
 
 			case UISizeUnit::PERCENTAGE_H:
-				return (resolveBaseSize(false) * value / 100.0f) * winScale;
+				return resolveBaseSize(false) * value / 100.0f;
 
 			default:
 				return 0.0f;
 			}
-		};
+			};
 
 		return Vector2(
 			calc(true, unitW, w),
@@ -288,55 +286,67 @@ namespace SDLCore::UI {
 		return offset;
 	}
 
+	static bool IsRow(UILayoutDirection d) {
+		return d == UILayoutDirection::ROW || d == UILayoutDirection::ROW_REVERSE;
+	}
+
+	static bool IsReverse(UILayoutDirection d) {
+		return d == UILayoutDirection::ROW_REVERSE || d == UILayoutDirection::COLUMN_REVERSE;
+	}
+
 	void UINode::CalculateLayout(const UIContext* uiContext) {
-		if (!uiContext)
-			return;
-
-		m_position.Set(0);
-
-		if (!m_parent)
+		if (!uiContext || !m_parent)
 			return;
 
 		const Vector2 parentSize = m_parent->m_size;
+		const UILayoutDirection dir = m_parent->GetLayoutDirection();
 
-		const float freeX = parentSize.x;
-		const float freeY = parentSize.y;
+		const bool isRow = IsRow(dir);
+		const bool isReverse = IsReverse(dir);
 
-		const UILayoutDirection parentDir = m_parent->GetLayoutDirection();
+		const float freeX = parentSize.x - m_size.x;
+		const float freeY = parentSize.y - m_size.y;
 
-		if (parentDir == UILayoutDirection::ROW || parentDir == UILayoutDirection::ROW_START || parentDir == UILayoutDirection::ROW_END) {
-			m_position.x = m_parent->m_position.x + AlignOffset(true, m_parent->GetHorizontalAlignment(), freeX);
+		if (isRow) {
+			float x = AlignOffset(true, m_parent->GetHorizontalAlignment(), parentSize.x);
 
+			if (isReverse)
+				x = parentSize.x - x - m_size.x;
+
+			m_position.x = m_parent->m_position.x + x;
+		}
+		else {
+			float y = AlignOffset(false, m_parent->GetVerticalAlignment(), parentSize.y);
+
+			if (isReverse)
+				y = parentSize.y - y - m_size.y;
+
+			m_position.y = m_parent->m_position.y + y;
+		}
+
+		if (isRow) {
 			switch (m_parent->GetVerticalAlignment()) {
 			case UIAlignment::START:
 				m_position.y = m_parent->m_position.y;
 				break;
 			case UIAlignment::CENTER:
-				m_position.y = m_parent->m_position.y + freeY * 0.5f - m_size.x * 0.5f;
+				m_position.y = m_parent->m_position.y + freeY * 0.5f;
 				break;
 			case UIAlignment::END:
-				m_position.y = m_parent->m_position.y + freeY - m_size.x;
-				break;
-			default:
-				m_position.y = m_parent->m_position.y;
+				m_position.y = m_parent->m_position.y + freeY;
 				break;
 			}
 		}
 		else {
-			m_position.y = m_parent->m_position.y + AlignOffset(false, m_parent->GetVerticalAlignment(), freeY);
-
 			switch (m_parent->GetHorizontalAlignment()) {
 			case UIAlignment::START:
 				m_position.x = m_parent->m_position.x;
 				break;
 			case UIAlignment::CENTER:
-				m_position.x = m_parent->m_position.x + freeX * 0.5f - m_size.x * 0.5f;
+				m_position.x = m_parent->m_position.x + freeX * 0.5f;
 				break;
 			case UIAlignment::END:
-				m_position.x = m_parent->m_position.x + freeX - m_size.x;
-				break;
-			default:
-				m_position.x = m_parent->m_position.x;
+				m_position.x = m_parent->m_position.x + freeX;
 				break;
 			}
 		}

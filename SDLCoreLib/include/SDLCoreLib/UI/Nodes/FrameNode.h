@@ -8,7 +8,7 @@ namespace SDLCore::UI {
         FrameNode(int childPos, uintptr_t key);
 
         void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) override;
-        void RenderNode() const override;
+        void RenderNode(UIContext* ctx) const override;
 
         static uint32_t GetType();
 
