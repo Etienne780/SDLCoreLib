@@ -11,6 +11,12 @@
 
 namespace SDLCore::UI {
 
+    namespace Internal {
+        
+        static std::unordered_map<std::string, uint32_t> nameToID;
+
+    }
+
     class UIContext;
     class FrameNode;
 
@@ -19,6 +25,7 @@ namespace SDLCore::UI {
     public:
         UINode(int childPos, uintptr_t id, const std::string& typeName);
         virtual ~UINode();
+        virtual void RenderNode() const = 0;
 
         template<typename T, typename... Args>
         T* AddChild(Args&&... args) {
@@ -53,6 +60,10 @@ namespace SDLCore::UI {
         UINode* GetParent();
         const std::vector<std::shared_ptr<UINode>>& GetChildren() const;
         bool GetChildHasEvent() const;
+        /*
+        * @brief node will be active after the first frame of creation
+        */
+        bool IsActive() const;
 
         /*
         * @brief used internaly to find out what elements have events
@@ -61,6 +72,11 @@ namespace SDLCore::UI {
         */
         void SetChildHasEvent(bool value);
 
+        Vector2 GetPosition() const;
+        Vector2 GetSize() const;
+        Vector4 GetPadding() const;
+        Vector4 GetMargin() const;
+
     protected:
         void RemoveChildrenFromIndex(uint16_t position);
 
@@ -68,6 +84,8 @@ namespace SDLCore::UI {
         * @brief Merge all appliedStyles into the final UIStyle object.
         */
         UIStyle CreateStyle();
+
+        void SetNodeActive();
 
         virtual void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) = 0;
 
@@ -83,6 +101,7 @@ namespace SDLCore::UI {
         UIStyle m_finalStyle;
         UIEvent m_eventState;
         bool m_childHasEvent = false;
+        bool m_isActive = false;
 
         Vector2 m_position;
         Vector2 m_size;
@@ -101,31 +120,6 @@ namespace SDLCore::UI {
         float AlignOffset(bool isHor, UIAlignment align, float freeSpace);
         Vector2 CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h);
         void CalculateLayout(const UIContext* uiContext);
-    };
-
-    class FrameNode : public UINode {
-    public:
-        FrameNode(int childPos, uintptr_t key);
-
-        void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) override;
-        static uint32_t GetType();
-
-        Vector4 m_backgroundColor;
-        Vector4 m_borderColor;
-
-    private:
-    };
-
-    class TextNode : public UINode {
-    public:
-        TextNode(int childPos, uintptr_t key);
-
-        void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) override;
-        static uint32_t GetType();
-
-        std::string m_text;
-        float m_textSize = 0;
-        Vector4 m_textColor;
     };
 
 }
