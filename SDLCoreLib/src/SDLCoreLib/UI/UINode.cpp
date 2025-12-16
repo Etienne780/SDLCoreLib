@@ -1,13 +1,10 @@
 #include <unordered_map>
 #include "UI/Types/UIStyleState.h"
 #include "UI/Types/UIContext.h"
+#include "UI/Nodes/FrameNode.h"
 #include "UI/UINode.h"
 
 namespace SDLCore::UI {
-
-	static std::unordered_map<std::string, uint32_t> nameToID;
-
-	#pragma region UINode
 
 	UINode::UINode(int childPos, uintptr_t id, const std::string& typeName)
 		: m_childPos(childPos), m_id(id), m_typeName(typeName){
@@ -109,9 +106,29 @@ namespace SDLCore::UI {
 	bool UINode::GetChildHasEvent() const {
 		return m_childHasEvent;
 	}
+
+	bool UINode::IsActive() const {
+		return m_isActive;
+	}
 	
 	void UINode::SetChildHasEvent(bool value) {
 		m_childHasEvent = value;
+	}
+
+	Vector2 UINode::GetPosition() const {
+		return m_position;
+	}
+
+	Vector2 UINode::GetSize() const {
+		return m_size;
+	}
+
+	Vector4 UINode::GetPadding() const {
+		return m_padding;
+	}
+
+	Vector4 UINode::GetMargin() const {
+		return m_margin;
 	}
 
 	void UINode::RemoveChildrenFromIndex(uint16_t pos) {
@@ -130,11 +147,15 @@ namespace SDLCore::UI {
 		return outStyle;
 	}
 
+	void UINode::SetNodeActive() {
+		m_isActive = true;
+	}
+
 	uint32_t UINode::GetUITypeID(const std::string& name) {
-		auto it = nameToID.find(name);
-		if (it == nameToID.end()) {
+		auto it = Internal::nameToID.find(name);
+		if (it == Internal::nameToID.end()) {
 			uint32_t newID = m_typeIDCounter;
-			nameToID[name] = newID;
+			Internal::nameToID[name] = newID;
 			m_typeIDCounter++;
 			return newID;
 		}
@@ -257,47 +278,5 @@ namespace SDLCore::UI {
 		m_position.x = m_parent->m_position.x + AlignOffset(true, m_horizontalAligment, freeX);
 		m_position.y = m_parent->m_position.y + AlignOffset(false, m_verticalAligment, freeY);
 	}
-
-	#pragma endregion
-
-	#pragma region FrameNode
-
-	static std::string frameNodeName = "Frame";
-	FrameNode::FrameNode(int childPos, uintptr_t key)
-		: UINode(childPos, key, frameNodeName) {
-		// hard codes Frame node to ui type 0
-	}
-
-	void FrameNode::ApplyStyleCalled(UIContext* ctx, const UIStyleState& styleState) {
-		if (!ctx)
-			return;
-
-	}
-
-	uint32_t FrameNode::GetType() {
-		return nameToID[frameNodeName];
-	}
-
-	#pragma endregion
-
-	#pragma region TextNode
-
-	static std::string textNodeName = "Text";
-	TextNode::TextNode(int childPos, uintptr_t key)
-		: UINode(childPos, key, textNodeName) {
-		// hard codes Frame node to ui type 1
-	}
-
-	void TextNode::ApplyStyleCalled(UIContext* ctx, const UIStyleState& styleState) {
-		if (!ctx)
-			return;
-
-	}
-
-	uint32_t TextNode::GetType() {
-		return nameToID[textNodeName];
-	}
-
-	#pragma endregion
 
 }

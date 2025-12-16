@@ -43,6 +43,7 @@ namespace SDLCore::UI {
 			if (parentNode->ContainsChildAtPos(pos, id, currentNode)) {
 				// element with id exists at position. set it as last position
 				// no stack increas cause add node has no end func
+				currentNode->SetNodeActive();
 				return reinterpret_cast<T*>(currentNode);
 			}
 			
@@ -60,6 +61,7 @@ namespace SDLCore::UI {
 		void SetWindowParams(WindowID id);
 
 		static UIEvent* ProcessEvent(UINode* node);
+		static void RenderNodes(UINode* rootNode);
 
 		std::deque<uint16_t> m_lastChildPosition;/*< is the position of the current child inside of last node*/
 		std::deque<UINode*> m_nodeStack;/*< is for creating nodes. if a node is this stack, than those nodes are currently created*/

@@ -7,6 +7,8 @@
 
 #include "UI/Types/UIContext.h" 
 #include "UI/UINode.h"
+#include "UI/Nodes/FrameNode.h"
+#include "UI/Nodes/TextNode.h"
 
 namespace SDLCore::UI {
 
@@ -30,7 +32,7 @@ namespace SDLCore::UI {
         FrameNode* node = Internal::InternalBeginFrame(key.id);
         if (node) {
             (node->AddStyle(styles), ...);
-            GetCurrentContext();
+            node->ApplyStyle(GetCurrentContext());
         }
     }
 
