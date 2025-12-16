@@ -252,11 +252,13 @@ namespace SDLCore {
 	void Window::UpdateWindowEvents(Uint32 type) {
 		switch (type) {
 		case SDL_EVENT_WINDOW_DISPLAY_CHANGED:
-			m_sdlDisplayID = SDL_GetDisplayForWindow(m_sdlWindow.get());
+			if(m_sdlWindow)
+				m_sdlDisplayID = SDL_GetDisplayForWindow(m_sdlWindow.get());
 			break;
 		case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
 		case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-			m_contentScale = SDL_GetWindowDisplayScale(m_sdlWindow.get());
+			if(m_sdlWindow)
+				m_contentScale = SDL_GetWindowDisplayScale(m_sdlWindow.get());
 			break;
 		case SDL_EVENT_WINDOW_MOVED:
 			break;
