@@ -10,7 +10,7 @@ namespace SDLCore::UI {
 		~UIEvent() = default;
 
 		bool IsHover() const;
-		bool IsActive() const;
+		bool IsPressed() const;
 		bool IsClick() const;
 		bool IsDragging() const;
 
@@ -19,17 +19,18 @@ namespace SDLCore::UI {
 
 	private:
 		bool m_isHovered = false;
-		bool m_isActive = false;
+		bool m_isPressed = false;
 		bool m_isClicked = false;
 		bool m_isDragging = false;
 
 		float m_scrollDir = 0;
 
 		void SetIsHovered(bool value);
-		void SetIsActive(bool value);
+		void SetIsPressed(bool value);
 		void SetIsClicked(bool value);
 		void SetIsDragging(bool value);
 		void SetScrollDir(float dir);
+		void Reset();
 	};
 
 }

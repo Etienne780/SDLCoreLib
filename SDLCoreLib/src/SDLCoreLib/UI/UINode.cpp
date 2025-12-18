@@ -1,4 +1,6 @@
 #include <unordered_map>
+
+#include "SDLCoreInput.h"
 #include "UI/Types/UIStyleState.h"
 #include "UI/Types/UIContext.h"
 #include "UI/Nodes/FrameNode.h"
@@ -34,9 +36,14 @@ namespace SDLCore::UI {
 			return;
 
 		m_finalStyle = CreateStyle();
-
-		const UIStyleState& styleState = m_finalStyle.GetStyleState(m_state);
-
+		
+		// allways uses normal state as a base
+		UIStyleState styleState = m_finalStyle.GetStyleState(UIState::NORMAL);
+		if (m_state != UIState::NORMAL) {
+			const UIStyleState& st = m_finalStyle.GetStyleState(m_state);
+			st.Merge(styleState);
+		}
+		
 		int layoutDir = 0;
 		int alignHorizontal = 0;
 		int alignVertical = 0;
@@ -172,19 +179,12 @@ namespace SDLCore::UI {
 		m_isActive = true;
 	}
 
-	uint32_t UINode::GetUITypeID(const std::string& name) {
-		auto it = Internal::nameToID.find(name);
-		if (it == Internal::nameToID.end()) {
-			uint32_t newID = m_typeIDCounter;
-			Internal::nameToID[name] = newID;
-			m_typeIDCounter++;
-			return newID;
-		}
-		return it->second;
+	bool UINode::IsPointInNode(const Vector2& point) {
+		return point.x > m_position.x && point.x <= m_position.x + m_size.x && 
+			point.y > m_position.y && point.y <= m_position.y + m_size.y;
 	}
 
-	Vector2 UINode::CalculateSize(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h)
-	{
+	Vector2 UINode::CalculateSize(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h) {
 		if (!ctx)
 			return Vector2(0.0f, 0.0f);
 
@@ -192,7 +192,7 @@ namespace SDLCore::UI {
 			if (m_parent)
 				return horizontal ? m_parent->m_size.x : m_parent->m_size.y;
 			return horizontal ? ctx->GetWindowSize().x : ctx->GetWindowSize().y;
-			};
+		};
 
 		auto calc = [&](bool horizontal, UISizeUnit unit, float value) -> float {
 			switch (unit) {
@@ -211,12 +211,23 @@ namespace SDLCore::UI {
 			default:
 				return 0.0f;
 			}
-			};
+		};
 
 		return Vector2(
 			calc(true, unitW, w),
 			calc(false, unitH, h)
 		);
+	}
+
+	uint32_t UINode::GetUITypeID(const std::string& name) {
+		auto it = Internal::nameToID.find(name);
+		if (it == Internal::nameToID.end()) {
+			uint32_t newID = m_typeIDCounter;
+			Internal::nameToID[name] = newID;
+			m_typeIDCounter++;
+			return newID;
+		}
+		return it->second;
 	}
 
 	float UINode::GetAccumulatedChildSize(bool horizontal, int upToIndex) const {
@@ -350,6 +361,40 @@ namespace SDLCore::UI {
 				break;
 			}
 		}
+	}
+
+	void UINode::ProcessEventInternal(UIEvent* event) {
+		if (!event)
+			return;
+
+		event->Reset();
+
+		Vector2 mouseDelta = Input::GetMouseDelta();
+		Vector2 mousePos = Input::GetMousePosition();
+		bool leftMousePressed = Input::MousePressed(MouseButton::LEFT);
+		bool leftMouseJustPressed = Input::MouseJustPressed(MouseButton::LEFT);
+		if (IsPointInNode(mousePos)) {
+			event->SetIsHovered(true);
+
+			if (leftMouseJustPressed) {
+				m_state = UIState::PRESSED;
+				event->SetIsClicked(true);
+				event->SetIsPressed(true);
+			}
+			else if (leftMousePressed) {
+				m_state = UIState::PRESSED;
+				event->SetIsPressed(true);
+				event->SetIsDragging(mouseDelta != Vector2::zero);
+			}
+			else {
+				m_state = UIState::HOVER;
+			}
+		}
+		else {
+			m_state = UIState::NORMAL;
+		}
+	
+		ProcessEvent(event);
 	}
 
 }

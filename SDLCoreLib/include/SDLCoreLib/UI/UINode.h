@@ -95,7 +95,11 @@ namespace SDLCore::UI {
 
         void SetNodeActive();
 
+        bool IsPointInNode(const Vector2& point);
+
         virtual void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) = 0;
+        virtual Vector2 CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h);
+        virtual void ProcessEvent(UIEvent* event) {};
 
         uintptr_t m_id = 0;
         int m_childPos = -1;/*< position inside of the children */
@@ -126,8 +130,8 @@ namespace SDLCore::UI {
         float GetAccumulatedChildSize(bool horizontal, int upToIndex) const;
         float GetTotalChildrenSize(bool horizontal) const;
         float AlignOffset(bool isHor, UIAlignment align, float freeSpace);
-        Vector2 CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h);
         void CalculateLayout(const UIContext* uiContext);
+        void ProcessEventInternal(UIEvent* event);
     };
 
 }
