@@ -16,6 +16,8 @@ void App::OnUpdate() {
 
     if (!m_winID.IsInvalid()) {
         namespace RE = SDLCore::Render;
+        SDLCore::Input::SetWindow(m_winID);
+
         RE::SetWindowRenderer(m_winID);
         RE::SetBlendMode(SDLCore::Render::BlendMode::BLEND);
         RE::SetColor(0);
@@ -27,6 +29,7 @@ void App::OnUpdate() {
         UI::BindContext(context);
 
         UI::UIStyle styleRoot("root");
+        styleRoot.SetValue(Prop::backgroundColor, Vector4(0, 0, 0, 0));
         styleRoot.SetValue(Prop::layoutDirection, UI::UILayoutDir::ROW);
         styleRoot.SetValue(Prop::alignHorizontal, UI::UIAlignment::CENTER);
         styleRoot.SetValue(Prop::alignVertical, UI::UIAlignment::CENTER);
@@ -37,20 +40,32 @@ void App::OnUpdate() {
 
         UI::UIStyle red;
         red.SetValue(Prop::backgroundColor, Vector4(255, 0, 0, 255));
+        red.SetActiveState(SDLCore::UI::UIState::HOVER);
+        red.SetValue(Prop::backgroundColor, Vector4(155, 0, 0, 255));
+        red.SetValue(Prop::width, 230.0f);
 
         UI::UIStyle green;
         green.SetValue(Prop::backgroundColor, Vector4(0, 255, 0, 255));
+        green.SetActiveState(SDLCore::UI::UIState::HOVER);
+        green.SetValue(Prop::backgroundColor, Vector4(0, 155, 0, 255));
+        green.SetValue(Prop::width, 230.0f);
 
         UI::UIStyle blue;
         blue.SetValue(Prop::backgroundColor, Vector4(0, 0, 255, 255));
+        blue.SetActiveState(SDLCore::UI::UIState::HOVER);
+        blue.SetValue(Prop::backgroundColor, Vector4(0, 0, 155, 255));
+        blue.SetValue(Prop::width, 230.0f);
 
         UI::UIStyle yellow;
         yellow.SetValue(Prop::backgroundColor, Vector4(255, 255, 0, 255));
+        yellow.SetActiveState(SDLCore::UI::UIState::HOVER);
+        yellow.SetValue(Prop::backgroundColor, Vector4(155, 155, 0, 255));
+        yellow.SetValue(Prop::width, 230.0f);
 
         UI::UIStyle px200;
         px200.SetValue(Prop::width, 150.0f).SetValue(Prop::height, 150.0f);
 
-        UI::BeginFrame(UI::UIKey("root"), styleRoot, red);
+        UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
             UI::BeginFrame(UI::UIKey("1"), px200, blue);
             UI::EndFrame();
@@ -63,7 +78,7 @@ void App::OnUpdate() {
         }
         UI::EndFrame();
 
-        Log::Print(UI::GetContextStringHierarchy(context));
+        // Log::Print(UI::GetContextStringHierarchy(context));
         RE::Present();
     }
 

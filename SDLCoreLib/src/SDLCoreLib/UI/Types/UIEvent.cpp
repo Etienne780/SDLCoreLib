@@ -6,8 +6,8 @@ namespace SDLCore::UI {
 		return m_isHovered;
 	}
 
-	bool UIEvent::IsActive() const {
-		return m_isActive;
+	bool UIEvent::IsPressed() const {
+		return m_isPressed;
 	}
 
 	bool UIEvent::IsClick() const {
@@ -31,12 +31,12 @@ namespace SDLCore::UI {
 		m_isHovered = value;
 	}
 
-	void UIEvent::SetIsActive(bool value) {
-		m_isActive = value;
+	void UIEvent::SetIsPressed(bool value) {
+		m_isPressed = value;
 	}
 
 	void UIEvent::SetIsClicked(bool value) {
-		m_isActive = value;
+		m_isClicked = value;
 	}
 
 	void UIEvent::SetIsDragging(bool value) {
@@ -45,6 +45,15 @@ namespace SDLCore::UI {
 
 	void UIEvent::SetScrollDir(float dir) {
 		m_scrollDir = dir;
+	}
+
+	void UIEvent::Reset() {
+		m_isHovered = false;
+		m_isPressed = false;
+		m_isClicked = false;
+		m_isDragging = false;
+
+		 m_scrollDir = 0;
 	}
 
 }

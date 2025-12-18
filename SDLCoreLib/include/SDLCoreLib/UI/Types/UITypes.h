@@ -12,8 +12,7 @@ namespace SDLCore::UI {
 	enum class UIState : uint16_t {
 		NORMAL = 0,
 		HOVER,
-		ACTIVE,
-		CLICK,
+		PRESSED,
 		DISABLED
 	};
 
@@ -192,8 +191,7 @@ static inline std::string FormatUtils::toString<SDLCore::UI::UIState>(SDLCore::U
 	switch (state) {
 	case SDLCore::UI::UIState::NORMAL:		return "Normal";
 	case SDLCore::UI::UIState::HOVER:		return "Hover";
-	case SDLCore::UI::UIState::ACTIVE:		return "Active";
-	case SDLCore::UI::UIState::CLICK:		return "Click";
+	case SDLCore::UI::UIState::PRESSED:		return "Active";
 	case SDLCore::UI::UIState::DISABLED:	return "Disabled";
 	default:								return "UNKOWN";
 	}

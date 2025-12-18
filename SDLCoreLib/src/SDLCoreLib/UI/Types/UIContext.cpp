@@ -147,11 +147,16 @@ namespace SDLCore::UI {
     }
 
     UIEvent* UIContext::ProcessEvent(UINode* node) {
+        static UIEvent dummy;
+
         // skip inactive nodes
-        if (!node || !node->IsActive()) {
-            static UIEvent dummy;
+        if (!node || !node->IsActive())
             return &dummy;
-        }
+
+        // do not UI processing if cursor is locked
+        auto* app = Application::GetInstance();
+        if (app && app->IsCursorLocked())
+            return &dummy;
 
         // skips this element if a child has a event
         const auto& children = node->GetChildren();
@@ -175,6 +180,8 @@ namespace SDLCore::UI {
         node->SetChildHasEvent(false);
         UIEvent* event = node->GetEventPtr();
         
+        node->ProcessEventInternal(event);
+
         return event;
     }
 

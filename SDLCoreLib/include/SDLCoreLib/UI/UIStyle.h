@@ -24,7 +24,8 @@ namespace SDLCore::UI {
 		void Merge(UIStyle& outStyle) const;
 
 		std::string GetName() const;
-		const UIStyleState& GetStyleState(UIState state);
+		UIStyleState GetStyleState(UIState state);
+		const UIStyleState& GetStyleState(UIState state) const;
 
 		/*
 		* @brief Sets the state that will be used when setting properties
@@ -37,13 +38,13 @@ namespace SDLCore::UI {
 	private:
 		std::string m_name = "UNKOWN";
 		UIState m_currentState = UIState::NORMAL;
-		std::unordered_map<UIState, UIStyleState> m_uiStates;
+		mutable std::unordered_map<UIState, UIStyleState> m_uiStates;
 
 		/*
 		* @brief Gets the state or creates a new one
 		* @return allways returns a valid ptr
 		*/
-		UIStyleState* GetState(UIState state);
+		UIStyleState* GetState(UIState state) const;
 	};
 
 }

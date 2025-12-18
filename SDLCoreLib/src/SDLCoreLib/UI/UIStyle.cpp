@@ -20,18 +20,11 @@ namespace SDLCore::UI {
 	std::string UIStyle::ToString() const {
 		return m_name;
 	}
-
+	
 	void UIStyle::Merge(UIStyle& outStyle) const {
 		for (auto& [state, styleState] : this->m_uiStates) {
 			UIStyleState* outStyleState = outStyle.GetState(state);
-
-			using propMap = std::unordered_map<UIPropertyID, PropertyValue>;
-			const propMap& sourceProps = styleState.GetAllProperties();
-			propMap& targetProps = outStyleState->GetAllProperties();
-
-			for (auto& [id, prop] : sourceProps) {
-				targetProps[id].ApplyWithPriority(prop);
-			}
+			styleState.Merge(*outStyleState);
 		}
 	}
 
@@ -39,7 +32,12 @@ namespace SDLCore::UI {
 		return m_name;
 	}
 
-	const UIStyleState& UIStyle::GetStyleState(UIState state) {
+	UIStyleState UIStyle::GetStyleState(UIState state) {
+		UIStyleState* styleState = GetState(state);
+		return *styleState;
+	}
+
+	const UIStyleState& UIStyle::GetStyleState(UIState state) const {
 		UIStyleState* styleState = GetState(state);
 		return *styleState;
 	}
@@ -55,7 +53,7 @@ namespace SDLCore::UI {
 		return *this;
 	}
 
-	UIStyleState* UIStyle::GetState(UIState state) {
+	UIStyleState* UIStyle::GetState(UIState state) const {
 		auto it = m_uiStates.find(state);
 		if (it == m_uiStates.end()) {
 			m_uiStates[state] = UIStyleState();
