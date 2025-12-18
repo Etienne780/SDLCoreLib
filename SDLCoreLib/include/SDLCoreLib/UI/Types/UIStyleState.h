@@ -10,6 +10,11 @@ namespace SDLCore::UI {
 		UIStyleState();
 		void SetValue(UIPropertyID id, PropertyValue value, bool important = false);
 
+		/*
+		* @brief Merges this style on top of outStyle
+		*/
+		void Merge(UIStyleState& outStyleState) const;
+
 		template<typename T>
 		bool TryGetValue(UIPropertyID id, T& outValue) const {
 			auto it = m_properties.find(id);

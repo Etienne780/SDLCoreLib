@@ -34,6 +34,16 @@ namespace SDLCore::UI {
 		prop.SetIsImportant(important);
 	}
 
+	void UIStyleState::Merge(UIStyleState& outStyleState) const {
+		using propMap = std::unordered_map<UIPropertyID, PropertyValue>;
+		const propMap& sourceProps = this->GetAllProperties();
+		propMap& targetProps = outStyleState.GetAllProperties();
+
+		for (auto& [id, prop] : sourceProps) {
+			targetProps[id].ApplyWithPriority(prop);
+		}
+	}
+
 	std::unordered_map<UIPropertyID, PropertyValue>& UIStyleState::GetAllProperties() {
 		return m_properties;
 	}
