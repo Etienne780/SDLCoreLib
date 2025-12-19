@@ -996,7 +996,7 @@ namespace SDLCore::Render {
                             penX += m->advance;
                         }
 
-                        penY += ct.lineHeights[i];
+                        penY += ct.lineHeightsIgnorBase[i];
                     }
 
                     // Restore old render target
