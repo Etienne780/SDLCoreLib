@@ -78,7 +78,7 @@ namespace SDLCore::Render {
         uint64_t lastUseFrame = 0;
     };
 
-    inline void hashCombine(std::size_t& seed, std::size_t value) noexcept {
+    static inline void hashCombine(std::size_t& seed, std::size_t value) noexcept {
         // Combines hashes using a variant of boost::hash_combine
         seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
     }
@@ -897,7 +897,7 @@ namespace SDLCore::Render {
     }
 
     // text musst be in finale version. Truncated applyed, ...
-    CachedText* GetCachedText(const std::string& text, bool createOnNotFound = false) {
+    static inline CachedText* GetCachedText(const std::string& text, bool createOnNotFound = false) {
         TextCacheKey key{
             s_font.get(),
             text,
@@ -1009,7 +1009,7 @@ namespace SDLCore::Render {
         return &ct;
     }
 
-    void RenderCachedText(const std::string& text, float x, float y) {
+    static inline void RenderCachedText(const std::string& text, float x, float y) {
         auto renderer = GetActiveRenderer("RenderCachedText");
         if (!renderer) return;
 
