@@ -238,52 +238,52 @@ namespace SDLCore::Render {
 	/**
 	* @brief Sets the current drawing color using RGBA values.
 	* 
-	* @param r Color components in the range 0–255.
-	* @param g Color components in the range 0–255.
-	* @param b Color components in the range 0–255.
-	* @param a Color components in the range 0–255.
+	* @param r Color components in the range 0â€“255.
+	* @param g Color components in the range 0â€“255.
+	* @param b Color components in the range 0â€“255.
+	* @param a Color components in the range 0â€“255.
 	*/
 	void SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
 	/**
 	* @brief Sets the current drawing color using RGB values.
 	* 
-	* @param r Color components in the range 0–255.
-	* @param g Color components in the range 0–255.
-	* @param b Color components in the range 0–255.
+	* @param r Color components in the range 0â€“255.
+	* @param g Color components in the range 0â€“255.
+	* @param b Color components in the range 0â€“255.
 	*/
 	void SetColor(Uint8 r, Uint8 g, Uint8 b);
 
 	/**
 	* @brief Sets the current drawing color using a Brightness value.
 	*
-	* @param brightness in the range 0–255.
-	* @param alpha components in the range 0–255.
+	* @param brightness in the range 0â€“255.
+	* @param alpha components in the range 0â€“255.
 	*/
 	void SetColor(Uint8 brightness, Uint8 alpha);
 
 	/**
 	* @brief Sets the current drawing color using a Brightness value.
-	* @param brightness in the range 0–255.
+	* @param brightness in the range 0â€“255.
 	*/
 	void SetColor(Uint8 brightness);
 
 	/**
 	* @brief Sets the current drawing color using RGBA values.
-	* @param rgba Color components in the range 0–255.
+	* @param rgba Color components in the range 0â€“255.
 	*/
 	void SetColor(const Vector4& rgba);
 
 	/**
 	* @brief Sets the current drawing color using RGB values.
-	* @param rgb Color components in the range 0–255.
+	* @param rgb Color components in the range 0â€“255.
 	* @param a Alpha component in the range 0-255.
 	*/
 	void SetColor(const Vector3& rgb, float a);
 
 	/**
 	* @brief Sets the current drawing color using RGB values.
-	* @param rgb Color components in the range 0–255.
+	* @param rgb Color components in the range 0â€“255.
 	*/
 	void SetColor(const Vector3& rgb);
 
@@ -618,6 +618,7 @@ namespace SDLCore::Render {
 	*
 	* When enabled, the renderer will cache the text for faster repeated rendering.
 	* When disabled, text will be rendered normally without caching.
+	* Cached text that is not used for 600 frames will be automatically deleted.
 	*
 	* @param value True to enable caching, false to disable.
 	*/
