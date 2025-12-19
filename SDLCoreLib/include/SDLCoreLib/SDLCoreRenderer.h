@@ -556,9 +556,13 @@ namespace SDLCore::Render {
 	#pragma endregion
 
 	#pragma region Text
-	
+
 	/**
 	* @brief Draws a string of text at the specified position using the active font.
+	*
+	* For text that changes infrequently or remains constant, enabling caching
+	* via `CachText(true)` can improve performance by pre-rendering the text.
+	*
 	* @param text The text to draw.
 	* @param x X position in pixels.
 	* @param y Y position in pixels.
@@ -567,6 +571,10 @@ namespace SDLCore::Render {
 
 	/**
 	* @brief Draws a string of text at the specified position using the active font.
+	*
+	* For text that changes infrequently or remains constant, enabling caching
+	* via `CachText(true)` can improve performance by pre-rendering the text.
+	*
 	* @param text The text to draw.
 	* @param pos x, y position of the text in pixels
 	*/
@@ -574,6 +582,10 @@ namespace SDLCore::Render {
 
 	/**
 	* @brief Draws formatted text at the specified position using the active font.
+	*
+	* For text that changes infrequently or remains constant, enabling caching
+	* via `CachText(true)` can improve performance by pre-rendering the text.
+	*
 	* @param x X position in pixels.
 	* @param y Y position in pixels.
 	* @param args Variadic list of values inserted into the text format pattern ({} markers).
@@ -587,6 +599,10 @@ namespace SDLCore::Render {
 
 	/**
 	* @brief Draws formatted text at the specified position using the active font.
+	*
+	* For text that changes infrequently or remains constant, enabling caching
+	* via `CachText(true)` can improve performance by pre-rendering the text.
+	*
 	* @param pos x, y position of the text in pixels
 	* @param args Variadic list of values inserted into the text format pattern ({} markers).
 	* @note Each {} placeholder is replaced by the corresponding value. This approach is simple but
@@ -596,6 +612,42 @@ namespace SDLCore::Render {
 	void TextF(const Vector2& pos, Args&&... args) {
 		Text(Log::GetFormattedString(std::forward<Args>(args)...), pos.x, pos.y);
 	}
+
+	/**
+	* @brief Enables or disables text caching for the next render call.
+	*
+	* When enabled, the renderer will cache the text for faster repeated rendering.
+	* When disabled, text will be rendered normally without caching.
+	*
+	* @param value True to enable caching, false to disable.
+	*/
+	void CachText(bool value);
+
+	/**
+	* @brief Clears the entire text cache.
+	*
+	* Frees all pre-rendered textures and removes all cached text entries.
+	*/
+	void ClearTextCache();
+
+	/**
+	* @brief Clears all cached text associated with a specific font.
+	*
+	* Frees pre-rendered textures for entries using the given font and removes them from the cache.
+	*
+	* @param font Pointer to the font whose cached texts should be cleared.
+	*/
+	void ClearTextCache(const Font* font);
+
+	/**
+	* @brief Returns the number of currently cached text entries.
+	*
+	* This counts all texts stored in the internal text cache, including
+	* those with pre-rendered textures.
+	*
+	* @return Number of cached text entries.
+	*/
+	size_t GetNumberOfCachedTexts();
 
 	/**
 	* @brief Resets all text-related rendering parameters to their default values.
@@ -827,21 +879,50 @@ namespace SDLCore::Render {
 
 	/**
 	* @brief Calculates the maximum width of a multi-line text block.
+	*
+	* This function first splits the input text into lines using the active
+	* clip width and line-breaking rules, then returns the widest line.
+	*
 	* @param text Text block to measure.
 	* @return Maximum line width in pixels.
 	*/
 	float GetTextBlockWidth(const std::string& text);
 
 	/**
+	* @brief Calculates the maximum width of a multi-line text block from precomputed lines.
+	*
+	* This overload assumes the text is already split into lines. Returns the
+	* width of the widest line.
+	*
+	* @param lines Vector of text lines.
+	* @return Maximum line width in pixels.
+	*/
+	float GetTextBlockWidth(const std::vector<std::string>& lines);
+
+	/**
 	* @brief Calculates the total height of a multi-line text block.
 	*
-	* Line height multipliers and maximum line limits are applied.
+	* The text is first split into lines using the active clip width and line-breaking rules.
+	* Line height multipliers and maximum line limits are applied. Optionally,
+	* descenders below the baseline can be ignored.
 	*
 	* @param text Text block to measure.
-	* @param ignoreBelowBaseline If true, descenders are excluded.
+	* @param ignoreBelowBaseline If true, descenders below the baseline are excluded from height.
 	* @return Total text block height in pixels.
 	*/
 	float GetTextBlockHeight(const std::string& text, bool ignoreBelowBaseline = false);
+
+	/**
+	* @brief Calculates the total height of a multi-line text block from precomputed lines.
+	*
+	* This overload uses pre-split lines. Line height multipliers and maximum line
+	* limits are applied. Optionally, descenders below the baseline can be ignored.
+	*
+	* @param lines Vector of text lines.
+	* @param ignoreBelowBaseline If true, descenders below the baseline are excluded from height.
+	* @return Total text block height in pixels.
+	*/
+	float GetTextBlockHeight(const std::vector<std::string>& lines, bool ignoreBelowBaseline = false);
 
 	/**
 	* @brief Calculates the height of a single rendered text line.
