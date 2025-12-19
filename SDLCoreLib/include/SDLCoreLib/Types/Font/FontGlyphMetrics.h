@@ -12,15 +12,15 @@ namespace SDLCore {
     *
     * Additionally, this structure stores atlas placement coordinates and dimensions.
     */
-    class GlypeMetrics {
+    class GlyphMetrics {
     public:
-        GlypeMetrics() = default;
+        GlyphMetrics() = default;
 
         /**
         * @brief Constructs glyph metrics for a specific codepoint.
         * @param ch Character code stored as unsigned integer (UTF-32 scalar).
         */
-        GlypeMetrics(char ch);
+        GlyphMetrics(char ch);
 
         char code = 'a';          /**< Character code associated with this glyph. */
 

@@ -710,10 +710,12 @@ namespace SDLCore::Render {
 
     static std::vector<std::string> BuildLines(const std::string& text) {
         std::vector<std::string> lines;
+        lines.reserve(text.size() / 10);
 
         if (s_textClipWidth == -1) {
             std::istringstream stream(text);
             std::string line;
+            line.reserve(32);
 
             while (std::getline(stream, line)) {
                 lines.push_back(line);
@@ -737,6 +739,9 @@ namespace SDLCore::Render {
         std::string currentWord;
         float currentWordWidth = 0.0f;
 
+        currentLine.reserve(32);
+        currentWord.reserve(16);
+
         auto flushLine = [&]() {
             if (!currentLine.empty()) {
                 lines.push_back(currentLine);
@@ -749,16 +754,13 @@ namespace SDLCore::Render {
             if (currentWord.empty())
                 return;
 
-            // Word fits into current line
             if (currentLineWidth + currentWordWidth <= s_textClipWidth) {
                 currentLine += currentWord;
                 currentLineWidth += currentWordWidth;
             }
-            // Word does not fit, new line
             else {
                 flushLine();
 
-                // Word still too large. char fallback
                 if (currentWordWidth > s_textClipWidth) {
                     for (char c : currentWord) {
                         auto* m = asset->GetGlyphMetrics(c);
@@ -766,9 +768,8 @@ namespace SDLCore::Render {
                             continue;
 
                         float cw = static_cast<float>(m->advance);
-                        if (currentLineWidth + cw > s_textClipWidth) {
+                        if (currentLineWidth + cw > s_textClipWidth)
                             flushLine();
-                        }
 
                         currentLine += c;
                         currentLineWidth += cw;
@@ -797,7 +798,6 @@ namespace SDLCore::Render {
 
             float charWidth = static_cast<float>(m->advance);
 
-            // Word separator
             if (c == ' ' || c == '\t') {
                 currentWord += c;
                 currentWordWidth += charWidth;
@@ -805,7 +805,6 @@ namespace SDLCore::Render {
                 continue;
             }
 
-            // Normal character
             currentWord += c;
             currentWordWidth += charWidth;
         }
@@ -821,19 +820,20 @@ namespace SDLCore::Render {
 
     void Text(const std::string& text, float x, float y) {
         auto renderer = GetActiveRenderer("Text");
-        if (!renderer) 
+        if (!renderer)
             return;
+
         if (!s_font) {
             Log::Error("SDLCore::Renderer::Text: Faild to render text for text'{}', no font was set", text);
             return;
         }
 
         auto* asset = s_font->GetFontAsset();
-        if (!asset) 
+        if (!asset)
             return;
 
         SDL_Texture* atlas = asset->GetGlyphAtlasTexture(s_winID);
-        if (!atlas) 
+        if (!atlas)
             return;
 
         SDL_SetTextureColorMod(atlas, s_activeColor.r, s_activeColor.g, s_activeColor.b);
