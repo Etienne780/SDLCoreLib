@@ -20,12 +20,15 @@ namespace SDLCore::UI {
 
 		void CapturePressNode(uintptr_t id);
 		void CaptureDragNode(uintptr_t id);
+		void CaptureFocusNode(uintptr_t id);
 
 		void ReleasePressNode(uintptr_t id);
 		void ReleaseDragNode(uintptr_t id);
+		void ReleaseFocusNode(uintptr_t id);
 
 		bool HasPressNodeCaptured() const;
 		bool HasDragNodeCaptured() const;
+		bool HasFocusNodeCaptured() const;
 
 		WindowID GetWindowID() const;
 		float GetWindowScale() const;
@@ -35,6 +38,8 @@ namespace SDLCore::UI {
 		uintptr_t GetActiveCapturedPressNode() const;
 		// should be used with HasDragNodeCaptured() to check if a node is Captured
 		uintptr_t GetActiveCapturedDragNode() const;
+		// should be used with HasFocusNodeCaptured() to check if a node is Captured
+		uintptr_t GetActiveCapturedFocusNode() const;
 
 	private:
 		UIContext() = default;
@@ -87,6 +92,7 @@ namespace SDLCore::UI {
 
 		uintptr_t m_pressNodeID = 0;/*< Address can not be 0 */
 		uintptr_t m_dragNodeID = 0;/*< Address can not be 0 */
+		uintptr_t m_focusNodeID = 0;/*< Address can not be 0 */
 	};
 
 }
