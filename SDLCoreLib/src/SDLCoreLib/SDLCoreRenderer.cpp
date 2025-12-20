@@ -35,6 +35,7 @@ namespace SDLCore::Render {
     std::string s_textEllipsis = s_textEllipsisDefault;
     float s_textClipWidth = -1.0f;
     bool s_textCacheEnabled = false;
+    bool s_isCalculatingTextCache = false;
 
     constexpr bool CREATE_ON_NOT_FOUND = true;
     constexpr uint64_t TEXT_CACHE_TTL_FRAMES = 600; // ~10 sec
@@ -913,6 +914,7 @@ namespace SDLCore::Render {
         if (it == s_textCache.end() && !createOnNotFound)
             return nullptr;
 
+        s_isCalculatingTextCache = true;
         auto [it2, inserted] = s_textCache.try_emplace(key);
         CachedText& ct = it2->second;
 
@@ -964,7 +966,7 @@ namespace SDLCore::Render {
 
                     float penY = 0.0f;
                     for (size_t i = 0; i < ct.lines.size(); ++i) {
-                        float lineWidth = GetTextWidth(ct.lines[i]);
+                        float lineWidth = ct.lineWidths[i];
                         float penX = 0.0f;
 
                         switch (s_textHorAlign) {
@@ -991,7 +993,7 @@ namespace SDLCore::Render {
                                 static_cast<float>(m->atlasWidth),
                                 static_cast<float>(m->atlasHeight)
                             };
-
+                            
                             SDL_RenderTexture(renderer.get(), s_font->GetFontAsset()->GetGlyphAtlasTexture(s_winID), &src, &dst);
                             penX += m->advance;
                         }
@@ -1005,6 +1007,7 @@ namespace SDLCore::Render {
             }
         }
 
+        s_isCalculatingTextCache = false;
         ct.lastUseFrame = Time::GetFrameCount();
         return &ct;
     }
@@ -1379,9 +1382,9 @@ namespace SDLCore::Render {
     }
 
     float GetTextWidth(const std::string& text) {
-        if (auto* ct = GetCachedText(text, false)) {
-            return ct->textWidth; // use cached width
-        }
+        if(!s_isCalculatingTextCache)
+            if (auto* ct = GetCachedText(text, false))
+                return ct->textWidth; // use cached width
 
         if (!s_font) {
             Log::Error("SDLCore::Renderer::GetTextWidth: Failed to get text width for text '{}', no font was set", text);
@@ -1401,9 +1404,9 @@ namespace SDLCore::Render {
     }
 
     float GetTextHeight(const std::string& text, bool ignoreBelowBaseline) {
-        if (auto* ct = GetCachedText(text, false)) {
-            return ignoreBelowBaseline ? ct->textHeightIgnorBase : ct->textHeight;
-        }
+        if (!s_isCalculatingTextCache)
+            if (auto* ct = GetCachedText(text, false))
+                return ignoreBelowBaseline ? ct->textHeightIgnorBase : ct->textHeight;
 
         if (!s_font) {
             Log::Error("SDLCore::Renderer::GetTextHeight: Faild to get text height for text'{}', no font was set", text);
@@ -1429,18 +1432,18 @@ namespace SDLCore::Render {
     }
 
     float GetTextBlockWidth(const std::string& text) {
-        if (auto* ct = GetCachedText(text, false)) {
+        if (!s_isCalculatingTextCache)
+            if (auto* ct = GetCachedText(text, false))
             return ct->blockWidth; // cached block width
-        }
 
         auto lines = BuildLines(text);
         return GetTextBlockWidth(lines);
     }
 
     float GetTextBlockWidth(const std::vector<std::string>& lines) {
-        if (auto* ct = GetCachedText(lines.empty() ? "" : lines[0], false)) {
-            return ct->blockWidth; // approximate cache, fallback if lines are from a single text
-        }
+        if (!s_isCalculatingTextCache)
+            if (auto* ct = GetCachedText(lines.empty() ? "" : lines[0], false))
+                return ct->blockWidth; // approximate cache, fallback if lines are from a single text
 
         if (!s_font) {
             Log::Error("SDLCore::Renderer::GetTextBlockWidth: Faild to get block width for lines'{}', no font was set", lines);
@@ -1454,18 +1457,18 @@ namespace SDLCore::Render {
     }
 
     float GetTextBlockHeight(const std::string& text, bool ignoreBelowBaseline) {
-        if (auto* ct = GetCachedText(text, false)) {
-            return ignoreBelowBaseline ? ct->blockHeightIgnorBase : ct->blockHeight;
-        }
+        if (!s_isCalculatingTextCache)
+            if (auto* ct = GetCachedText(text, false))
+                return ignoreBelowBaseline ? ct->blockHeightIgnorBase : ct->blockHeight;
 
         auto lines = BuildLines(text);
         return GetTextBlockHeight(lines, ignoreBelowBaseline);
     }
 
     float GetTextBlockHeight(const std::vector<std::string>& lines, bool ignoreBelowBaseline) {
-        if (auto* ct = GetCachedText(lines.empty() ? "" : lines[0], false)) {
-            return ignoreBelowBaseline ? ct->blockHeightIgnorBase : ct->blockHeight;
-        }
+        if (!s_isCalculatingTextCache)
+            if (auto* ct = GetCachedText(lines.empty() ? "" : lines[0], false))
+                return ignoreBelowBaseline ? ct->blockHeightIgnorBase : ct->blockHeight;
 
         if (!s_font) {
             Log::Error("SDLCore::Renderer::GetTextBlockHeight: Faild to get block height for lines'{}', no font was set", lines);
@@ -1484,14 +1487,16 @@ namespace SDLCore::Render {
     }
 
     float GetLineHeight(const std::string& line, bool ignoreBelowBaseline) {
-        if (auto* ct = GetCachedText(line, false)) {
-            if (ignoreBelowBaseline) {
-                return ct->lineHeightsIgnorBase.empty() ? 0.0f :
-                    *std::max_element(ct->lineHeightsIgnorBase.begin(), ct->lineHeightsIgnorBase.end());
-            }
-            else {
-                return ct->lineHeights.empty() ? 0.0f :
-                    *std::max_element(ct->lineHeights.begin(), ct->lineHeights.end());
+        if (!s_isCalculatingTextCache) {
+            if (auto* ct = GetCachedText(line, false)) {
+                if (ignoreBelowBaseline) {
+                    return ct->lineHeightsIgnorBase.empty() ? 0.0f :
+                        *std::max_element(ct->lineHeightsIgnorBase.begin(), ct->lineHeightsIgnorBase.end());
+                }
+                else {
+                    return ct->lineHeights.empty() ? 0.0f :
+                        *std::max_element(ct->lineHeights.begin(), ct->lineHeights.end());
+                }
             }
         }
 
