@@ -187,7 +187,7 @@ namespace SDLCore::UI {
 
     void UIContext::RenderNodes(UIContext* ctx, UINode* rootNode) {
 
-        std::function<void(UINode*)> RenderRecursive;
+        std::function<void(UINode*)> RenderRecursive; 
         RenderRecursive = [&](UINode* root) {
             root->CalculateLayout(ctx);
 

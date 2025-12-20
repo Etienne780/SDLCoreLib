@@ -59,14 +59,14 @@ namespace SDLCore::UI::Properties {
     /*
     * @brief Inner spacing (Vector4)
     *
-    * Usage: style.SetValue<Vector4>(Vector4(4))
+    * Usage: style.SetValue<Vector4>(Vector4(Top, Left, Bottom, Right))
     */
     inline UIPropertyID padding;
 
     /*
     * @brief Outer spacing (Vector4)
     *
-    * Usage: style.SetValue<Vector4>(Vector4(8))
+    * Usage: style.SetValue<Vector4>(Vector4(Top, Left, Bottom, Right))
     */
     inline UIPropertyID margin;
 

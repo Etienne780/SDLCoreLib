@@ -9,7 +9,6 @@ namespace SDLCore::UI {
 	static std::string frameNodeName = "Frame";
 	FrameNode::FrameNode(int childPos, uintptr_t key)
 		: UINode(childPos, key, frameNodeName) {
-		// hard codes Frame node to ui type 0
 	}
 
 	void FrameNode::ApplyStyleCalled(UIContext* ctx, const UIStyleState& styleState) {
