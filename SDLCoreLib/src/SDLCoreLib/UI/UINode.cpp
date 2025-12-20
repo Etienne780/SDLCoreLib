@@ -86,6 +86,9 @@ namespace SDLCore::UI {
 		m_isHitTestEnabled = true;
 		styleState.TryGetValue<bool>(Properties::hitTestEnabled, m_isHitTestEnabled);
 
+		m_notInteractible = false;
+		styleState.TryGetValue<bool>(Properties::notInteractible, m_notInteractible);
+
 		ApplyStyleCalled(ctx, styleState);
 
 		m_size.Set(0);
@@ -146,6 +149,14 @@ namespace SDLCore::UI {
 		return m_isActive;
 	}
 
+	bool UINode::HasHitTestEnabled() const {
+		return m_isHitTestEnabled;
+	}
+
+	bool UINode::IsInteractible() const {
+		return !m_notInteractible;
+	}
+
 	void UINode::SetChildHasEvent(bool value) {
 		m_childHasEvent = value;
 	}
@@ -198,7 +209,11 @@ namespace SDLCore::UI {
 		m_isActive = true;
 	}
 
-	bool UINode::IsPointInNode(const Vector2& point) {
+	bool UINode::IsMouseInNode() const {
+		return IsPointInNode(Input::GetMousePosition());
+	}
+
+	bool UINode::IsPointInNode(const Vector2& point) const {
 		return point.x > m_position.x && point.x <= m_position.x + m_size.x && 
 			point.y > m_position.y && point.y <= m_position.y + m_size.y;
 	}
@@ -406,6 +421,11 @@ namespace SDLCore::UI {
 
 		event->Reset();
 
+		if (m_notInteractible) {
+			m_state = UIState::NORMAL;
+			return;
+		}
+
 		if (!m_isHitTestEnabled) {
 			m_state = UIState::NORMAL;
 			ProcessEvent(event);
@@ -452,7 +472,7 @@ namespace SDLCore::UI {
 		}
 
 		// Press state, press ends if mouse out of node
-		if (pressCaptured && isHovered) {
+		if (pressCaptured && isHovered && mouseDown) {
 			m_state = UIState::PRESSED;
 			event->SetIsPressed(true);
 		}
