@@ -74,6 +74,9 @@ namespace SDLCore::UI {
         */
         bool IsActive() const;
 
+        bool HasHitTestEnabled() const;
+        bool IsInteractible() const;
+
         /*
         * @brief used internaly to find out what elements have events
         * 
@@ -100,7 +103,8 @@ namespace SDLCore::UI {
 
         void SetNodeActive();
 
-        bool IsPointInNode(const Vector2& point);
+        bool IsMouseInNode() const;
+        bool IsPointInNode(const Vector2& point) const;
 
         virtual void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) = 0;
         virtual Vector2 CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h);
@@ -120,6 +124,7 @@ namespace SDLCore::UI {
         bool m_childHasEvent = false;
         bool m_isActive = false;
         bool m_isHitTestEnabled = true;
+        bool m_notInteractible = false;
 
         Vector2 m_position;
         Vector2 m_size;

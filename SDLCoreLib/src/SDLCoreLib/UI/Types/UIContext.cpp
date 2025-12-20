@@ -202,7 +202,7 @@ namespace SDLCore::UI {
             if (!child)
                 continue;
 
-            if (child->GetChildHasEvent()) {
+            if (child->GetChildHasEvent() || (!child->IsInteractible() && child->IsMouseInNode())) {
                 node->SetChildHasEvent(true);
                 node->ResetState();// resets the node to normal
                 return node->GetEventPtr();
