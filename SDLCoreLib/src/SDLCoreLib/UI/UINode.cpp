@@ -39,6 +39,13 @@ namespace SDLCore::UI {
 		
 		// allways uses normal state as a base
 		UIStyleState styleState = m_finalStyle.GetStyleState(UIState::NORMAL);
+
+		// if state pressed apply hover
+		if (m_state == UIState::PRESSED) {
+			const UIStyleState& st = m_finalStyle.GetStyleState(UIState::HOVER);
+			st.Merge(styleState);
+		}
+
 		if (m_state != UIState::NORMAL) {
 			const UIStyleState& st = m_finalStyle.GetStyleState(m_state);
 			st.Merge(styleState);
