@@ -159,10 +159,22 @@ namespace SDLCore::UI::Properties {
 	* If false, the element is rendered visually but does not receive
 	* hover, click, or any other interaction events.
 	* Events will pass through to elements below.
+	* Commonly used for Text.
 	*
 	* Usage: style.SetValue<bool>(true)
 	*/
 	inline UIPropertyID hitTestEnabled;
+
+	/*
+	* @brief Disables all interaction for this element (bool)
+	*
+	* If true, the element will not respond to any events
+	* (clicks, hover, etc.) and behaves as disabled.
+	* Useful for disabling buttons or making elements non-interactive.
+	*
+	* Usage: style.SetValue<bool>(true)
+	*/
+	inline UIPropertyID notInteractible;
 
 	#pragma endregion
 

@@ -77,10 +77,10 @@ void App::OnUpdate() {
         margin.SetActiveState(UI::UIState::HOVER)
             .SetValue(Prop::margin, Vector4(8));
         margin.SetActiveState(UI::UIState::PRESSED)
-            .SetValue(Prop::margin, Vector4(0, 16, 0, 2));
+            .SetValue(Prop::margin, Vector4(0, 16, 0, 5));
 
         UI::UIStyle padding;
-        padding.SetValue(Prop::padding, Vector4(8));
+        padding.SetValue(Prop::padding, Vector4(16));
 
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
@@ -89,7 +89,7 @@ void App::OnUpdate() {
 
             UI::BeginFrame(UI::UIKey("2"), px200, green, margin, padding);
             {
-                UI::BeginFrame(UI::UIKey("child"), stretch, ignor);
+                UI::BeginFrame(UI::UIKey("child"), stretch);
                 UI::EndFrame();
             }
             UI::EndFrame();

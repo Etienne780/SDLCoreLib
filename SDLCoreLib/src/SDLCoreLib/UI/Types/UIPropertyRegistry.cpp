@@ -109,10 +109,21 @@ namespace SDLCore::UI {
             PropertyValue(0.0f)
         );
 
+        // ============ Other ============
+
         hitTestEnabled = RegisterProperty(
             "hit_test_enabled",
-            "Enables or disables event hit-testing for this element",
+            "Enables or disables event hit-testing for this element. "
+            "If false, the element is visible but does not receive interaction events; events pass through. Commonly used for text.",
             PropertyValue(true)
+        );
+
+        notInteractible = RegisterProperty(
+            "not_interactible",
+            "Disables all interaction for this element. "
+            "If true, the element will not respond to any events (clicks, hover, etc.) "
+            "and behaves as disabled.",
+            PropertyValue(false)
         );
 
         // ============ Text ============

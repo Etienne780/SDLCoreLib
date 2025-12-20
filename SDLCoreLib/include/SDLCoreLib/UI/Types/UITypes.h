@@ -13,7 +13,8 @@ namespace SDLCore::UI {
 		NORMAL = 0,
 		HOVER,
 		PRESSED,
-		DISABLED
+		DISABLED,
+		FOCUSED
 	};
 
 	enum UIAlignment : uint16_t {
