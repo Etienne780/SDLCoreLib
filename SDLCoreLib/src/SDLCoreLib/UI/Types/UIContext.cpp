@@ -21,6 +21,11 @@ namespace SDLCore::UI {
         m_dragNodeID = id;
     }
 
+    void UIContext::CaptureFocusNode(uintptr_t id) {
+        ReleaseDragNode(m_focusNodeID);
+        m_focusNodeID = id;
+    }
+
     void UIContext::ReleasePressNode(uintptr_t id) {
         if (m_pressNodeID != id)
             return;
@@ -33,12 +38,22 @@ namespace SDLCore::UI {
         m_dragNodeID = 0;
     }
 
+    void UIContext::ReleaseFocusNode(uintptr_t id) {
+        if (m_focusNodeID != id)
+            return;
+        m_focusNodeID = 0;
+    }
+
     bool UIContext::HasPressNodeCaptured() const {
         return m_pressNodeID != 0;
     }
 
     bool UIContext::HasDragNodeCaptured() const {
         return m_dragNodeID != 0;
+    }
+
+    bool UIContext::HasFocusNodeCaptured() const {
+        return m_focusNodeID != 0;
     }
 
     WindowID UIContext::GetWindowID() const {
@@ -59,6 +74,10 @@ namespace SDLCore::UI {
 
     uintptr_t UIContext::GetActiveCapturedDragNode() const {
         return m_dragNodeID;
+    }
+
+    uintptr_t UIContext::GetActiveCapturedFocusNode() const {
+        return m_focusNodeID;
     }
 
     FrameNode* UIContext::BeginFrame(uintptr_t id) {
