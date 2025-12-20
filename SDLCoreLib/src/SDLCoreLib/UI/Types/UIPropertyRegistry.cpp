@@ -79,7 +79,7 @@ namespace SDLCore::UI {
             PropertyValue(UIFontID{ 0 }));// default font
 
         fontSize = RegisterProperty("font_size", "font size", 
-            PropertyValue(16.0f));
+            PropertyValue(24.0f));
 
         textColor = RegisterProperty("text_color", "text color", 
             PropertyValue(Vector4(255)));

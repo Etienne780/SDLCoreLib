@@ -127,7 +127,10 @@ namespace SDLCore::UI {
         static inline uint32_t m_typeIDCounter = 0;
         static uint32_t GetUITypeID(const std::string& name);
 
+        // is size + margin
         float GetAccumulatedChildSize(bool horizontal, int upToIndex) const;
+
+        // is size + margin
         float GetTotalChildrenSize(bool horizontal) const;
         float AlignOffset(bool isHor, UIAlignment align, float freeSpace);
         void CalculateLayout(const UIContext* uiContext);

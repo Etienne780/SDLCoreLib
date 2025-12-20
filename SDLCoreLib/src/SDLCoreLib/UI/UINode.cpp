@@ -67,17 +67,17 @@ namespace SDLCore::UI {
 		styleState.TryGetValue<int>(Properties::sizeUnitW, sizeUnitW);
 		styleState.TryGetValue<int>(Properties::sizeUnitH, sizeUnitH);
 
-		m_size = CalculateSize(ctx,
-			static_cast<UISizeUnit>(sizeUnitW),
-			static_cast<UISizeUnit>(sizeUnitH),
-			width, height);
-
 		m_padding.Set(0);
 		m_margin.Set(0);
 		styleState.TryGetValue<Vector4>(Properties::padding, m_padding);
 		styleState.TryGetValue<Vector4>(Properties::margin, m_margin);
 
 		ApplyStyleCalled(ctx, styleState);
+
+		m_size = CalculateSize(ctx,
+			static_cast<UISizeUnit>(sizeUnitW),
+			static_cast<UISizeUnit>(sizeUnitH),
+			width, height);
 	}
 
 	bool UINode::ContainsChildAtPos(uint16_t pos, uintptr_t id, UINode*& outNode) {
@@ -189,8 +189,10 @@ namespace SDLCore::UI {
 			return Vector2(0.0f, 0.0f);
 
 		auto resolveBaseSize = [&](bool horizontal) -> float {
-			if (m_parent)
-				return horizontal ? m_parent->m_size.x : m_parent->m_size.y;
+			if (m_parent) {
+				const auto& pPadding = m_parent->m_padding;
+				return horizontal ? m_parent->m_size.x - pPadding.y - pPadding.w : m_parent->m_size.y - pPadding.x - pPadding.z;
+			}
 			return horizontal ? ctx->GetWindowSize().x : ctx->GetWindowSize().y;
 		};
 
@@ -238,7 +240,8 @@ namespace SDLCore::UI {
 		float size = 0.0f;
 
 		for (int i = 0; i < upToIndex && i < static_cast<int>(childs.size()); ++i) {
-			size += horizontal ? childs[i]->m_size.x : childs[i]->m_size.y;
+			const auto& cMargin = childs[i]->m_margin;
+			size += horizontal ? childs[i]->m_size.x + cMargin.y + cMargin.w : childs[i]->m_size.y + cMargin.x + cMargin.z;
 		}
 
 		return size;
@@ -252,7 +255,8 @@ namespace SDLCore::UI {
 		float size = 0.0f;
 
 		for (const auto& c : childs) {
-			size += horizontal ? c->m_size.x : c->m_size.y;
+			const auto& cMargin = c->m_margin;
+			size += horizontal ? c->m_size.x + cMargin.y + cMargin.w : c->m_size.y + cMargin.x + cMargin.z;
 		}
 
 		return size;
@@ -268,32 +272,27 @@ namespace SDLCore::UI {
 
 		// Compute offset only along main axis
 		switch (align) {
-
 		case UIAlignment::START:
 			if (m_childPos > 0 && m_childPos < static_cast<int>(childs.size())) {
 				offset = GetAccumulatedChildSize(isHor, m_childPos);
 			}
 			break;
-
 		case UIAlignment::CENTER: {
 			const float totalSize = GetTotalChildrenSize(isHor);
 			const float start = (freeSpace - totalSize) * 0.5f;
 			offset = start + GetAccumulatedChildSize(isHor, m_childPos);
 			break;
 		}
-
 		case UIAlignment::END: {
 			const float totalSize = GetTotalChildrenSize(isHor);
 			const float start = freeSpace - totalSize;
 			offset = start + GetAccumulatedChildSize(isHor, m_childPos);
 			break;
 		}
-
 		default:
 			offset = 0.0f;
 			break;
 		}
-
 		return offset;
 	}
 
@@ -315,49 +314,68 @@ namespace SDLCore::UI {
 		const bool isRow = IsRow(dir);
 		const bool isReverse = IsReverse(dir);
 
-		const float freeX = parentSize.x - m_size.x;
-		const float freeY = parentSize.y - m_size.y;
+		const auto& pPad = m_parent->m_padding;
+		const float contentWidth =
+			parentSize.x - pPad.y - pPad.w;
+		const float contentHeight =
+			parentSize.y - pPad.x - pPad.z;
+
+		const float freeX =
+			contentWidth - m_size.x;
+		const float freeY =
+			contentHeight - m_size.y;
+
+		const float contentStartX = m_parent->m_position.x + pPad.y;
+		const float contentStartY = m_parent->m_position.y + pPad.x;
 
 		if (isRow) {
-			float x = AlignOffset(true, m_parent->GetHorizontalAlignment(), parentSize.x);
+			float x = AlignOffset(true, m_parent->GetHorizontalAlignment(), contentWidth);
 
 			if (isReverse)
-				x = parentSize.x - x - m_size.x;
+				x = contentWidth - x - m_size.x;
 
-			m_position.x = m_parent->m_position.x + x;
+			m_position.x = contentStartX + x + m_margin.y;
 		}
 		else {
-			float y = AlignOffset(false, m_parent->GetVerticalAlignment(), parentSize.y);
+			float y = AlignOffset(false, m_parent->GetVerticalAlignment(), contentHeight);
 
 			if (isReverse)
-				y = parentSize.y - y - m_size.y;
+				y = contentHeight - y - m_size.y;
 
-			m_position.y = m_parent->m_position.y + y;
+			m_position.y = contentStartY + y + m_margin.x;
 		}
 
 		if (isRow) {
 			switch (m_parent->GetVerticalAlignment()) {
 			case UIAlignment::START:
-				m_position.y = m_parent->m_position.y;
+				m_position.y = contentStartY + m_margin.x;
 				break;
+
 			case UIAlignment::CENTER:
-				m_position.y = m_parent->m_position.y + freeY * 0.5f;
+				m_position.y =
+					contentStartY + (contentHeight - m_size.y) * 0.5f;
 				break;
+
 			case UIAlignment::END:
-				m_position.y = m_parent->m_position.y + freeY;
+				m_position.y =
+					contentStartY + contentHeight - m_size.y - m_margin.z;
 				break;
 			}
 		}
 		else {
 			switch (m_parent->GetHorizontalAlignment()) {
 			case UIAlignment::START:
-				m_position.x = m_parent->m_position.x;
+				m_position.x = contentStartX + m_margin.y;
 				break;
+
 			case UIAlignment::CENTER:
-				m_position.x = m_parent->m_position.x + freeX * 0.5f;
+				m_position.x =
+					contentStartX + (contentWidth - m_size.x) * 0.5f;
 				break;
+
 			case UIAlignment::END:
-				m_position.x = m_parent->m_position.x + freeX;
+				m_position.x =
+					contentStartX + contentWidth - m_size.x - m_margin.w;
 				break;
 			}
 		}
