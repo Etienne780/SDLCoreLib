@@ -18,9 +18,23 @@ namespace SDLCore::UI {
 	public:
 		static UIContext* CreateContext();
 
+		void CapturePressNode(uintptr_t id);
+		void CaptureDragNode(uintptr_t id);
+
+		void ReleasePressNode(uintptr_t id);
+		void ReleaseDragNode(uintptr_t id);
+
+		bool HasPressNodeCaptured() const;
+		bool HasDragNodeCaptured() const;
+
 		WindowID GetWindowID() const;
 		float GetWindowScale() const;
 		Vector2 GetWindowSize() const;
+
+		// should be used with HasPressNodeCaptured() to check if a node is Captured
+		uintptr_t GetActiveCapturedPressNode() const;
+		// should be used with HasDragNodeCaptured() to check if a node is Captured
+		uintptr_t GetActiveCapturedDragNode() const;
 
 	private:
 		UIContext() = default;
@@ -60,7 +74,7 @@ namespace SDLCore::UI {
 		UINode* GetRootNode() const;
 		void SetWindowParams(WindowID id);
 
-		static UIEvent* ProcessEvent(UINode* node);
+		static UIEvent* ProcessEvent(UIContext* ctx, UINode* node);
 		static void RenderNodes(UIContext* ctx, UINode* rootNode);
 
 		std::deque<uint16_t> m_lastChildPosition;/*< is the position of the current child inside of last node*/
@@ -70,6 +84,9 @@ namespace SDLCore::UI {
 		WindowID m_windowID;
 		float m_windowContentScale = 1.0f;
 		Vector2 m_windowSize{ 0.0f, 0.0f };
+
+		uintptr_t m_pressNodeID = 0;/*< Address can not be 0 */
+		uintptr_t m_dragNodeID = 0;/*< Address can not be 0 */
 	};
 
 }

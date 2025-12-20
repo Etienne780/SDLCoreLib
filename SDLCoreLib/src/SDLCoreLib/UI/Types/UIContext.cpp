@@ -11,6 +11,36 @@ namespace SDLCore::UI {
 		return new UIContext();
 	}
 
+    void UIContext::CapturePressNode(uintptr_t id) {
+        ReleasePressNode(m_pressNodeID);
+        m_pressNodeID = id;
+    }
+
+    void UIContext::CaptureDragNode(uintptr_t id) {
+        ReleaseDragNode(m_dragNodeID);
+        m_dragNodeID = id;
+    }
+
+    void UIContext::ReleasePressNode(uintptr_t id) {
+        if (m_pressNodeID != id)
+            return;
+        m_pressNodeID = 0;
+    }
+
+    void UIContext::ReleaseDragNode(uintptr_t id) {
+        if (m_dragNodeID != id)
+            return;
+        m_dragNodeID = 0;
+    }
+
+    bool UIContext::HasPressNodeCaptured() const {
+        return m_pressNodeID != 0;
+    }
+
+    bool UIContext::HasDragNodeCaptured() const {
+        return m_dragNodeID != 0;
+    }
+
     WindowID UIContext::GetWindowID() const {
         return m_windowID;
     }
@@ -21,6 +51,14 @@ namespace SDLCore::UI {
 
     Vector2 UIContext::GetWindowSize() const {
         return m_windowSize;
+    }
+
+    uintptr_t UIContext::GetActiveCapturedPressNode() const {
+        return m_pressNodeID;
+    }
+
+    uintptr_t UIContext::GetActiveCapturedDragNode() const {
+        return m_dragNodeID;
     }
 
     FrameNode* UIContext::BeginFrame(uintptr_t id) {
@@ -107,7 +145,7 @@ namespace SDLCore::UI {
             m_nodeStack.pop_back();
 
         if (!m_lastNodeStack.empty()) {
-            UIEvent* uiEvent = ProcessEvent(m_lastNodeStack.back());
+            UIEvent* uiEvent = ProcessEvent(this, m_lastNodeStack.back());
             m_lastNodeStack.pop_back();
             // last node poped
             if (m_lastNodeStack.empty()) {
@@ -146,7 +184,7 @@ namespace SDLCore::UI {
         m_windowSize = win->GetSize();
     }
 
-    UIEvent* UIContext::ProcessEvent(UINode* node) {
+    UIEvent* UIContext::ProcessEvent(UIContext* ctx, UINode* node) {
         static UIEvent dummy;
 
         // skip inactive nodes
@@ -182,7 +220,7 @@ namespace SDLCore::UI {
         node->SetChildHasEvent(false);
         UIEvent* event = node->GetEventPtr();
         
-        node->ProcessEventInternal(event);
+        node->ProcessEventInternal(ctx, event);
 
         return event;
     }
