@@ -55,6 +55,10 @@ namespace SDLCore::UI {
 		int alignHorizontal = 0;
 		int alignVertical = 0;
 
+		m_layoutDir = UILayoutDirection::ROW;
+		m_horizontalAligment = UIAlignment::START;
+		m_verticalAligment = UIAlignment::START;
+
 		styleState.TryGetValue<int>(Properties::layoutDirection, layoutDir);
 		styleState.TryGetValue<int>(Properties::alignHorizontal, alignHorizontal);
 		styleState.TryGetValue<int>(Properties::alignVertical, alignVertical);
@@ -79,12 +83,20 @@ namespace SDLCore::UI {
 		styleState.TryGetValue<Vector4>(Properties::padding, m_padding);
 		styleState.TryGetValue<Vector4>(Properties::margin, m_margin);
 
+		m_isHitTestEnabled = true;
+		styleState.TryGetValue<bool>(Properties::hitTestEnabled, m_isHitTestEnabled);
+
 		ApplyStyleCalled(ctx, styleState);
 
+		m_size.Set(0);
 		m_size = CalculateSize(ctx,
 			static_cast<UISizeUnit>(sizeUnitW),
 			static_cast<UISizeUnit>(sizeUnitH),
 			width, height);
+	}
+
+	void UINode::ResetState() {
+		m_state = UIState::NORMAL;
 	}
 
 	bool UINode::ContainsChildAtPos(uint16_t pos, uintptr_t id, UINode*& outNode) {
@@ -398,7 +410,8 @@ namespace SDLCore::UI {
 		Vector2 mousePos = Input::GetMousePosition();
 		bool leftMousePressed = Input::MousePressed(MouseButton::LEFT);
 		bool leftMouseJustPressed = Input::MouseJustPressed(MouseButton::LEFT);
-		if (IsPointInNode(mousePos)) {
+
+		if (m_isHitTestEnabled && IsPointInNode(mousePos)) {
 			event->SetIsHovered(true);
 
 			if (leftMouseJustPressed) {
