@@ -40,25 +40,25 @@ void App::OnUpdate() {
 
         UI::UIStyle red;
         red.SetValue(Prop::backgroundColor, Vector4(255, 0, 0, 255));
-        red.SetActiveState(SDLCore::UI::UIState::HOVER)
+        red.SetActiveState(UI::UIState::HOVER)
             .SetValue(Prop::backgroundColor, Vector4(155, 0, 0, 255))
             .SetValue(Prop::width, 230.0f);
 
         UI::UIStyle green;
         green.SetValue(Prop::backgroundColor, Vector4(0, 255, 0, 255));
-        green.SetActiveState(SDLCore::UI::UIState::HOVER)
+        green.SetActiveState(UI::UIState::HOVER)
             .SetValue(Prop::backgroundColor, Vector4(0, 155, 0, 255))
             .SetValue(Prop::width, 230.0f);
 
         UI::UIStyle blue;
         blue.SetValue(Prop::backgroundColor, Vector4(0, 0, 255, 255));
-        blue.SetActiveState(SDLCore::UI::UIState::HOVER)
+        blue.SetActiveState(UI::UIState::HOVER)
             .SetValue(Prop::backgroundColor, Vector4(0, 0, 155, 255))
             .SetValue(Prop::width, 230.0f);
 
         UI::UIStyle yellow;
         yellow.SetValue(Prop::backgroundColor, Vector4(255, 255, 0, 255));
-        yellow.SetActiveState(SDLCore::UI::UIState::HOVER)
+        yellow.SetActiveState(UI::UIState::HOVER)
             .SetValue(Prop::backgroundColor, Vector4(155, 155, 0, 255))
             .SetValue(Prop::width, 230.0f);
 
@@ -69,6 +69,9 @@ void App::OnUpdate() {
         stretch.SetValue(Prop::sizeUnitW, UI::UISizeUnit::PERCENTAGE)
             .SetValue(Prop::sizeUnitH, UI::UISizeUnit::PERCENTAGE)
             .SetValue(Prop::width, 100.0f).SetValue(Prop::height, 100.0f);
+
+        UI::UIStyle ignor;
+        ignor.SetValue(Prop::hitTestEnabled, false);
 
         UI::UIStyle margin;
         margin.SetActiveState(UI::UIState::HOVER)
@@ -86,7 +89,7 @@ void App::OnUpdate() {
 
             UI::BeginFrame(UI::UIKey("2"), px200, green, margin, padding);
             {
-                UI::BeginFrame(UI::UIKey("child"), stretch);
+                UI::BeginFrame(UI::UIKey("child"), stretch, ignor);
                 UI::EndFrame();
             }
             UI::EndFrame();
