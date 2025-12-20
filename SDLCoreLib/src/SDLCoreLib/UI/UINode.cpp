@@ -400,38 +400,69 @@ namespace SDLCore::UI {
 		}
 	}
 
-	void UINode::ProcessEventInternal(UIEvent* event) {
-		if (!event)
+	void UINode::ProcessEventInternal(UIContext* ctx, UIEvent* event) {
+		if (!ctx || !event)
 			return;
 
 		event->Reset();
 
-		Vector2 mouseDelta = Input::GetMouseDelta();
-		Vector2 mousePos = Input::GetMousePosition();
-		bool leftMousePressed = Input::MousePressed(MouseButton::LEFT);
-		bool leftMouseJustPressed = Input::MouseJustPressed(MouseButton::LEFT);
+		if (!m_isHitTestEnabled) {
+			m_state = UIState::NORMAL;
+			ProcessEvent(event);
+			return;
+		}
 
-		if (m_isHitTestEnabled && IsPointInNode(mousePos)) {
+		const Vector2 mousePos = Input::GetMousePosition();
+		const Vector2 mouseDelta = Input::GetMouseDelta();
+
+		const bool mouseDown = Input::MousePressed(MouseButton::LEFT);
+		const bool mouseJustDown = Input::MouseJustPressed(MouseButton::LEFT);
+		const bool mouseJustUp = Input::MouseJustReleased(MouseButton::LEFT);
+
+		const bool isHovered = IsPointInNode(mousePos);
+
+		const bool pressCaptured = ctx->GetActiveCapturedPressNode() == m_id;
+		const bool dragCaptured = ctx->GetActiveCapturedDragNode() == m_id;
+
+		// Hover state
+		if (isHovered)
 			event->SetIsHovered(true);
 
-			if (leftMouseJustPressed) {
-				m_state = UIState::PRESSED;
-				event->SetIsClicked(true);
-				event->SetIsPressed(true);
-			}
-			else if (leftMousePressed) {
-				m_state = UIState::PRESSED;
-				event->SetIsPressed(true);
-				event->SetIsDragging(mouseDelta != Vector2::zero);
-			}
-			else {
-				m_state = UIState::HOVER;
-			}
+		// Press start
+		if (mouseJustDown && isHovered) {
+			ctx->CapturePressNode(m_id);
+			m_state = UIState::PRESSED;
+			event->SetIsPressed(true);
+			event->SetIsClicked(true);
+		}
+		
+		// Drag start
+		if (pressCaptured && mouseDown && mouseDelta != Vector2::zero && !dragCaptured) {
+			ctx->CaptureDragNode(m_id);
+		}
+
+		// Drag active
+		if (dragCaptured && mouseDown) {
+			event->SetIsDragging(true);
+		}
+
+		// Drag release
+		if (dragCaptured && mouseJustUp) {
+			ctx->ReleaseDragNode(m_id);
+		}
+
+		// Press state, press ends if mouse out of node
+		if (pressCaptured && isHovered) {
+			m_state = UIState::PRESSED;
+			event->SetIsPressed(true);
 		}
 		else {
-			m_state = UIState::NORMAL;
+			if (pressCaptured && !isHovered) {
+				ctx->ReleasePressNode(m_id);
+			}
+			m_state = isHovered ? UIState::HOVER : UIState::NORMAL;
 		}
-	
+
 		ProcessEvent(event);
 	}
 
