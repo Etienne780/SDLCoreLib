@@ -60,6 +60,47 @@ namespace SDLCore::Render {
 	*/
 	void Present();
 
+	/**
+	* @brief Sets a uniform render scale on the active SDL renderer.
+	* @param scaleX Horizontal scale factor.
+	* @param scaleY Vertical scale factor.
+	*
+	* Applies a global scaling transformation to all subsequent render operations.
+	* This affects both positions and sizes and is evaluated relative to the origin (0,0).
+	* Intended for world/camera scaling, not for DPI or UI layout scaling.
+	*/
+	void SetRenderScale(float scaleX, float scaleY);
+
+	/**
+	* @brief Sets a uniform render scale on both axes.
+	* @param scale Scale factor applied to both X and Y axes.
+	*
+	* Convenience overload that applies the same scaling factor to both axes.
+	* Equivalent to calling SetRenderScale(scale, scale).
+	*/
+	void SetRenderScale(float scale);
+
+	/**
+	* @brief Sets the render scale using a 2D vector.
+	* @param scale Vector containing horizontal (x) and vertical (y) scale factors.
+	*
+	* Convenience overload for vector-based scale input.
+	* Internally forwards to SetRenderScale(scale.x, scale.y).
+	*/
+	void SetRenderScale(const Vector2& scale);
+
+	/**
+	* @brief Retrieves the current render scale of the active SDL renderer.
+	* @return A Vector2 containing the horizontal (x) and vertical (y) render scale factors.
+	*
+	* Returns the global scaling factors currently applied to the renderer.
+	* The render scale affects all subsequent draw calls by scaling positions
+	* and sizes relative to the origin (0,0).
+	* This value reflects world/camera scaling and should not be interpreted
+	* as DPI or window content scale.
+	*/
+	Vector2 GetRenderScale();
+
 	#pragma region ViewportAndClipping
 
 	/**
@@ -197,52 +238,52 @@ namespace SDLCore::Render {
 	/**
 	* @brief Sets the current drawing color using RGBA values.
 	* 
-	* @param r Color components in the range 0–255.
-	* @param g Color components in the range 0–255.
-	* @param b Color components in the range 0–255.
-	* @param a Color components in the range 0–255.
+	* @param r Color components in the range 0â€“255.
+	* @param g Color components in the range 0â€“255.
+	* @param b Color components in the range 0â€“255.
+	* @param a Color components in the range 0â€“255.
 	*/
 	void SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
 	/**
 	* @brief Sets the current drawing color using RGB values.
 	* 
-	* @param r Color components in the range 0–255.
-	* @param g Color components in the range 0–255.
-	* @param b Color components in the range 0–255.
+	* @param r Color components in the range 0â€“255.
+	* @param g Color components in the range 0â€“255.
+	* @param b Color components in the range 0â€“255.
 	*/
 	void SetColor(Uint8 r, Uint8 g, Uint8 b);
 
 	/**
 	* @brief Sets the current drawing color using a Brightness value.
 	*
-	* @param brightness in the range 0–255.
-	* @param alpha components in the range 0–255.
+	* @param brightness in the range 0â€“255.
+	* @param alpha components in the range 0â€“255.
 	*/
 	void SetColor(Uint8 brightness, Uint8 alpha);
 
 	/**
 	* @brief Sets the current drawing color using a Brightness value.
-	* @param brightness in the range 0–255.
+	* @param brightness in the range 0â€“255.
 	*/
 	void SetColor(Uint8 brightness);
 
 	/**
 	* @brief Sets the current drawing color using RGBA values.
-	* @param rgba Color components in the range 0–255.
+	* @param rgba Color components in the range 0â€“255.
 	*/
 	void SetColor(const Vector4& rgba);
 
 	/**
 	* @brief Sets the current drawing color using RGB values.
-	* @param rgb Color components in the range 0–255.
+	* @param rgb Color components in the range 0â€“255.
 	* @param a Alpha component in the range 0-255.
 	*/
 	void SetColor(const Vector3& rgb, float a);
 
 	/**
 	* @brief Sets the current drawing color using RGB values.
-	* @param rgb Color components in the range 0–255.
+	* @param rgb Color components in the range 0â€“255.
 	*/
 	void SetColor(const Vector3& rgb);
 
@@ -515,9 +556,13 @@ namespace SDLCore::Render {
 	#pragma endregion
 
 	#pragma region Text
-	
+
 	/**
 	* @brief Draws a string of text at the specified position using the active font.
+	*
+	* For text that changes infrequently or remains constant, enabling caching
+	* via `CachText(true)` can improve performance by pre-rendering the text.
+	*
 	* @param text The text to draw.
 	* @param x X position in pixels.
 	* @param y Y position in pixels.
@@ -526,6 +571,10 @@ namespace SDLCore::Render {
 
 	/**
 	* @brief Draws a string of text at the specified position using the active font.
+	*
+	* For text that changes infrequently or remains constant, enabling caching
+	* via `CachText(true)` can improve performance by pre-rendering the text.
+	*
 	* @param text The text to draw.
 	* @param pos x, y position of the text in pixels
 	*/
@@ -533,6 +582,10 @@ namespace SDLCore::Render {
 
 	/**
 	* @brief Draws formatted text at the specified position using the active font.
+	*
+	* For text that changes infrequently or remains constant, enabling caching
+	* via `CachText(true)` can improve performance by pre-rendering the text.
+	*
 	* @param x X position in pixels.
 	* @param y Y position in pixels.
 	* @param args Variadic list of values inserted into the text format pattern ({} markers).
@@ -546,6 +599,10 @@ namespace SDLCore::Render {
 
 	/**
 	* @brief Draws formatted text at the specified position using the active font.
+	*
+	* For text that changes infrequently or remains constant, enabling caching
+	* via `CachText(true)` can improve performance by pre-rendering the text.
+	*
 	* @param pos x, y position of the text in pixels
 	* @param args Variadic list of values inserted into the text format pattern ({} markers).
 	* @note Each {} placeholder is replaced by the corresponding value. This approach is simple but
@@ -555,6 +612,43 @@ namespace SDLCore::Render {
 	void TextF(const Vector2& pos, Args&&... args) {
 		Text(Log::GetFormattedString(std::forward<Args>(args)...), pos.x, pos.y);
 	}
+
+	/**
+	* @brief Enables or disables text caching for the next render call.
+	*
+	* When enabled, the renderer will cache the text for faster repeated rendering.
+	* When disabled, text will be rendered normally without caching.
+	* Cached text that is not used for 600 frames will be automatically deleted.
+	*
+	* @param value True to enable caching, false to disable.
+	*/
+	void CachText(bool value);
+
+	/**
+	* @brief Clears the entire text cache.
+	*
+	* Frees all pre-rendered textures and removes all cached text entries.
+	*/
+	void ClearTextCache();
+
+	/**
+	* @brief Clears all cached text associated with a specific font.
+	*
+	* Frees pre-rendered textures for entries using the given font and removes them from the cache.
+	*
+	* @param font Pointer to the font whose cached texts should be cleared.
+	*/
+	void ClearTextCache(const Font* font);
+
+	/**
+	* @brief Returns the number of currently cached text entries.
+	*
+	* This counts all texts stored in the internal text cache, including
+	* those with pre-rendered textures.
+	*
+	* @return Number of cached text entries.
+	*/
+	size_t GetNumberOfCachedTexts();
 
 	/**
 	* @brief Resets all text-related rendering parameters to their default values.
@@ -786,21 +880,50 @@ namespace SDLCore::Render {
 
 	/**
 	* @brief Calculates the maximum width of a multi-line text block.
+	*
+	* This function first splits the input text into lines using the active
+	* clip width and line-breaking rules, then returns the widest line.
+	*
 	* @param text Text block to measure.
 	* @return Maximum line width in pixels.
 	*/
 	float GetTextBlockWidth(const std::string& text);
 
 	/**
+	* @brief Calculates the maximum width of a multi-line text block from precomputed lines.
+	*
+	* This overload assumes the text is already split into lines. Returns the
+	* width of the widest line.
+	*
+	* @param lines Vector of text lines.
+	* @return Maximum line width in pixels.
+	*/
+	float GetTextBlockWidth(const std::vector<std::string>& lines);
+
+	/**
 	* @brief Calculates the total height of a multi-line text block.
 	*
-	* Line height multipliers and maximum line limits are applied.
+	* The text is first split into lines using the active clip width and line-breaking rules.
+	* Line height multipliers and maximum line limits are applied. Optionally,
+	* descenders below the baseline can be ignored.
 	*
 	* @param text Text block to measure.
-	* @param ignoreBelowBaseline If true, descenders are excluded.
+	* @param ignoreBelowBaseline If true, descenders below the baseline are excluded from height.
 	* @return Total text block height in pixels.
 	*/
 	float GetTextBlockHeight(const std::string& text, bool ignoreBelowBaseline = false);
+
+	/**
+	* @brief Calculates the total height of a multi-line text block from precomputed lines.
+	*
+	* This overload uses pre-split lines. Line height multipliers and maximum line
+	* limits are applied. Optionally, descenders below the baseline can be ignored.
+	*
+	* @param lines Vector of text lines.
+	* @param ignoreBelowBaseline If true, descenders below the baseline are excluded from height.
+	* @return Total text block height in pixels.
+	*/
+	float GetTextBlockHeight(const std::vector<std::string>& lines, bool ignoreBelowBaseline = false);
 
 	/**
 	* @brief Calculates the height of a single rendered text line.

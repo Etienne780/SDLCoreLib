@@ -37,9 +37,12 @@ namespace SDLCore {
 		return *this;
 	}
 
-    GlypeMetrics* FontAsset::GetGlyphMetrics(char code) {
-        auto it = m_charToGlypeMetrics.find(code);
-        return (it == m_charToGlypeMetrics.end()) ? nullptr : &it->second;
+    GlyphMetrics* FontAsset::GetGlyphMetrics(uint32_t code) {
+        if (code < 256 && m_asciiPresent[code])
+            return &m_asciiGlyphs[code];
+
+        auto it = m_charToGlyphMetrics.find(code);
+        return (it == m_charToGlyphMetrics.end()) ? nullptr : &it->second;
     }
 
     SDL_Texture* FontAsset::GetGlyphAtlasTexture(WindowID winID) {
@@ -74,7 +77,11 @@ namespace SDLCore {
         lastUseTick = other.lastUseTick;
         ttfFont = other.ttfFont;
         glyphAtlasSurf = other.glyphAtlasSurf;
-        m_charToGlypeMetrics = std::move(other.m_charToGlypeMetrics);
+
+        m_charToGlyphMetrics = std::move(other.m_charToGlyphMetrics);
+        m_asciiGlyphs = std::move(other.m_asciiGlyphs);
+        m_asciiPresent = std::move(other.m_asciiPresent);
+
 
         m_winIDToGlyphAtlasTexture = std::move(other.m_winIDToGlyphAtlasTexture);
         auto* app = Application::GetInstance();
@@ -92,7 +99,9 @@ namespace SDLCore {
         other.lastUseTick = 0;
         other.ttfFont = nullptr;
         other.glyphAtlasSurf = nullptr;
-        other.m_charToGlypeMetrics.clear();
+        other.m_charToGlyphMetrics.clear();
+        other.m_asciiGlyphs.fill({});
+        other.m_asciiPresent.fill(false);
         other.m_winIDToGlyphAtlasTexture.clear();
         other.m_winIDToWinCallbackID.clear();
     }
@@ -103,7 +112,7 @@ namespace SDLCore {
 
         RemoveAllWindowCloseCB();
 
-        m_charToGlypeMetrics.clear();
+        m_charToGlyphMetrics.clear();
         m_winIDToGlyphAtlasTexture.clear();
 
 		if (glyphAtlasSurf)
@@ -135,10 +144,10 @@ namespace SDLCore {
         struct GlyphTemp {
             Uint32 code;
             SDL_Surface* surf;
-            GlypeMetrics metrics;
+            GlyphMetrics metrics;
 
             GlyphTemp(Uint32 _code, SDL_Surface* _surf, char _c) 
-                : code(_code), surf(_surf), metrics(GlypeMetrics{_c}) {
+                : code(_code), surf(_surf), metrics(GlyphMetrics{_c}) {
             }
 
             ~GlyphTemp() {
@@ -163,7 +172,7 @@ namespace SDLCore {
             }
 
             glyphs.emplace_back(c, glyphSurf, static_cast<char>(c));
-            GlypeMetrics& gm = glyphs.back().metrics;
+            GlyphMetrics& gm = glyphs.back().metrics;
 
             if (!TTF_GetGlyphMetrics(font, c, &gm.minX, &gm.maxX, &gm.minY, &gm.maxY, &gm.advance)) {
                 Log::Error("SDLCore::FontAsset::GenerateGlypeAtlas: Could not get metrics for '{}' (size '{}', font '{}'): {}",
@@ -210,7 +219,12 @@ namespace SDLCore {
             g.metrics.atlasX = dst.x;
             g.metrics.atlasY = dst.y;
 
-            m_charToGlypeMetrics[g.code] = g.metrics;
+            m_charToGlyphMetrics[g.code] = g.metrics;
+            if (g.code < 256) {
+                m_asciiGlyphs[g.code] = g.metrics;
+                m_asciiPresent[g.code] = true;
+            }
+
             cursorX += g.surf->w + spacingX;
 
             SDL_DestroySurface(g.surf);

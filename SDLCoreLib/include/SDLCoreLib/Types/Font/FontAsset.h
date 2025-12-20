@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <unordered_map>
 
 #include "Types/Types.h"
@@ -26,11 +27,15 @@ namespace SDLCore {
 		TTF_Font* ttfFont = nullptr;
 		SDL_Surface* glyphAtlasSurf = nullptr;
 
-		GlypeMetrics* GetGlyphMetrics(char code);
+		
+		GlyphMetrics* GetGlyphMetrics(uint32_t code);
 		SDL_Texture* GetGlyphAtlasTexture(WindowID winID);
 
 	private:
-		std::unordered_map<char, GlypeMetrics> m_charToGlypeMetrics;
+		std::array<GlyphMetrics, 256> m_asciiGlyphs;
+		std::array<bool, 256> m_asciiPresent;
+
+		std::unordered_map<Uint32, GlyphMetrics> m_charToGlyphMetrics;
 		std::unordered_map<WindowID, SDL_Texture*> m_winIDToGlyphAtlasTexture;
 		std::unordered_map<WindowID, WindowCallbackID> m_winIDToWinCallbackID;
 

@@ -3,7 +3,7 @@
 
 namespace SDLCore {
 
-    GlypeMetrics::GlypeMetrics(char ch)
+    GlyphMetrics::GlyphMetrics(char ch)
         : code(ch)
     {
         // Constructor intentionally empty.
@@ -11,31 +11,31 @@ namespace SDLCore {
         // and atlas generation.
     }
 
-    int GlypeMetrics::MetricsWidth() const {
+    int GlyphMetrics::MetricsWidth() const {
         return maxX - minX;
     }
 
-    int GlypeMetrics::MetricsHeight() const {
+    int GlyphMetrics::MetricsHeight() const {
         return maxY - minY;
     }
 
-    int GlypeMetrics::AscenderHeight() const {
+    int GlyphMetrics::AscenderHeight() const {
         return std::max(0, maxY);
     }
 
-    int GlypeMetrics::DescenderHeight() const {
+    int GlyphMetrics::DescenderHeight() const {
         return std::max(0, -minY);
     }
 
-    int GlypeMetrics::BearingX() const {
+    int GlyphMetrics::BearingX() const {
         return minX;
     }
 
-    int GlypeMetrics::BearingY() const {
+    int GlyphMetrics::BearingY() const {
         return maxY;
     }
 
-    bool GlypeMetrics::HasAtlasPlacement() const {
+    bool GlyphMetrics::HasAtlasPlacement() const {
         return atlasWidth > 0 && atlasHeight > 0;
     }
 
