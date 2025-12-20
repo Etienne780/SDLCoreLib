@@ -30,59 +30,110 @@ namespace SDLCore::UI {
 
         using namespace SDLCore::UI::Properties;
 
-        sizeUnitW = RegisterProperty("size_unit_w", "width size unit",
-            PropertyValue(static_cast<int>(UISizeUnit::PX)));
+        sizeUnitW = RegisterProperty(
+            "size_unit_w",
+            "Width size unit (PX, percentage, etc.)",
+            PropertyValue(static_cast<int>(UISizeUnit::PX))
+        );
 
-        sizeUnitH = RegisterProperty("size_unit_h", "height size unit",
-            PropertyValue(static_cast<int>(UISizeUnit::PX)));
+        sizeUnitH = RegisterProperty(
+            "size_unit_h",
+            "Height size unit (PX, percentage, etc.)",
+            PropertyValue(static_cast<int>(UISizeUnit::PX))
+        );
 
-        width = RegisterProperty("width", "width of an element", 
-            PropertyValue(0.0f));
+        width = RegisterProperty(
+            "width",
+            "Element width (interpreted using size_unit_w)",
+            PropertyValue(0.0f)
+        );
 
-        height = RegisterProperty("height", "height of an element", 
-            PropertyValue(0.0f));
+        height = RegisterProperty(
+            "height",
+            "Element height (interpreted using size_unit_h)",
+            PropertyValue(0.0f)
+        );
 
-        padding = RegisterProperty("padding", "inner spacing", 
-            PropertyValue(Vector4(0)));
+        padding = RegisterProperty(
+            "padding",
+            "Inner spacing (Top, Left, Bottom, Right)",
+            PropertyValue(Vector4(0))
+        );
 
-        margin = RegisterProperty("margin", "outer spacing", 
-            PropertyValue(Vector4(0)));
+        margin = RegisterProperty(
+            "margin",
+            "Outer spacing (Top, Left, Bottom, Right)",
+            PropertyValue(Vector4(0))
+        );
 
-        layoutDirection = RegisterProperty("layout_direction", "layout flow direction", 
-            PropertyValue(UILayoutDirection::ROW));
+        layoutDirection = RegisterProperty(
+            "layout_direction",
+            "Child layout flow direction (row / column)",
+            PropertyValue(UILayoutDirection::ROW)
+        );
 
-        alignHorizontal = RegisterProperty("align_horizontal", "horizontal alignment",
-            PropertyValue(UIAlignment::START));
+        alignHorizontal = RegisterProperty(
+            "align_horizontal",
+            "Horizontal alignment of child elements",
+            PropertyValue(UIAlignment::START)
+        );
 
-        alignVertical = RegisterProperty("align_vertical", "vertical alignment",
-            PropertyValue(UIAlignment::START));
+        alignVertical = RegisterProperty(
+            "align_vertical",
+            "Vertical alignment of child elements",
+            PropertyValue(UIAlignment::START)
+        );
 
+        // ============ not implemented ============
+        backgroundTexture = RegisterProperty(
+            "background_texture",
+            "Background texture identifier",
+            PropertyValue(UITextureID{})
+        );
 
-        // not implemented
-        backgroundTexture = RegisterProperty("background_texture", "background texture id",
-            PropertyValue(UITextureID{}));
+        backgroundColor = RegisterProperty(
+            "background_color",
+            "Background color (RGBA)",
+            PropertyValue(Vector4(255))
+        );
 
-        backgroundColor = RegisterProperty("background_color", "background color",
-            PropertyValue(Vector4(255)));
+        borderColor = RegisterProperty(
+            "border_color",
+            "Border color (RGBA)",
+            PropertyValue(Vector4(255))
+        );
 
-        borderColor = RegisterProperty("border_color", "border color",
-            PropertyValue(Vector4(255)));
+        borderThickness = RegisterProperty(
+            "border_thickness",
+            "Border thickness in pixels",
+            PropertyValue(0.0f)
+        );
 
-        borderThickness = RegisterProperty("border_thickness", "border thickness",
-            PropertyValue(0.0f));
-
-        borderThickness = RegisterProperty("border_thickness", "border thickness",
-            PropertyValue(true));
+        hitTestEnabled = RegisterProperty(
+            "hit_test_enabled",
+            "Enables or disables event hit-testing for this element",
+            PropertyValue(true)
+        );
 
         // ============ Text ============
-        font = RegisterProperty("font", "font id", 
-            PropertyValue(UIFontID{ 0 }));// default font
 
-        fontSize = RegisterProperty("font_size", "font size", 
-            PropertyValue(24.0f));
+        font = RegisterProperty(
+            "font",
+            "Font identifier used for text rendering",
+            PropertyValue(UIFontID{ 0 })
+        );
 
-        textColor = RegisterProperty("text_color", "text color", 
-            PropertyValue(Vector4(255)));
+        fontSize = RegisterProperty(
+            "font_size",
+            "Font size in pixels",
+            PropertyValue(24.0f)
+        );
+
+        textColor = RegisterProperty(
+            "text_color",
+            "Text color (RGBA)",
+            PropertyValue(Vector4(255))
+        );
 
         m_basePropertiesRegistered = true;
     }

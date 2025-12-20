@@ -166,12 +166,14 @@ namespace SDLCore::UI {
 
             if (child->GetChildHasEvent()) {
                 node->SetChildHasEvent(true);
+                node->ResetState();// resets the node to normal
                 return node->GetEventPtr();
             }
 
             if (UIEvent* childEvent = child->GetEventPtr()) {
                 if (childEvent->IsHover()) {
                     node->SetChildHasEvent(true);
+                    node->ResetState();// resets the node to normal
                     return node->GetEventPtr();
                 }
             }

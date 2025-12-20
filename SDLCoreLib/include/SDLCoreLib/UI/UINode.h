@@ -51,6 +51,11 @@ namespace SDLCore::UI {
         void ApplyStyle(UIContext* context);
 
         /*
+        * @brief Resets the state of the node to NORMAL
+        */
+        void ResetState();
+
+        /*
         * @brief checks if a child at a given position has the id, if true outNode is this child
         */
         bool ContainsChildAtPos(uint16_t position, uintptr_t id, UINode*& outNode);
@@ -114,6 +119,7 @@ namespace SDLCore::UI {
         UIEvent m_eventState;
         bool m_childHasEvent = false;
         bool m_isActive = false;
+        bool m_isHitTestEnabled = true;
 
         Vector2 m_position;
         Vector2 m_size;

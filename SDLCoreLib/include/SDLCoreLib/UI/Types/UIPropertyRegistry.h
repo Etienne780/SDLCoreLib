@@ -26,124 +26,175 @@ namespace SDLCore::UI {
 
 namespace SDLCore::UI::Properties {
 
-    // ================= Size / Layout =================
+	#pragma region ================= Size / Layout =================
 
-    /*
-    * @brief Width size unit (int, UISizeUnit)
-    *
-    * Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
-    */
-    inline UIPropertyID sizeUnitW;
+	/*
+	* @brief Width size unit (int, UISizeUnit)
+	*
+	* Defines how the width value is interpreted (pixels, percentage, etc.).
+	*
+	* Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
+	*/
+	inline UIPropertyID sizeUnitW;
 
-    /*
-    * @brief Height size unit (int, UISizeUnit)
-    *
-    * Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
-    */
-    inline UIPropertyID sizeUnitH;
+	/*
+	* @brief Height size unit (int, UISizeUnit)
+	*
+	* Defines how the height value is interpreted (pixels, percentage, etc.).
+	*
+	* Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
+	*/
+	inline UIPropertyID sizeUnitH;
 
-    /*
-    * @brief Width of an element (float)
-    *
-    * Usage: style.SetValue<float>(100.0f)
-    */
-    inline UIPropertyID width;
+	/*
+	* @brief Element width (float)
+	*
+	* Interpreted according to sizeUnitW.
+	*
+	* Usage: style.SetValue<float>(100.0f)
+	*/
+	inline UIPropertyID width;
 
-    /*
-    * @brief Height of an element (float)
-    *
-    * Usage: style.SetValue<float>(50.0f)
-    */
-    inline UIPropertyID height;
+	/*
+	* @brief Element height (float)
+	*
+	* Interpreted according to sizeUnitH.
+	*
+	* Usage: style.SetValue<float>(50.0f)
+	*/
+	inline UIPropertyID height;
 
-    /*
-    * @brief Inner spacing (Vector4)
-    *
-    * Usage: style.SetValue<Vector4>(Vector4(Top, Left, Bottom, Right))
-    */
-    inline UIPropertyID padding;
+	/*
+	* @brief Inner spacing (Vector4)
+	*
+	* Order: Top, Left, Bottom, Right.
+	*
+	* Usage: style.SetValue<Vector4>(Vector4(top, left, bottom, right))
+	*/
+	inline UIPropertyID padding;
 
-    /*
-    * @brief Outer spacing (Vector4)
-    *
-    * Usage: style.SetValue<Vector4>(Vector4(Top, Left, Bottom, Right))
-    */
-    inline UIPropertyID margin;
+	/*
+	* @brief Outer spacing (Vector4)
+	*
+	* Order: Top, Left, Bottom, Right.
+	*
+	* Usage: style.SetValue<Vector4>(Vector4(top, left, bottom, right))
+	*/
+	inline UIPropertyID margin;
 
-    /*
-    * @brief Layout flow direction for children (int, UILayoutDirection)
-    *
-    * Usage: style.SetValue<int>(static_cast<int>(UILayoutDirection::ROW))
-    */
-    inline UIPropertyID layoutDirection;
+	/*
+	* @brief Layout flow direction for child elements (int, UILayoutDirection)
+	*
+	* Controls how children are arranged inside this element.
+	*
+	* Usage: style.SetValue<int>(static_cast<int>(UILayoutDirection::ROW))
+	*/
+	inline UIPropertyID layoutDirection;
 
-    /*
-    * @brief Horizontal alignment of children (int, UIAlignment)
-    *
-    * Usage: style.SetValue<int>(static_cast<int>(UIAlignment::CENTER))
-    */
-    inline UIPropertyID alignHorizontal;
+	/*
+	* @brief Horizontal alignment of children (int, UIAlignment)
+	*
+	* Affects child placement on the X axis inside this element.
+	*
+	* Usage: style.SetValue<int>(static_cast<int>(UIAlignment::CENTER))
+	*/
+	inline UIPropertyID alignHorizontal;
 
-    /*
-    * @brief Vertical alignment of children (int, UIAlignment)
-    *
-    * Usage: style.SetValue<int>(static_cast<int>(UIAlignment::START))
-    */
-    inline UIPropertyID alignVertical;
+	/*
+	* @brief Vertical alignment of children (int, UIAlignment)
+	*
+	* Affects child placement on the Y axis inside this element.
+	*
+	* Usage: style.SetValue<int>(static_cast<int>(UIAlignment::START))
+	*/
+	inline UIPropertyID alignVertical;
 
+	#pragma endregion
 
-    // ================= Visuals =================
+	#pragma region ================= Visuals =======================
 
-    /*
-    * @brief Background texture ID (UITextureID)
-    *
-    * Usage: style.SetValue<UITextureID>(UITextureID{0})
-    */
-    inline UIPropertyID backgroundTexture;
+	/*
+	* @brief Background texture ID (UITextureID)
+	*
+	* References a texture used as element background.
+	*
+	* Usage: style.SetValue<UITextureID>(UITextureID{0})
+	*/
+	inline UIPropertyID backgroundTexture;
 
-    /*
-    * @brief Background color (Vector4)
-    *
-    * Usage: style.SetValue<Vector4>(Vector4(255))
-    */
-    inline UIPropertyID backgroundColor;
+	/*
+	* @brief Background color (Vector4)
+	*
+	* RGBA color used when no background texture is present.
+	*
+	* Usage: style.SetValue<Vector4>(Vector4(r, g, b, a))
+	*/
+	inline UIPropertyID backgroundColor;
 
-    /*
-    * @brief Border color (Vector4)
-    *
-    * Usage: style.SetValue<Vector4>(Vector4(255))
-    */
-    inline UIPropertyID borderColor;
+	/*
+	* @brief Border color (Vector4)
+	*
+	* RGBA color of the element border.
+	*
+	* Usage: style.SetValue<Vector4>(Vector4(r, g, b, a))
+	*/
+	inline UIPropertyID borderColor;
 
-    /*
-    * @brief Border thickness (float)
-    *
-    * Usage: style.SetValue<float>(2.0f)
-    */
-    inline UIPropertyID borderThickness;
+	/*
+	* @brief Border thickness (float)
+	*
+	* Thickness of the element border in pixels.
+	*
+	* Usage: style.SetValue<float>(2.0f)
+	*/
+	inline UIPropertyID borderThickness;
 
+	#pragma endregion
 
-    // ================= Text =================
+	#pragma region ================= Interaction ===================
 
-    /*
-    * @brief Font ID (UIFontID)
-    *
-    * Usage: style.SetValue<UIFontID>(UIFontID{0})
-    */
-    inline UIPropertyID font;
+	/*
+	* @brief Enables or disables event hit-testing (bool)
+	*
+	* If false, the element is rendered visually but does not receive
+	* hover, click, or any other interaction events.
+	* Events will pass through to elements below.
+	*
+	* Usage: style.SetValue<bool>(true)
+	*/
+	inline UIPropertyID hitTestEnabled;
 
-    /*
-    * @brief Font size (float)
-    *
-    * Usage: style.SetValue<float>(16.0f)
-    */
-    inline UIPropertyID fontSize;
+	#pragma endregion
 
-    /*
-    * @brief Text color (Vector4)
-    *
-    * Usage: style.SetValue<Vector4>(Vector4(255))
-    */
-    inline UIPropertyID textColor;
+	#pragma region ================= Text ==========================
+
+	/*
+	* @brief Font identifier (UIFontID)
+	*
+	* Defines which font is used for text rendering.
+	*
+	* Usage: style.SetValue<UIFontID>(UIFontID{0})
+	*/
+	inline UIPropertyID font;
+
+	/*
+	* @brief Font size (float)
+	*
+	* Text size in pixels.
+	*
+	* Usage: style.SetValue<float>(16.0f)
+	*/
+	inline UIPropertyID fontSize;
+
+	/*
+	* @brief Text color (Vector4)
+	*
+	* RGBA color of rendered text.
+	*
+	* Usage: style.SetValue<Vector4>(Vector4(r, g, b, a))
+	*/
+	inline UIPropertyID textColor;
+
+	#pragma endregion
 
 }
