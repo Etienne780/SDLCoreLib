@@ -5,11 +5,15 @@ App::App()
     : Application("Tetris", SDLCore::Version(1, 0)) {
 }
 
+SDLCore::UI::UINumberID spacing_xs;
 SDLCore::UI::UIContext* context = SDLCore::UI::CreateContext();
 void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
     win->SetIcon(tex);
+
+    using namespace SDLCore;
+    spacing_xs = UI::UIRegistry::RegisterNumber(16);
 }
 
 void App::OnUpdate() {
@@ -74,13 +78,13 @@ void App::OnUpdate() {
         ignor.SetValue(Prop::hitTestEnabled, false);
 
         UI::UIStyle margin;
-        margin.SetActiveState(UI::UIState::HOVER)
-            .SetValue(Prop::margin, Vector4(8));
+        margin.SetActiveState(UI::UIState::NORMAL)
+            .SetValue(Prop::margin, spacing_xs);
         margin.SetActiveState(UI::UIState::PRESSED)
             .SetValue(Prop::margin, Vector4(0, 16, 0, 5));
 
         UI::UIStyle padding;
-        padding.SetValue(Prop::padding, Vector4(16));
+        padding.SetValue(Prop::padding, Vector4(8));
 
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {

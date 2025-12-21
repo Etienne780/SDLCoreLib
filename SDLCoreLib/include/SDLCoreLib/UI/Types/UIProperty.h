@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "UI/Types/UITypes.h"
+#include "UI/Types/PropertyValue.h"
 
 namespace SDLCore::UI {
 

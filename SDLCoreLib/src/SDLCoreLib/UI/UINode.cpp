@@ -55,10 +55,6 @@ namespace SDLCore::UI {
 		int alignHorizontal = 0;
 		int alignVertical = 0;
 
-		m_layoutDir = UILayoutDirection::ROW;
-		m_horizontalAligment = UIAlignment::START;
-		m_verticalAligment = UIAlignment::START;
-
 		styleState.TryGetValue<int>(Properties::layoutDirection, layoutDir);
 		styleState.TryGetValue<int>(Properties::alignHorizontal, alignHorizontal);
 		styleState.TryGetValue<int>(Properties::alignVertical, alignVertical);
