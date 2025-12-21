@@ -1,6 +1,7 @@
 #include <vector>
 #include <shared_mutex>
 
+#include "UI/Types/UITypes.h"
 #include "UI/UIRegistry.h"
 
 namespace SDLCore::UI {
@@ -61,71 +62,71 @@ namespace SDLCore::UI {
 		return false;
 	}
 
-	UIColorID RegisterColor(const Vector4& color) {
+	UIColorID UIRegistry::RegisterColor(const Vector4& color) {
 		return RegisterValue<UIColorID>(color, g_colors, g_colorsMutex);
 	}
 
-	UIFontID RegisterFont(const SystemFilePath& path) {
+	UIFontID UIRegistry::RegisterFont(const SystemFilePath& path) {
 		return RegisterValue<UIFontID>(std::make_shared<Font>(path), g_fonts, g_fontsMutex);
 	}
 	
-	UITextureID RegisterTexture(const SystemFilePath& path) {
+	UITextureID UIRegistry::RegisterTexture(const SystemFilePath& path) {
 		Texture tex(path);
 		return RegisterValue<UITextureID>(std::move(tex), g_textures, g_texturesMutex);
 	}
 	
-	UINumberID RegisterNumber(int number) {
+	UINumberID UIRegistry::RegisterNumber(int number) {
 		return RegisterValue<UINumberID>(static_cast<double>(number), g_numbers, g_numbersMutex);
 	}
 	
-	UINumberID RegisterNumber(float number) {
+	UINumberID UIRegistry::RegisterNumber(float number) {
 		return RegisterValue<UINumberID>(static_cast<double>(number), g_numbers, g_numbersMutex);
 	}
 	
-	UINumberID RegisterNumber(double number) {
+	UINumberID UIRegistry::RegisterNumber(double number) {
 		return RegisterValue<UINumberID>(number, g_numbers, g_numbersMutex);
 	}
 
 
-	void SetRegisteredColor(UIColorID id, const Vector4& color) {
+	void UIRegistry::SetRegisteredColor(UIColorID id, const Vector4& color) {
 		SetRegisteredValue(id.value, color, g_colors, g_colorsMutex);
 	}
 
-	void SetRegisteredFont(UIFontID id, const SystemFilePath& path) {
+	void UIRegistry::SetRegisteredFont(UIFontID id, const SystemFilePath& path) {
 		SetRegisteredValue(id.value, std::make_shared<Font>(path), g_fonts, g_fontsMutex);
 	}
 
-	void SetRegisteredTexture(UITextureID id, const SystemFilePath& path) {
+	void UIRegistry::SetRegisteredTexture(UITextureID id, const SystemFilePath& path) {
 		Texture tex(path);
 		SetRegisteredValue(id.value, std::move(tex), g_textures, g_texturesMutex);
 	}
 
-	void SetRegisteredNumber(UINumberID id, int number) {
+	void UIRegistry::SetRegisteredNumber(UINumberID id, int number) {
 		SetRegisteredValue(id.value, static_cast<double>(number), g_numbers, g_numbersMutex);
 	}
 
-	void SetRegisteredNumber(UINumberID id, float number) {
+	void UIRegistry::SetRegisteredNumber(UINumberID id, float number) {
 		SetRegisteredValue(id.value, static_cast<double>(number), g_numbers, g_numbersMutex);
 	}
 
-	void SetRegisteredNumber(UINumberID id, double number) {
+	void UIRegistry::SetRegisteredNumber(UINumberID id, double number) {
 		SetRegisteredValue(id.value, number, g_numbers, g_numbersMutex);
 	}
 
 
-	bool TryGetRegisteredColor(UIColorID id, Vector4& outValue) {
+	bool UIRegistry::TryGetRegisteredColor(UIColorID id, Vector4& outValue) {
 		return TryGetRegisteredValue(id.value, g_colors, outValue, g_colorsMutex);
 	}
 
-	bool TryGetRegisteredFont(UIFontID id, std::shared_ptr<Font>& outValue) {
+	bool UIRegistry::TryGetRegisteredFont(UIFontID id, std::shared_ptr<Font>& outValue) {
 		return TryGetRegisteredValue(id.value, g_fonts, outValue, g_fontsMutex);
 	}
 
-	bool TryGetRegisteredTexture(UITextureID id, Texture& outValue) {
+	bool UIRegistry::TryGetRegisteredTexture(UITextureID id, Texture& outValue) {
 		return TryGetRegisteredValue(id.value, g_textures, outValue, g_texturesMutex);
 	}
 
-	bool TryGetRegisteredNumber(UINumberID id, int& outValue) {
+	bool UIRegistry::TryGetRegisteredNumber(UINumberID id, int& outValue) {
 		double tmp;
 		if (TryGetRegisteredValue(id.value, g_numbers, tmp, g_numbersMutex)) {
 			outValue = static_cast<int>(tmp);
@@ -134,7 +135,7 @@ namespace SDLCore::UI {
 		return false;
 	}
 
-	bool TryGetRegisteredNumber(UINumberID id, float& outValue) {
+	bool UIRegistry::TryGetRegisteredNumber(UINumberID id, float& outValue) {
 		double tmp;
 		if (TryGetRegisteredValue(id.value, g_numbers, tmp, g_numbersMutex)) {
 			outValue = static_cast<float>(tmp);
@@ -143,21 +144,69 @@ namespace SDLCore::UI {
 		return false;
 	}
 
-	bool TryGetRegisteredNumber(UINumberID id, double& outValue) {
+	bool UIRegistry::TryGetRegisteredNumber(UINumberID id, double& outValue) {
 		return TryGetRegisteredValue(id.value, g_numbers, outValue, g_numbersMutex);
 	}
 
 
-	bool TryGetRegisteredColor(UIColorID id, const Vector4*& outValue) {
+	bool UIRegistry::TryGetRegisteredColor(UIColorID id, const Vector4*& outValue) {
 		return TryGetRegisteredValuePtr(id.value, g_colors, outValue, g_colorsMutex);
 	}
 
-	bool TryGetRegisteredFont(UIFontID id, const std::shared_ptr<Font>*& outValue) {
+	bool UIRegistry::TryGetRegisteredFont(UIFontID id, const std::shared_ptr<Font>*& outValue) {
 		return TryGetRegisteredValuePtr(id.value, g_fonts, outValue, g_fontsMutex);
 	}
 
-	bool TryGetRegisteredTexture(UITextureID id, const Texture*& outValue) {
+	bool UIRegistry::TryGetRegisteredTexture(UITextureID id, const Texture*& outValue) {
 		return TryGetRegisteredValuePtr(id.value, g_textures, outValue, g_texturesMutex);
+	}
+
+	bool UIRegistry::TryResolve(UIColorID id, Vector4& out) {
+		if (Vector4 color; TryGetRegisteredColor(id, color)) {
+			out = color;
+			return true;
+		}
+		return false;
+	}
+
+	bool UIRegistry::TryResolve(UINumberID id, int& out) {
+		if (int value; TryGetRegisteredNumber(id, value)) {
+			out = value;
+			return true;
+		}
+		return false;
+	}
+
+	bool UIRegistry::TryResolve(UINumberID id, float& out) {
+		if (float value; TryGetRegisteredNumber(id, value)) {
+			out = value;
+			return true;
+		}
+		return false;
+	}
+
+	bool UIRegistry::TryResolve(UINumberID id, double& out) {
+		if (double value; TryGetRegisteredNumber(id, value)) {
+			out = value;
+			return true;
+		}
+		return false;
+	}
+
+	bool UIRegistry::TryResolve(UINumberID id, Vector2& out) {
+		if (float value; TryGetRegisteredNumber(id, value)) {
+			out = Vector2(value);
+			return true;
+		}
+		return false;
+	}
+
+	bool UIRegistry::TryResolve(UINumberID id, Vector4& out) {
+		if (float value; TryGetRegisteredNumber(id, value)) {
+			out = Vector4(value);
+			return true;
+		}
+		return false;
 	}
 
 }

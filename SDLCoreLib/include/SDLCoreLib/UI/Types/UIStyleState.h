@@ -2,6 +2,7 @@
 #include <CoreLib/Math/Vector2.h>
 
 #include "UI/Types/UITypes.h"
+#include "UI/Types/PropertyValue.h"
 
 namespace SDLCore::UI {
 
