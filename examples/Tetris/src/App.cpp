@@ -89,7 +89,7 @@ void App::OnUpdate() {
 
             UI::BeginFrame(UI::UIKey("2"), px200, green, margin, padding);
             {
-                UI::BeginFrame(UI::UIKey("child"), stretch);
+                UI::BeginFrame(UI::UIKey("child"), stretch, ignor);
                 UI::EndFrame();
             }
             UI::EndFrame();
