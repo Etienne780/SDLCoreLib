@@ -1,10 +1,8 @@
-#include "UI/Types/UITypes.h"
+#include "UI/Types/PropertyValue.h"
 
 namespace SDLCore::UI {
 
-	#pragma region PropertyValue
-
-	PropertyValue::PropertyValue() 
+	PropertyValue::PropertyValue()
 		: m_value(0), m_valueType(Type::INT) {
 	}
 
@@ -16,7 +14,7 @@ namespace SDLCore::UI {
 		: m_value(f), m_valueType(Type::FLOAT) {
 	}
 
-	PropertyValue::PropertyValue(double d) 
+	PropertyValue::PropertyValue(double d)
 		: m_value(d), m_valueType(Type::DOUBLE) {
 	}
 
@@ -102,16 +100,12 @@ namespace SDLCore::UI {
 		case Type::FLOAT:
 		case Type::DOUBLE:
 		case Type::NUMBER_ID:
+		case Type::VECTOR2:
+		case Type::VECTOR4:
 			return PropertyTypeClass::Numeric;
 
 		case Type::BOOL:
 			return PropertyTypeClass::BOOL;
-			
-		case Type::VECTOR2:
-			return PropertyTypeClass::Vector2;
-
-		case Type::VECTOR4:
-			return PropertyTypeClass::Vector4;
 
 		case Type::TEXTURE:
 		case Type::TEXTURE_ID:
@@ -228,7 +222,5 @@ namespace SDLCore::UI {
 		if (type == typeid(UINumberID)) return "UINumberID";
 		return "UNKOWN";
 	}
-
-	#pragma endregion
 
 }
