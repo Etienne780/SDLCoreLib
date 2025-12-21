@@ -15,7 +15,7 @@ namespace SDLCore::UI {
         ReleasePressNode(m_pressNodeID);
         m_pressNodeID = id;
     }
-
+    
     void UIContext::CaptureDragNode(uintptr_t id) {
         ReleaseDragNode(m_dragNodeID);
         m_dragNodeID = id;
@@ -105,14 +105,18 @@ namespace SDLCore::UI {
         }
 
         if (!m_nodeStack.empty()) {
-            UINode* node = m_nodeStack.back();
-            if (!node)
+            UINode* parentNode = m_nodeStack.back();
+            if (!parentNode)
                 return nullptr;
 
             int currentChildPos = (!m_lastChildPosition.empty()) ? 
                 static_cast<int>(m_lastChildPosition.back()) : 0;
 
-            FrameNode* frame = node->AddChild<FrameNode>(currentChildPos, id);
+#ifndef NDEBUG
+            LogDuplicateIDIfAny(id, parentNode);
+#endif
+
+            FrameNode* frame = parentNode->AddChild<FrameNode>(currentChildPos, id);
             m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastChildPosition.push_back(0);
@@ -120,10 +124,10 @@ namespace SDLCore::UI {
             return frame;
         }
         else {
-            UINode* node = m_lastNodeStack.back();
+            UINode* parentNode = m_lastNodeStack.back();
             uint16_t pos = (m_lastChildPosition.empty()) ? 0 : m_lastChildPosition.back();
             UINode* currentNode = nullptr;
-            if (node->ContainsChildAtPos(pos, id, currentNode)) {
+            if (parentNode->ContainsChildAtPos(pos, id, currentNode)) {
                 // element with id exists at position. set it as last position
                 m_lastNodeStack.push_back(currentNode);
                 m_lastChildPosition.push_back(0);
@@ -132,10 +136,14 @@ namespace SDLCore::UI {
             }
             else {
                 // remove pos and every entry after
-                node->RemoveChildrenFromIndex(pos);
+                parentNode->RemoveChildrenFromIndex(pos);
+
+#ifndef NDEBUG
+                LogDuplicateIDIfAny(id, parentNode);
+#endif
 
                 // element does not exist. create element and create stack
-                FrameNode* frame = node->AddChild<FrameNode>(static_cast<int>(pos), id);
+                FrameNode* frame = parentNode->AddChild<FrameNode>(static_cast<int>(pos), id);
                 m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
                 m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
                 m_lastChildPosition.push_back(0);
@@ -146,7 +154,6 @@ namespace SDLCore::UI {
         return nullptr;
     }
 
-#include "SDLCoreTime.h"
     UIEvent UIContext::EndFrame() {
         if (!m_lastChildPosition.empty() && !m_lastNodeStack.empty()) {
             UINode* node = m_lastNodeStack.back();
@@ -245,9 +252,8 @@ namespace SDLCore::UI {
     }
 
     void UIContext::RenderNodes(UIContext* ctx, UINode* rootNode) {
-
-        std::function<void(UINode*)> RenderRecursive; 
-        RenderRecursive = [&](UINode* root) {
+        std::function<void(UINode*)> renderRecursive; 
+        renderRecursive = [&](UINode* root) {
             root->CalculateLayout(ctx);
 
             if (!root || !root->IsActive()) 
@@ -255,12 +261,39 @@ namespace SDLCore::UI {
 
             root->RenderNode(ctx);
             for (const std::shared_ptr<UINode>& child : root->GetChildren()) {
-                RenderRecursive(child.get());
+                renderRecursive(child.get());
             }
         };
 
-        RenderRecursive(rootNode);
+        renderRecursive(rootNode);
     }
 
+    bool UIContext::IsIDUnique(uintptr_t idToCheck, UINode* parent) {
+        auto isUniqueInChilds = [&](UINode* pNode) -> bool {
+            for (const auto& child : pNode->GetChildren()) {
+                if (child->GetID() == idToCheck)
+                    return false;
+            }
+            return true;
+        };
+
+        if (!isUniqueInChilds(parent))
+            return false;
+
+        return true;
+    }
+
+#ifndef NDEBUG
+    void UIContext::LogDuplicateIDIfAny(uintptr_t id, UINode* parent) {
+        if (!IsIDUnique(id, parent)) {
+            const char* text = reinterpret_cast<const char*>(id);
+            Log::Warn(
+                "SDLCore::UI::UIContext::BeginFrame: id '{}' ({}) is not unique on this layer, will lead to problems!",
+                text,
+                id
+            );
+        }
+    }
+#endif
 
 }

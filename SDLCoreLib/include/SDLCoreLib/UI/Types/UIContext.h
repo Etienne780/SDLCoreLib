@@ -44,9 +44,21 @@ namespace SDLCore::UI {
 	private:
 		UIContext() = default;
 
+		std::deque<uint16_t> m_lastChildPosition;/*< is the position of the current child inside of last node*/
+		std::deque<UINode*> m_nodeStack;/*< is for creating nodes. if a node is this stack, than those nodes are currently created*/
+		std::deque<UINode*> m_lastNodeStack;
+		std::shared_ptr<FrameNode> m_rootNode = nullptr;
+		WindowID m_windowID;
+		float m_windowContentScale = 1.0f;
+		Vector2 m_windowSize{ 0.0f, 0.0f };
+
+		uintptr_t m_pressNodeID = 0;/*< Address can not be 0 */
+		uintptr_t m_dragNodeID = 0;/*< Address can not be 0 */
+		uintptr_t m_focusNodeID = 0;/*< Address can not be 0 */
+
 		FrameNode* BeginFrame(uintptr_t id);
 		UIEvent EndFrame();
-		
+
 		template<typename T, typename ...Args>
 		T* AddNode(uintptr_t id, Args&&... args) {
 			if (!m_rootNode) {
@@ -65,15 +77,19 @@ namespace SDLCore::UI {
 				currentNode->SetNodeActive();
 				return reinterpret_cast<T*>(currentNode);
 			}
-			
+
 			// remove pos and every entry after
 			parentNode->RemoveChildrenFromIndex(pos);
+
+#ifndef NDEBUG
+			LogDuplicateIDIfAny(id, parentNode);
+#endif
 
 			// element does not exist. create element and create stack
 			T* childNode = parentNode->AddChild<T>(static_cast<int>(pos), id, std::forward<Args>(args)...);
 			// no stack increas cause add node has no end func
 			return childNode;
-			
+
 		}
 
 		UINode* GetRootNode() const;
@@ -82,17 +98,16 @@ namespace SDLCore::UI {
 		static UIEvent* ProcessEvent(UIContext* ctx, UINode* node);
 		static void RenderNodes(UIContext* ctx, UINode* rootNode);
 
-		std::deque<uint16_t> m_lastChildPosition;/*< is the position of the current child inside of last node*/
-		std::deque<UINode*> m_nodeStack;/*< is for creating nodes. if a node is this stack, than those nodes are currently created*/
-		std::deque<UINode*> m_lastNodeStack;
-		std::shared_ptr<FrameNode> m_rootNode = nullptr;
-		WindowID m_windowID;
-		float m_windowContentScale = 1.0f;
-		Vector2 m_windowSize{ 0.0f, 0.0f };
-
-		uintptr_t m_pressNodeID = 0;/*< Address can not be 0 */
-		uintptr_t m_dragNodeID = 0;/*< Address can not be 0 */
-		uintptr_t m_focusNodeID = 0;/*< Address can not be 0 */
+		/**
+		* @brief Checks whether an ID is unique among siblings and all parent layers.
+		* @param idToCheck ID to validate
+		* @param parent Parent node defining the current layer
+		* @return true if the ID does not occur in any sibling or ancestor layer
+		*/
+		bool IsIDUnique(uintptr_t idToCheck, UINode* parent);
+#ifndef NDEBUG
+		void LogDuplicateIDIfAny(uintptr_t id, UINode* parent);
+#endif
 	};
 
 }
