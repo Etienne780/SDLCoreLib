@@ -42,63 +42,19 @@ void App::OnUpdate() {
             .SetValue(Prop::width, 100.0f)
             .SetValue(Prop::height, 100.0f);
 
-        UI::UIStyle red;
-        red.SetValue(Prop::backgroundColor, Vector4(255, 0, 0, 255));
-        red.SetActiveState(UI::UIState::HOVER)
-            .SetValue(Prop::backgroundColor, Vector4(155, 0, 0, 255))
-            .SetValue(Prop::width, 230.0f);
-
-        UI::UIStyle green;
-        green.SetValue(Prop::backgroundColor, Vector4(0, 255, 0, 255));
-        green.SetActiveState(UI::UIState::HOVER)
-            .SetValue(Prop::backgroundColor, Vector4(0, 155, 0, 255))
-            .SetValue(Prop::width, 230.0f);
-
-        UI::UIStyle blue;
-        blue.SetValue(Prop::backgroundColor, Vector4(0, 0, 255, 255));
-        blue.SetActiveState(UI::UIState::HOVER)
-            .SetValue(Prop::backgroundColor, Vector4(0, 0, 155, 255))
-            .SetValue(Prop::width, 230.0f);
-
-        UI::UIStyle yellow;
-        yellow.SetValue(Prop::backgroundColor, Vector4(255, 255, 0, 255));
-        yellow.SetActiveState(UI::UIState::HOVER)
-            .SetValue(Prop::backgroundColor, Vector4(155, 155, 0, 255))
-            .SetValue(Prop::width, 230.0f);
-
-        UI::UIStyle px200;
-        px200.SetValue(Prop::width, 150.0f).SetValue(Prop::height, 150.0f);
-
-        UI::UIStyle stretch;
-        stretch.SetValue(Prop::sizeUnitW, UI::UISizeUnit::PERCENTAGE)
-            .SetValue(Prop::sizeUnitH, UI::UISizeUnit::PERCENTAGE)
-            .SetValue(Prop::width, 100.0f).SetValue(Prop::height, 100.0f);
-
-        UI::UIStyle ignor;
-        ignor.SetValue(Prop::hitTestEnabled, false);
-
-        UI::UIStyle margin;
-        margin.SetActiveState(UI::UIState::NORMAL)
-            .SetValue(Prop::margin, spacing_xs);
-        margin.SetActiveState(UI::UIState::PRESSED)
-            .SetValue(Prop::margin, Vector4(0, 16, 0, 5));
-
-        UI::UIStyle padding;
-        padding.SetValue(Prop::padding, Vector4(8));
+        UI::UIStyle elementStyle("element");
+        elementStyle.SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
+            .SetValue(Prop::borderWidth, 12.0f)
+            .SetValue(Prop::borderColor, Vector4(255, 0, 0, 255));
+        elementStyle.SetActiveState(UI::UIState::HOVER)
+            .SetValue(Prop::borderInset, true);
 
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
-            UI::BeginFrame(UI::UIKey("1"), px200, blue);
-            UI::EndFrame();
-
-            UI::BeginFrame(UI::UIKey("2"), px200, green, margin, padding);
+            UI::BeginFrame(UI::UIKey("element"), elementStyle);
             {
-                UI::BeginFrame(UI::UIKey("child"), stretch, ignor);
-                UI::EndFrame();
-            }
-            UI::EndFrame();
 
-            UI::BeginFrame(UI::UIKey("3"), px200, yellow);
+            }
             UI::EndFrame();
         }
         UI::EndFrame();

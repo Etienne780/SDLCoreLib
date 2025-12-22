@@ -15,7 +15,17 @@ namespace SDLCore::UI {
 		if (!ctx)
 			return;
 
+		m_backgroundColor.Set(0);
 		styleState.TryGetValue<Vector4>(Properties::backgroundColor, m_backgroundColor);
+
+		m_borderColor.Set(0);
+		styleState.TryGetValue<Vector4>(Properties::borderColor, m_borderColor);
+
+		m_borderWidth = 0;
+		styleState.TryGetValue<float>(Properties::borderWidth, m_borderWidth);
+
+		m_innerBorder = false;
+		styleState.TryGetValue<bool>(Properties::borderInset, m_innerBorder);
 	}
 
 	void FrameNode::RenderNode(UIContext* ctx) const {
@@ -23,6 +33,13 @@ namespace SDLCore::UI {
 
 		RE::SetColor(m_backgroundColor);
 		RE::FillRect(this->GetPosition(), this->GetSize());
+
+		if (m_borderWidth > 0) {
+			RE::SetColor(m_borderColor);
+			RE::SetInnerStroke(m_innerBorder);
+			RE::SetStrokeWidth(m_borderWidth);
+			RE::Rect(this->GetPosition(), this->GetSize());
+		}
 	}
 
 	uint32_t FrameNode::GetType() {
