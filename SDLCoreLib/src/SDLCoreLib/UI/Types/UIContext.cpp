@@ -269,6 +269,12 @@ namespace SDLCore::UI {
     }
 
     bool UIContext::IsIDUnique(uintptr_t idToCheck, UINode* parent) {
+        if (!parent)
+            return true;
+
+        if (idToCheck == parent->GetID())
+            return false;
+
         auto isUniqueInChilds = [&](UINode* pNode) -> bool {
             for (const auto& child : pNode->GetChildren()) {
                 if (child->GetID() == idToCheck)
