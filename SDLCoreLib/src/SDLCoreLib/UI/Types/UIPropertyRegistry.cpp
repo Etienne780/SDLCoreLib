@@ -103,11 +103,18 @@ namespace SDLCore::UI {
             PropertyValue(Vector4(255))
         );
 
-        borderThickness = RegisterProperty(
-            "border_thickness",
-            "Border thickness in pixels",
+        borderWidth = RegisterProperty(
+            "border_width",
+            "Border width in pixels",
             PropertyValue(0.0f)
         );
+
+        borderInset = RegisterProperty(
+            "border_inset",
+            "Render border inside the element bounds",
+            PropertyValue(false)
+        );
+
 
         // ============ Other ============
 
