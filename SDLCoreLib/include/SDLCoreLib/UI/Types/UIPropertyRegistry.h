@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <unordered_map>
 #include "IDManager.h"
 #include "UI/Types/UIProperty.h"
@@ -141,13 +141,25 @@ namespace SDLCore::UI::Properties {
 	inline UIPropertyID borderColor;
 
 	/*
-	* @brief Border thickness (float)
+	* @brief Border width (float)
 	*
-	* Thickness of the element border in pixels.
+	* Width of the element border in pixels.
 	*
 	* Usage: style.SetValue<float>(2.0f)
 	*/
-	inline UIPropertyID borderThickness;
+	inline UIPropertyID borderWidth;
+
+	/*
+	* @brief Border inset mode (bool)
+	*
+	* Controls whether the border is rendered inside the element bounds.
+	*
+	* - true  -> Border is drawn inside the element
+	* - false -> Border is drawn outside the element
+	*
+	* Usage: style.SetValue<bool>(true)
+	*/
+	inline UIPropertyID borderInset;
 
 	#pragma endregion
 

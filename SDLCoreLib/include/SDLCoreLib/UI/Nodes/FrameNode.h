@@ -14,6 +14,8 @@ namespace SDLCore::UI {
 
         Vector4 m_backgroundColor;
         Vector4 m_borderColor;
+        float m_borderWidth = 0.0f;
+        bool m_innerBorder = false;
 
     private:
     };
