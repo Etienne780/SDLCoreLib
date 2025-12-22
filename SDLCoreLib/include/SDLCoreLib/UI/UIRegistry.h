@@ -9,7 +9,7 @@
 namespace SDLCore::UI {
 
 	// TODO: Consider adding additional overloads for RegisterFont/RegisterTexture
-	//       to support direct shared_ptr<Font> or Texture objects if needed.
+	//       to support direct Font or Texture objects if needed.
 	//       This allows more flexible usage without relying solely on file paths.
 
 	/*
