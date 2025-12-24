@@ -208,11 +208,11 @@ namespace SDLCore {
         Render(pos.x, pos.y, size.x, size.y, src);
     }
 
-    bool Texture::Render(const Vector4& trans, const FRect* src = nullptr) {
+    bool Texture::Render(const Vector4& trans, const FRect* src) {
         Render(trans.x, trans.y, trans.z, trans.w, src);
     }
 
-    bool Texture::Render(const FRect& trans, const FRect* src = nullptr) {
+    bool Texture::Render(const FRect& trans, const FRect* src) {
         Render(trans.x, trans.y, trans.w, trans.h, src);
     }
 
