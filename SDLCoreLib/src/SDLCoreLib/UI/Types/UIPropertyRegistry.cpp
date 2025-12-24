@@ -84,7 +84,6 @@ namespace SDLCore::UI {
             PropertyValue(UIAlignment::START)
         );
 
-        // ============ not implemented ============
         backgroundTexture = RegisterProperty(
             "background_texture",
             "Background texture identifier",
