@@ -71,8 +71,8 @@ namespace SDLCore::UI {
 
 		int sizeUnitW = 0;// 0 = PX
 		int sizeUnitH = 0;
-		styleState.TryGetValue<int>(Properties::sizeUnitW, sizeUnitW);
-		styleState.TryGetValue<int>(Properties::sizeUnitH, sizeUnitH);
+		styleState.TryGetValue<int>(Properties::widthUnit, sizeUnitW);
+		styleState.TryGetValue<int>(Properties::heightUnit, sizeUnitH);
 
 		m_padding.Set(0);
 		m_margin.Set(0);

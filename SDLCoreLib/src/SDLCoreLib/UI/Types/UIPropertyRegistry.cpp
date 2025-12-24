@@ -30,15 +30,15 @@ namespace SDLCore::UI {
 
         using namespace SDLCore::UI::Properties;
 
-        sizeUnitW = RegisterProperty(
-            "size_unit_w",
-            "Width size unit (PX, percentage, etc.)",
+        widthUnit = RegisterProperty(
+            "width_unit",
+            "Width unit (PX, percentage, etc.)",
             PropertyValue(static_cast<int>(UISizeUnit::PX))
         );
 
-        sizeUnitH = RegisterProperty(
-            "size_unit_h",
-            "Height size unit (PX, percentage, etc.)",
+        heightUnit = RegisterProperty(
+            "height_unit",
+            "Height unit (PX, percentage, etc.)",
             PropertyValue(static_cast<int>(UISizeUnit::PX))
         );
 
