@@ -41,6 +41,13 @@ namespace SDLCore {
             HORIZONTAL_AND_VERTICAL = SDL_FlipMode::SDL_FLIP_HORIZONTAL_AND_VERTICAL    /**< flip horizontally and vertically (not a diagonal flip) */
         };
 
+        enum class ScaleMode {
+            INVALID = SDL_ScaleMode::SDL_SCALEMODE_INVALID,
+            NEAREST = SDL_ScaleMode::SDL_SCALEMODE_NEAREST,     /**< nearest pixel sampling */
+            LINEAR = SDL_ScaleMode::SDL_SCALEMODE_LINEAR,       /**< linear filtering */
+            PIXELART = SDL_ScaleMode::SDL_SCALEMODE_PIXELART    /**< nearest pixel sampling with improved scaling for pixel art */
+        };
+
         /**
         * @brief Default constructor (creates an empty texture or a fallback texture if requested).
         * @param fallbackTexture If true, generates a simple fallback texture instead of leaving empty.
@@ -252,6 +259,26 @@ namespace SDLCore {
         Texture* SetFlip(Flip flip);
 
         /**
+        * @brief Sets the texture scaling mode used during rendering.
+        *
+        * Controls how the texture is sampled when it is rendered at a size
+        * different from its original resolution. This directly affects visual
+        * quality when upscaling or downscaling textures.
+        *
+        * @param scaleMode Scaling algorithm to use (default: ScaleMode::NEAREST).
+        * 
+        *        - NEAREST: Nearest-neighbor sampling, suitable for pixel art
+        * 
+        *        - LINEAR: Linear filtering, smooth but blurry for pixel art
+        * 
+        *        - PIXELART: SDL pixel-art optimized nearest scaling (SDL >= 2.26)
+        *
+        * @return Pointer to this Texture instance to allow method chaining.
+        */
+        Texture* SetScaleMode(ScaleMode scaleMode);
+
+
+        /**
         * @brief Get the current rotation angle for this texture.
         * @return Rotation in degrees.
         */
@@ -276,6 +303,13 @@ namespace SDLCore {
         Flip GetFlip() const;
 
         /**
+        * @brief Returns the current texture scale mode.
+        *
+        * @return Active ScaleMode used for texture scaling.
+        */
+        ScaleMode GetScaleMode() const;
+
+        /**
         * @brief Get the SDL_Texture associated with a specific window.
         * @param id WindowID to query.
         * @return Pointer to SDL_Texture for that window, or nullptr if none exists.
@@ -283,7 +317,9 @@ namespace SDLCore {
         SDL_Texture* GetSDLTexture(WindowID id);
 
         /**
-        * @brief get
+        * @brief Returns the surface wrapper of this texture.
+        *
+        * @return TextureSurface associated with this texture.
         */
         TextureSurface GetSurface() const;
 
@@ -296,6 +332,7 @@ namespace SDLCore {
         struct SDLTexture {
             SDL_Texture* tex = nullptr;
             Uint8 lastR = 0, lastG = 0, lastB = 0, lastA = 0;
+            SDL_ScaleMode scaleMode = SDL_ScaleMode::SDL_SCALEMODE_INVALID;
 
             SDLTexture() = default;
             SDLTexture(SDL_Texture* texture) : tex(texture) {
@@ -312,6 +349,7 @@ namespace SDLCore {
         Vector2 m_center { 0.0f, 0.0f };
         Vector4 m_colorTint { 255.0f, 255.0f, 255.0f, 255.0f };
         Flip m_flip = Flip::NONE;
+        ScaleMode m_scaleMode = ScaleMode::LINEAR;
         Type m_type = Type::STATIC;
 
         /**
