@@ -17,6 +17,9 @@ namespace SDLCore::UI {
         float m_borderWidth = 0.0f;
         bool m_innerBorder = false;
 
+        bool m_useTexture = false;
+        mutable Texture m_texture;
+
     private:
     };
 

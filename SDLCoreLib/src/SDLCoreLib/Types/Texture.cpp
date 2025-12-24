@@ -89,7 +89,6 @@ namespace SDLCore {
         m_center(other.m_center),
         m_colorTint(other.m_colorTint),
         m_flip(other.m_flip),
-        m_scaleMode(other.m_scaleMode),
         m_type(other.m_type) {
     }
 
@@ -105,7 +104,6 @@ namespace SDLCore {
         m_center = other.m_center;
         m_colorTint = other.m_colorTint;
         m_flip = other.m_flip;
-        m_scaleMode = other.m_scaleMode;
         m_type = other.m_type;
 
         return *this;
@@ -160,57 +158,36 @@ namespace SDLCore {
     bool Texture::Render(float x, float y, float w, float h, const FRect* src) {
         WindowID currentWinID = Render::GetActiveWindowID();
         SDLTexture* texture = GetTexture(currentWinID);
-        if (!texture || !texture->tex) {
-            SetErrorF("SDLCore::Texture::Render: SDL texture is nullptr for window '{}'", currentWinID);
+        if (!texture)
+            return false;
+
+        if (!texture->tex) {
+            SetErrorF("SDLCore::Texture::Render: SDL texture from texture of win '{}' is nullptr!", currentWinID);
             return false;
         }
+
+        // Use original texture size if w/h are unspecified
+        if (w <= 0) w = static_cast<float>(m_width);
+        if (h <= 0) h = static_cast<float>(m_height);
 
         SDL_Renderer* renderer = GetRenderer(currentWinID);
         if (!renderer) {
-            SetErrorF("SDLCore::Texture::Render: Renderer is nullptr for window '{}'", currentWinID);
+            SetErrorF("SDLCore::Texture::Render: Failed to render texture, renderer of window '{}' is null!", currentWinID);
             return false;
         }
 
-        if (w <= 0) 
-            w = static_cast<float>(m_width);
-        if (h <= 0) 
-            h = static_cast<float>(m_height);
+        if (texture->lastR != static_cast<Uint8>(m_colorTint.x) ||
+            texture->lastG != static_cast<Uint8>(m_colorTint.y) ||
+            texture->lastB != static_cast<Uint8>(m_colorTint.z) ||
+            texture->lastA != static_cast<Uint8>(m_colorTint.w)) {
 
-        bool result = true;
-        std::string errorBuffer;
+            texture->lastR = static_cast<Uint8>(m_colorTint.x);
+            texture->lastG = static_cast<Uint8>(m_colorTint.y);
+            texture->lastB = static_cast<Uint8>(m_colorTint.z);
+            texture->lastA = static_cast<Uint8>(m_colorTint.w);
 
-        Uint8 r = static_cast<Uint8>(m_colorTint.x);
-        Uint8 g = static_cast<Uint8>(m_colorTint.y);
-        Uint8 b = static_cast<Uint8>(m_colorTint.z);
-        Uint8 a = static_cast<Uint8>(m_colorTint.w);
-
-        if (texture->lastR != r || texture->lastG != g || texture->lastB != b || texture->lastA != a) {
-            texture->lastR = r;
-            texture->lastG = g;
-            texture->lastB = b;
-            texture->lastA = a;
-
-            if (!SDL_SetTextureColorMod(texture->tex, r, g, b) != 0) {
-                if (!errorBuffer.empty()) errorBuffer += ", ";
-                errorBuffer += FormatUtils::formatString("Failed to set color: {}", SDL_GetError());
-                result = false;
-            }
-
-            if (!SDL_SetTextureAlphaMod(texture->tex, a) != 0) {
-                if (!errorBuffer.empty()) errorBuffer += ", ";
-                errorBuffer += FormatUtils::formatString("Failed to set alpha: {}", SDL_GetError());
-                result = false;
-            }
-        }
-
-        SDL_ScaleMode scaleMode = static_cast<SDL_ScaleMode>(m_scaleMode);
-        if (texture->scaleMode != scaleMode) {
-            texture->scaleMode = scaleMode;
-            if (!SDL_SetTextureScaleMode(texture->tex, scaleMode) != 0) {
-                if (!errorBuffer.empty()) errorBuffer += ", ";
-                errorBuffer += FormatUtils::formatString("Failed to set scale mode: {}", SDL_GetError());
-                result = false;
-            }
+            SDL_SetTextureColorMod(texture->tex, texture->lastR, texture->lastG, texture->lastB);
+            SDL_SetTextureAlphaMod(texture->tex, texture->lastA);
         }
 
         SDL_FRect dst{ x, y, w, h };
@@ -221,16 +198,10 @@ namespace SDLCore {
 
         SDL_FlipMode sdlFlip = static_cast<SDL_FlipMode>(m_flip);
         if (!SDL_RenderTextureRotated(renderer, texture->tex, src, &dst, m_rotation, &center, sdlFlip)) {
-            if (!errorBuffer.empty()) errorBuffer += ", ";
-            errorBuffer += FormatUtils::formatString("Failed to render texture: {}", SDL_GetError());
-            result = false;
+            SetErrorF("SDLCore::Texture::Render: Failed to render texture: {}", SDL_GetError());
+            return false;
         }
-
-        if (!errorBuffer.empty()) {
-            SetErrorF("SDLCore::Texture::Render: {}", errorBuffer);
-        }
-
-        return result;
+        return true;
     }
 
     bool Texture::Render(const Vector2& pos, const Vector2& size, const FRect* src) {
@@ -316,11 +287,6 @@ namespace SDLCore {
         return this;
     }
 
-    Texture* Texture::SetScaleMode(ScaleMode scaleMode) {
-        m_scaleMode = scaleMode;
-        return this;
-    }
-
     float Texture::GetRotation() const { 
         return m_rotation; 
     }
@@ -335,10 +301,6 @@ namespace SDLCore {
 
     Texture::Flip Texture::GetFlip() const { 
         return m_flip; 
-    }
-
-    Texture::ScaleMode Texture::GetScaleMode() const {
-        return m_scaleMode;
     }
 
     SDL_Texture* Texture::GetSDLTexture(WindowID id) {
@@ -364,9 +326,6 @@ namespace SDLCore {
 
         if (!(ignoreMask & TextureParams::FLIP))
             m_flip = Flip::NONE;
-
-        if (!(ignoreMask & TextureParams::SCALE_MODE))
-            m_scaleMode = ScaleMode::LINEAR;
 
         if (!(ignoreMask & TextureParams::TYPE))
             m_type = Type::STATIC;
@@ -443,7 +402,6 @@ namespace SDLCore {
         m_center = other.m_center;
         m_colorTint = other.m_colorTint;
         m_flip = other.m_flip;
-        m_scaleMode = other.m_scaleMode;
         m_type = other.m_type;
 
         other.m_width = 0;
@@ -452,14 +410,12 @@ namespace SDLCore {
         other.m_center.Set(0.0f, 0.0f);
         other.m_colorTint.Set(255.0f, 255.0f, 255.0f, 255.0f);
         other.m_flip = Flip::NONE;
-        other.m_scaleMode = ScaleMode::INVALID;
         other.m_type = Type::STATIC;
         other.m_textures.clear();
     }
 
     void Texture::LoadFallback() {
         SDL_Surface* surface = GenerateFallbackSurface();
-        m_scaleMode = ScaleMode::PIXELART;
         m_textureSurface = TextureSurface(surface);
         m_width = surface->w;
         m_height = surface->h;
