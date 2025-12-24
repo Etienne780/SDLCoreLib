@@ -125,6 +125,31 @@ namespace SDLCore {
         bool Render(float x, float y, float w = 0, float h = 0, const FRect* src = nullptr);
 
         /**
+        * @brief Renders this texture in the active window.
+        * @param pos Destination x/y-position.
+        * @param size Destination w/h (defaults to texture w/h if 0).
+        * @param src Optional source rectangle (nullptr = full texture).
+        * @return true on success. Call SDLCore::GetError() for more information
+        */
+        bool Render(const Vector2& pos, const Vector2& size = Vector2{ 0, 0 }, const FRect* src = nullptr);
+
+        /**
+        * @brief Renders this texture in the active window.
+        * @param transform Is in (x, y, z, w), defaults to texture size z/w if 0
+        * @param src Optional source rectangle (nullptr = full texture).
+        * @return true on success. Call SDLCore::GetError() for more information
+        */
+        bool Render(const Vector4& transform, const FRect* src = nullptr);
+
+        /**
+        * @brief Renders this texture in the active window.
+        * @param transform Is in (x, y, w, h), defaults to texture size w/h if 0
+        * @param src Optional source rectangle (nullptr = full texture).
+        * @return true on success. Call SDLCore::GetError() for more information
+        */
+        bool Render(const FRect& transform, const FRect* src = nullptr);
+
+        /**
         * @brief Updates the pixel data of a dynamic texture.
         * @param windowID The window whose texture should be updated.
         * @param pixels Pointer to pixel data.
