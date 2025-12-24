@@ -89,6 +89,7 @@ namespace SDLCore {
         m_center(other.m_center),
         m_colorTint(other.m_colorTint),
         m_flip(other.m_flip),
+        m_scaleMode(other.m_scaleMode),
         m_type(other.m_type) {
     }
 
@@ -104,6 +105,7 @@ namespace SDLCore {
         m_center = other.m_center;
         m_colorTint = other.m_colorTint;
         m_flip = other.m_flip;
+        m_scaleMode = other.m_scaleMode;
         m_type = other.m_type;
 
         return *this;
@@ -363,6 +365,9 @@ namespace SDLCore {
         if (!(ignoreMask & TextureParams::FLIP))
             m_flip = Flip::NONE;
 
+        if (!(ignoreMask & TextureParams::SCALE_MODE))
+            m_scaleMode = ScaleMode::LINEAR;
+
         if (!(ignoreMask & TextureParams::TYPE))
             m_type = Type::STATIC;
 
@@ -438,6 +443,7 @@ namespace SDLCore {
         m_center = other.m_center;
         m_colorTint = other.m_colorTint;
         m_flip = other.m_flip;
+        m_scaleMode = other.m_scaleMode;
         m_type = other.m_type;
 
         other.m_width = 0;
@@ -446,6 +452,7 @@ namespace SDLCore {
         other.m_center.Set(0.0f, 0.0f);
         other.m_colorTint.Set(255.0f, 255.0f, 255.0f, 255.0f);
         other.m_flip = Flip::NONE;
+        other.m_scaleMode = ScaleMode::INVALID;
         other.m_type = Type::STATIC;
         other.m_textures.clear();
     }

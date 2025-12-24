@@ -323,8 +323,18 @@ namespace SDLCore {
         */
         TextureSurface GetSurface() const;
 
-        /*
-        * @param Resets all params to
+        /**
+        * @brief Resets the texture's parameters to their default values.
+        *
+        * All configurable properties of the texture (rotation, center, color tint,
+        * flip, scale mode, type) are reset unless explicitly excluded by the ignoreMask.
+        *
+        * @param ignoreMask Bitmask of TextureParams specifying which properties
+        *                   should NOT be reset (default: TextureParams::NONE).
+        *                   Multiple flags can be combined using bitwise OR.
+        *                   Example: TextureParams::ROTATION | TextureParams::CENTER
+        *
+        * @return Pointer to this Texture to allow method chaining.
         */
         Texture* Texture::Reset(TextureParams ignoreMask = TextureParams::NONE);
         
