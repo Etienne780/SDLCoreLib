@@ -30,7 +30,7 @@ namespace SDLCore::UI {
 		: m_value(vec), m_valueType(Type::VECTOR4) {
 	}
 
-	PropertyValue::PropertyValue(const Texture& tex)
+	PropertyValue::PropertyValue(std::shared_ptr<Texture>  tex)
 		: m_value(tex), m_valueType(Type::TEXTURE) {
 	}
 
@@ -160,7 +160,7 @@ namespace SDLCore::UI {
 		return *this;
 	}
 
-	PropertyValue& PropertyValue::SetValue(const Texture& tex) {
+	PropertyValue& PropertyValue::SetValue(std::shared_ptr<Texture> tex) {
 		m_valueType = Type::TEXTURE;
 		m_value = tex;
 		SetIsSet(true);

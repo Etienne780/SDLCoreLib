@@ -9,7 +9,7 @@
 template<typename T>
 struct IsUITextureTarget : std::false_type {};
 
-template<> struct IsUITextureTarget<SDLCore::Texture> : std::true_type {};
+template<> struct IsUITextureTarget<std::shared_ptr<SDLCore::Texture>> : std::true_type {};
 
 template<typename T>
 inline constexpr bool IsUITextureTarget_v = IsUITextureTarget<T>::value;
@@ -30,7 +30,7 @@ namespace SDLCore::UI {
 	
 	class PropertyValue {
 	public:
-		using ValueVariant = std::variant<int, float, double, bool, Vector2, Vector4, Texture, std::shared_ptr<Font>, UIColorID, UIFontID, UITextureID, UINumberID>;
+		using ValueVariant = std::variant<int, float, double, bool, Vector2, Vector4, std::shared_ptr<Texture>, std::shared_ptr<Font>, UIColorID, UIFontID, UITextureID, UINumberID>;
 		enum class Type {
 			INT, FLOAT, DOUBLE, BOOL, VECTOR2, VECTOR4, TEXTURE, FONT, COLOR_ID, FONT_ID, TEXTURE_ID, NUMBER_ID
 		};
@@ -42,7 +42,7 @@ namespace SDLCore::UI {
 		PropertyValue(bool b);
 		PropertyValue(const Vector2& vec);
 		PropertyValue(const Vector4& vec);
-		PropertyValue(const Texture& tex);
+		PropertyValue(std::shared_ptr<Texture> tex);
 		PropertyValue(std::shared_ptr<Font> font);
 		PropertyValue(UIColorID id);
 		PropertyValue(UIFontID id);
@@ -66,7 +66,7 @@ namespace SDLCore::UI {
 		PropertyValue& SetValue(double d);
 		PropertyValue& SetValue(const Vector2& vec);
 		PropertyValue& SetValue(const Vector4& vec);
-		PropertyValue& SetValue(const Texture& tex);
+		PropertyValue& SetValue(std::shared_ptr<Texture> tex);
 		PropertyValue& SetValue(std::shared_ptr<Font> font);
 		PropertyValue& SetValue(UIColorID id);
 		PropertyValue& SetValue(UIFontID id);
