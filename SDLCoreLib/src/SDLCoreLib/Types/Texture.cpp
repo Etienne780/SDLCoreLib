@@ -188,13 +188,13 @@ namespace SDLCore {
             texture->lastB = b;
             texture->lastA = a;
 
-            if (SDL_SetTextureColorMod(texture->tex, r, g, b) != 0) {
+            if (!SDL_SetTextureColorMod(texture->tex, r, g, b) != 0) {
                 if (!errorBuffer.empty()) errorBuffer += ", ";
                 errorBuffer += FormatUtils::formatString("Failed to set color: {}", SDL_GetError());
                 result = false;
             }
 
-            if (SDL_SetTextureAlphaMod(texture->tex, a) != 0) {
+            if (!SDL_SetTextureAlphaMod(texture->tex, a) != 0) {
                 if (!errorBuffer.empty()) errorBuffer += ", ";
                 errorBuffer += FormatUtils::formatString("Failed to set alpha: {}", SDL_GetError());
                 result = false;
@@ -204,7 +204,7 @@ namespace SDLCore {
         SDL_ScaleMode scaleMode = static_cast<SDL_ScaleMode>(m_scaleMode);
         if (texture->scaleMode != scaleMode) {
             texture->scaleMode = scaleMode;
-            if (SDL_SetTextureScaleMode(texture->tex, scaleMode) != 0) {
+            if (!SDL_SetTextureScaleMode(texture->tex, scaleMode) != 0) {
                 if (!errorBuffer.empty()) errorBuffer += ", ";
                 errorBuffer += FormatUtils::formatString("Failed to set scale mode: {}", SDL_GetError());
                 result = false;
