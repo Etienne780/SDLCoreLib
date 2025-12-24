@@ -35,7 +35,7 @@ namespace SDLCore::UI::Properties {
 	*
 	* Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
 	*/
-	inline UIPropertyID sizeUnitW;
+	inline UIPropertyID widthUnit;
 
 	/*
 	* @brief Height size unit (int, UISizeUnit)
@@ -44,7 +44,7 @@ namespace SDLCore::UI::Properties {
 	*
 	* Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
 	*/
-	inline UIPropertyID sizeUnitH;
+	inline UIPropertyID heightUnit;
 
 	/*
 	* @brief Element width (float)
