@@ -204,6 +204,18 @@ namespace SDLCore {
         return true;
     }
 
+    bool Texture::Render(const Vector2& pos, const Vector2& size, const FRect* src) {
+        Render(pos.x, pos.y, size.x, size.y, src);
+    }
+
+    bool Texture::Render(const Vector4& trans, const FRect* src = nullptr) {
+        Render(trans.x, trans.y, trans.z, trans.w, src);
+    }
+
+    bool Texture::Render(const FRect& trans, const FRect* src = nullptr) {
+        Render(trans.x, trans.y, trans.w, trans.h, src);
+    }
+
     bool Texture::Update(WindowID windowID, const void* pixels, int pitch, Rect* rect) {
         if (m_type != Type::DYNAMIC)
             return false;
