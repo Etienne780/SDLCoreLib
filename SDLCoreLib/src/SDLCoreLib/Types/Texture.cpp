@@ -89,6 +89,7 @@ namespace SDLCore {
         m_center(other.m_center),
         m_colorTint(other.m_colorTint),
         m_flip(other.m_flip),
+        m_scaleMode(other.m_scaleMode),
         m_type(other.m_type) {
     }
 
@@ -104,6 +105,7 @@ namespace SDLCore {
         m_center = other.m_center;
         m_colorTint = other.m_colorTint;
         m_flip = other.m_flip;
+        m_scaleMode = other.m_scaleMode;
         m_type = other.m_type;
 
         return *this;
@@ -188,13 +190,13 @@ namespace SDLCore {
             texture->lastB = b;
             texture->lastA = a;
 
-            if (SDL_SetTextureColorMod(texture->tex, r, g, b) != 0) {
+            if (!SDL_SetTextureColorMod(texture->tex, r, g, b) != 0) {
                 if (!errorBuffer.empty()) errorBuffer += ", ";
                 errorBuffer += FormatUtils::formatString("Failed to set color: {}", SDL_GetError());
                 result = false;
             }
 
-            if (SDL_SetTextureAlphaMod(texture->tex, a) != 0) {
+            if (!SDL_SetTextureAlphaMod(texture->tex, a) != 0) {
                 if (!errorBuffer.empty()) errorBuffer += ", ";
                 errorBuffer += FormatUtils::formatString("Failed to set alpha: {}", SDL_GetError());
                 result = false;
@@ -204,7 +206,7 @@ namespace SDLCore {
         SDL_ScaleMode scaleMode = static_cast<SDL_ScaleMode>(m_scaleMode);
         if (texture->scaleMode != scaleMode) {
             texture->scaleMode = scaleMode;
-            if (SDL_SetTextureScaleMode(texture->tex, scaleMode) != 0) {
+            if (!SDL_SetTextureScaleMode(texture->tex, scaleMode) != 0) {
                 if (!errorBuffer.empty()) errorBuffer += ", ";
                 errorBuffer += FormatUtils::formatString("Failed to set scale mode: {}", SDL_GetError());
                 result = false;
@@ -363,6 +365,9 @@ namespace SDLCore {
         if (!(ignoreMask & TextureParams::FLIP))
             m_flip = Flip::NONE;
 
+        if (!(ignoreMask & TextureParams::SCALE_MODE))
+            m_scaleMode = ScaleMode::LINEAR;
+
         if (!(ignoreMask & TextureParams::TYPE))
             m_type = Type::STATIC;
 
@@ -438,6 +443,7 @@ namespace SDLCore {
         m_center = other.m_center;
         m_colorTint = other.m_colorTint;
         m_flip = other.m_flip;
+        m_scaleMode = other.m_scaleMode;
         m_type = other.m_type;
 
         other.m_width = 0;
@@ -446,6 +452,7 @@ namespace SDLCore {
         other.m_center.Set(0.0f, 0.0f);
         other.m_colorTint.Set(255.0f, 255.0f, 255.0f, 255.0f);
         other.m_flip = Flip::NONE;
+        other.m_scaleMode = ScaleMode::INVALID;
         other.m_type = Type::STATIC;
         other.m_textures.clear();
     }

@@ -120,12 +120,13 @@ namespace SDLCore {
 	using TextureID = SDLCoreID<TextureTag>;
 
 	enum class TextureParams : int {
-		NONE = 0,
-		ROTATION = 1 << 0,
-		CENTER = 1 << 1,
-		COLOR_TINT = 1 << 2,
-		FLIP = 1 << 3,
-		TYPE = 1 << 4
+		NONE		= 0,
+		ROTATION	= 1 << 0,
+		CENTER		= 1 << 1,
+		COLOR_TINT	= 1 << 2,
+		FLIP		= 1 << 3,
+		SCALE_MODE	= 1 << 4,
+		TYPE		= 1 << 5
 	};
 
 	TextureParams operator|(TextureParams a, TextureParams b);
