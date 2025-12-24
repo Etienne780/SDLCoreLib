@@ -27,16 +27,16 @@ namespace SDLCore::UI {
 		m_innerBorder = false;
 		styleState.TryGetValue<bool>(Properties::borderInset, m_innerBorder);
 
-		m_useTexture = styleState.TryGetValue<Texture>(Properties::backgroundTexture, m_texture);
+		m_useTexture = styleState.TryGetValue<std::shared_ptr<Texture>>(Properties::backgroundTexture, m_texture);
 	}
 
 	void FrameNode::RenderNode(UIContext* ctx) const {
 		namespace RE = SDLCore::Render;
-		if (m_useTexture) {
+		if (m_useTexture && m_texture) {
 			const Vector2& size = this->GetSize();
 			if (size != Vector2::zero) {
-				m_texture.SetColorTint(m_backgroundColor);
-				m_texture.Render(this->GetPosition(), size);
+				m_texture->SetColorTint(m_backgroundColor);
+				m_texture->Render(this->GetPosition(), size);
 			}
 		}
 		else {

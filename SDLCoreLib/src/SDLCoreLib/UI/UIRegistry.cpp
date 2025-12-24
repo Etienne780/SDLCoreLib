@@ -1,5 +1,6 @@
 #include <vector>
 #include <shared_mutex>
+#include <memory>
 
 #include "UI/Types/UITypes.h"
 #include "UI/UIRegistry.h"
@@ -8,7 +9,7 @@ namespace SDLCore::UI {
 
     static std::vector<Vector4> g_colors;
     static std::vector<std::shared_ptr<Font>> g_fonts;
-    static std::vector<Texture> g_textures;
+	static std::vector<std::shared_ptr<Texture>> g_textures;
     static std::vector<double> g_numbers; // alle Zahlen als double speichern
 
 	static std::shared_mutex g_colorsMutex;
@@ -71,8 +72,8 @@ namespace SDLCore::UI {
 	}
 	
 	UITextureID UIRegistry::RegisterTexture(const SystemFilePath& path) {
-		Texture tex(path);
-		return RegisterValue<UITextureID>(std::move(tex), g_textures, g_texturesMutex);
+		auto tex = std::make_shared<Texture>(path);
+		return RegisterValue<UITextureID>(tex, g_textures, g_texturesMutex);
 	}
 	
 	UINumberID UIRegistry::RegisterNumber(int number) {
@@ -97,8 +98,8 @@ namespace SDLCore::UI {
 	}
 
 	void UIRegistry::SetRegisteredTexture(UITextureID id, const SystemFilePath& path) {
-		Texture tex(path);
-		SetRegisteredValue(id.value, std::move(tex), g_textures, g_texturesMutex);
+		auto tex = std::make_shared<Texture>(path);
+		SetRegisteredValue(id.value, tex, g_textures, g_texturesMutex);
 	}
 
 	void UIRegistry::SetRegisteredNumber(UINumberID id, int number) {
@@ -122,7 +123,7 @@ namespace SDLCore::UI {
 		return TryGetRegisteredValue(id.value, g_fonts, outValue, g_fontsMutex);
 	}
 
-	bool UIRegistry::TryGetRegisteredTexture(UITextureID id, Texture& outValue) {
+	bool UIRegistry::TryGetRegisteredTexture(UITextureID id, std::shared_ptr<Texture>& outValue) {
 		return TryGetRegisteredValue(id.value, g_textures, outValue, g_texturesMutex);
 	}
 
@@ -153,14 +154,6 @@ namespace SDLCore::UI {
 		return TryGetRegisteredValuePtr(id.value, g_colors, outValue, g_colorsMutex);
 	}
 
-	bool UIRegistry::TryGetRegisteredFont(UIFontID id, const std::shared_ptr<Font>*& outValue) {
-		return TryGetRegisteredValuePtr(id.value, g_fonts, outValue, g_fontsMutex);
-	}
-
-	bool UIRegistry::TryGetRegisteredTexture(UITextureID id, const Texture*& outValue) {
-		return TryGetRegisteredValuePtr(id.value, g_textures, outValue, g_texturesMutex);
-	}
-
 	bool UIRegistry::TryResolve(UIColorID id, Vector4& out) {
 		if (Vector4 color; TryGetRegisteredColor(id, color)) {
 			out = color;
@@ -169,7 +162,7 @@ namespace SDLCore::UI {
 		return false;
 	}
 
-	bool UIRegistry::TryResolve(UITextureID id, Texture& out) {
+	bool UIRegistry::TryResolve(UITextureID id, std::shared_ptr<Texture>& out) {
 		return TryGetRegisteredTexture(id, out);
 	}
 
