@@ -7,16 +7,24 @@
 #include "UI/UIRegistry.h"
 
 template<typename T>
-struct IsUINumberTarget : std::false_type {};
+struct IsUITextureTarget : std::false_type {};
+
+template<> struct IsUITextureTarget<SDLCore::Texture> : std::true_type {};
 
 template<typename T>
-inline constexpr bool IsUINumberTarget_v = IsUINumberTarget<T>::value;
+inline constexpr bool IsUITextureTarget_v = IsUITextureTarget<T>::value;
+
+template<typename T>
+struct IsUINumberTarget : std::false_type {};
 
 template<> struct IsUINumberTarget<int> : std::true_type {};
 template<> struct IsUINumberTarget<float> : std::true_type {};
 template<> struct IsUINumberTarget<double> : std::true_type {};
 template<> struct IsUINumberTarget<Vector2> : std::true_type {};
 template<> struct IsUINumberTarget<Vector4> : std::true_type {};
+
+template<typename T>
+inline constexpr bool IsUINumberTarget_v = IsUINumberTarget<T>::value;
 
 namespace SDLCore::UI {
 	
@@ -93,6 +101,13 @@ namespace SDLCore::UI {
 				if (std::holds_alternative<UINumberID>(m_value)) {
 					return UIRegistry::TryResolve(
 						std::get<UINumberID>(m_value), out);
+				}
+			}
+
+			if constexpr (IsUITextureTarget_v<T>) {
+				if (std::holds_alternative<UITextureID>(m_value)) {
+					return UIRegistry::TryResolve(
+						std::get<UITextureID>(m_value), out);
 				}
 			}
 

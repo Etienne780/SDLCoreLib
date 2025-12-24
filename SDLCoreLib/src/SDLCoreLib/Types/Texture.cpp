@@ -157,7 +157,7 @@ namespace SDLCore {
 
     bool Texture::Render(float x, float y, float w, float h, const FRect* src) {
         WindowID currentWinID = Render::GetActiveWindowID();
-        SDLTexture* texture = GetTexture(currentWinID);;
+        SDLTexture* texture = GetTexture(currentWinID);
         if (!texture)
             return false;
 

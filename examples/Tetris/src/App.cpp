@@ -5,7 +5,8 @@ App::App()
     : Application("Tetris", SDLCore::Version(1, 0)) {
 }
 
-SDLCore::UI::UINumberID spacing_xs;
+SDLCore::UI::UINumberID spacingXS;
+SDLCore::UI::UITextureID testImageID;
 SDLCore::UI::UIContext* context = SDLCore::UI::CreateContext();
 void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
@@ -13,7 +14,8 @@ void App::OnStart() {
     win->SetIcon(tex);
 
     using namespace SDLCore;
-    spacing_xs = UI::UIRegistry::RegisterNumber(16);
+    spacingXS = UI::UIRegistry::RegisterNumber(16);
+    testImageID = UI::UIRegistry::RegisterTexture("image.trust");
 }
 
 void App::OnUpdate() {
@@ -37,15 +39,16 @@ void App::OnUpdate() {
             .SetValue(Prop::layoutDirection, UI::UILayoutDir::ROW)
             .SetValue(Prop::alignHorizontal, UI::UIAlignment::CENTER)
             .SetValue(Prop::alignVertical, UI::UIAlignment::CENTER)
-            .SetValue(Prop::sizeUnitW, UI::UISizeUnit::PERCENTAGE)
-            .SetValue(Prop::sizeUnitH, UI::UISizeUnit::PERCENTAGE)
+            .SetValue(Prop::widthUnit, UI::UISizeUnit::PERCENTAGE)
+            .SetValue(Prop::heightUnit, UI::UISizeUnit::PERCENTAGE)
             .SetValue(Prop::width, 100.0f)
             .SetValue(Prop::height, 100.0f);
 
         UI::UIStyle elementStyle("element");
         elementStyle.SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
             .SetValue(Prop::borderWidth, 12.0f)
-            .SetValue(Prop::borderColor, Vector4(255, 0, 0, 255));
+            .SetValue(Prop::borderColor, Vector4(255, 0, 0, 255))
+            .SetValue(Prop::backgroundTexture, testImageID);
         elementStyle.SetActiveState(UI::UIState::HOVER)
             .SetValue(Prop::borderInset, true);
 

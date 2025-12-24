@@ -15,7 +15,7 @@ namespace SDLCore::UI {
 	static std::shared_mutex g_fontsMutex;
 	static std::shared_mutex g_texturesMutex;
 	static std::shared_mutex g_numbersMutex;
-	
+
 	template<typename T>
 	static bool IsInBounds(uint32_t id, const std::vector<T>& vec) {
 		return id < vec.size();
@@ -169,28 +169,29 @@ namespace SDLCore::UI {
 		return false;
 	}
 
-	bool UIRegistry::TryResolve(UINumberID id, int& out) {
-		if (int value; TryGetRegisteredNumber(id, value)) {
+	bool UIRegistry::TryResolve(UITextureID id, Texture& out) {
+		return TryGetRegisteredTexture(id, out);
+	}
+
+	template<typename T>
+	static bool TryResolveNumber(UINumberID id, T& out) {
+		if (T value; UIRegistry::TryGetRegisteredNumber(id, value)) {
 			out = value;
 			return true;
 		}
 		return false;
+	}
+
+	bool UIRegistry::TryResolve(UINumberID id, int& out) {
+		return TryResolveNumber<int>(id, out);
 	}
 
 	bool UIRegistry::TryResolve(UINumberID id, float& out) {
-		if (float value; TryGetRegisteredNumber(id, value)) {
-			out = value;
-			return true;
-		}
-		return false;
+		return TryResolveNumber<float>(id, out);
 	}
 
 	bool UIRegistry::TryResolve(UINumberID id, double& out) {
-		if (double value; TryGetRegisteredNumber(id, value)) {
-			out = value;
-			return true;
-		}
-		return false;
+		return TryResolveNumber<double>(id, out);
 	}
 
 	bool UIRegistry::TryResolve(UINumberID id, Vector2& out) {

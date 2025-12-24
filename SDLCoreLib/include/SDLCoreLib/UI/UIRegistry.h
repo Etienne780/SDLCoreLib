@@ -137,6 +137,7 @@ namespace SDLCore::UI {
 		static bool TryGetRegisteredTexture(UITextureID id, const Texture*& outValue);
 
 		static bool TryResolve(UIColorID id, Vector4& out);
+		static bool TryResolve(UITextureID id, Texture& out);
 
 		static bool TryResolve(UINumberID id, int& out);
 		static bool TryResolve(UINumberID id, float& out);
