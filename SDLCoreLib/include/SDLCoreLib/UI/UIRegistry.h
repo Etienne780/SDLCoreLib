@@ -100,7 +100,7 @@ namespace SDLCore::UI {
 		* @param outValue Output variable to receive the texture.
 		* @return True if found, false otherwise.
 		*/
-		static bool TryGetRegisteredTexture(UITextureID id, Texture& outValue);
+		static bool TryGetRegisteredTexture(UITextureID id, std::shared_ptr<Texture>& outValue);
 
 		/**
 		* @brief Attempts to get a copy of a registered numeric value.
@@ -120,24 +120,8 @@ namespace SDLCore::UI {
 		*/
 		static bool TryGetRegisteredColor(UIColorID id, const Vector4*& outValue);
 
-		/**
-		* @brief Attempts to get a pointer to a registered font (no copy).
-		* @param id Font identifier.
-		* @param outValue Pointer to the stored shared_ptr<Font>.
-		* @return True if found, false otherwise.
-		*/
-		static bool TryGetRegisteredFont(UIFontID id, const std::shared_ptr<Font>*& outValue);
-
-		/**
-		* @brief Attempts to get a pointer to a registered texture (no copy).
-		* @param id Texture identifier.
-		* @param outValue Pointer to the stored texture.
-		* @return True if found, false otherwise.
-		*/
-		static bool TryGetRegisteredTexture(UITextureID id, const Texture*& outValue);
-
 		static bool TryResolve(UIColorID id, Vector4& out);
-		static bool TryResolve(UITextureID id, Texture& out);
+		static bool TryResolve(UITextureID id, std::shared_ptr<Texture>& out);
 
 		static bool TryResolve(UINumberID id, int& out);
 		static bool TryResolve(UINumberID id, float& out);

@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include "UI/UINode.h"
 
 namespace SDLCore::UI {
@@ -18,7 +19,7 @@ namespace SDLCore::UI {
         bool m_innerBorder = false;
 
         bool m_useTexture = false;
-        mutable Texture m_texture;
+        mutable std::shared_ptr<Texture> m_texture = nullptr;
 
     private:
     };
