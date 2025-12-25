@@ -8,7 +8,6 @@ namespace SDLCore::UI {
     public:
         FrameNode(int childPos, uintptr_t key);
 
-        void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) override;
         void RenderNode(UIContext* ctx) const override;
 
         static uint32_t GetType();
@@ -22,6 +21,7 @@ namespace SDLCore::UI {
         mutable std::shared_ptr<Texture> m_texture = nullptr;
 
     private:
+        void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) override;
     };
 
 }

@@ -14,7 +14,7 @@ namespace SDLCore::UI {
 	void TextNode::RenderNode(UIContext* ctx) const {
 		namespace RE = SDLCore::Render;
 		RE::SetFontSize(m_textSize);
-		RE::SetColor(255);
+		RE::SetColor(m_textColor);
 		RE::CachText(true);
 		RE::Text(m_text, this->GetPosition());
 	}
@@ -28,6 +28,7 @@ namespace SDLCore::UI {
 			return;
 
 		styleState.TryGetValue(Properties::fontSize, m_textSize);
+		styleState.TryGetValue(Properties::textColor, m_textColor);
 	}
 
 	Vector2 TextNode::CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h) {
