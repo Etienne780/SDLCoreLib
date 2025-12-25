@@ -11,6 +11,7 @@ SDLCore::UI::UIContext* context = SDLCore::UI::CreateContext();
 
 SDLCore::UI::UIStyle styleRoot("root");
 SDLCore::UI::UIStyle elementStyle("element");
+SDLCore::UI::UIStyle textStyle("text");
 
 void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
@@ -31,12 +32,17 @@ void App::OnStart() {
         .SetValue(Prop::width, 100.0f)
         .SetValue(Prop::height, 100.0f);
 
-    elementStyle.SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
+    elementStyle.SetValue(Prop::layoutDirection, UI::UILayoutDir::COLUMN)
+        .SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
         .SetValue(Prop::borderWidth, 12.0f)
         .SetValue(Prop::borderColor, Vector4(255, 0, 0, 255))
         .SetValue(Prop::backgroundTexture, testImageID);
     elementStyle.SetActiveState(UI::UIState::HOVER)
         .SetValue(Prop::borderInset, true);
+
+    textStyle.SetValue(Prop::hitTestEnabled, false)
+        .SetValue(Prop::textSize, 64.0f)
+        .SetValue(Prop::textColor, Vector4(0, 0, 255, 255));
 }
 
 void App::OnUpdate() {
@@ -55,13 +61,18 @@ void App::OnUpdate() {
         UI::SetContextWindow(context, m_winID);
         UI::BindContext(context);
 
-
-
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
             for (int i = 0; i < 50; i++) {
                 UI::BeginFrame(UI::UIKey("element-" + std::to_string(i)), elementStyle);
-                
+                {
+                    UI::Text(UI::UIKey("Test"), "Test", textStyle);
+                    UI::Text(UI::UIKey("Test1"), "Test", textStyle);
+                    UI::Text(UI::UIKey("Test2"), "Test", textStyle);
+                    UI::Text(UI::UIKey("Test3"), "Test", textStyle);
+                    UI::Text(UI::UIKey("Test4"), "Test", textStyle);
+                    UI::Text(UI::UIKey("Test5"), "Test", textStyle);
+                }
                 UI::EndFrame();
             }
         }

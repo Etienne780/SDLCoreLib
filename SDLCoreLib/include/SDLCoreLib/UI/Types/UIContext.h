@@ -87,6 +87,7 @@ namespace SDLCore::UI {
 			if (parentNode->ContainsChildAtPos(pos, id, currentNode)) {
 				// element with id exists at position. set it as last position
 				// no stack increas cause add node has no end func
+				ProcessEvent(this, currentNode);
 				currentNode->SetNodeActive();
 				return reinterpret_cast<T*>(currentNode);
 			}
@@ -100,9 +101,9 @@ namespace SDLCore::UI {
 
 			// element does not exist. create element and create stack
 			T* childNode = parentNode->AddChild<T>(static_cast<int>(pos), id, std::forward<Args>(args)...);
+			ProcessEvent(this, childNode);
 			// no stack increas cause add node has no end func
 			return childNode;
-
 		}
 
 		UINode* GetRootNode() const;
