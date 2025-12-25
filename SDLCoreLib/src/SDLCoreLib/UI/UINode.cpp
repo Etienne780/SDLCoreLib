@@ -35,6 +35,7 @@ namespace SDLCore::UI {
 		if (!ctx)
 			return;
 
+		m_lastState = m_state;
 		m_finalStyle = CreateStyle();
 		
 		// allways uses normal state as a base
@@ -137,12 +138,32 @@ namespace SDLCore::UI {
 		return m_children;
 	}
 
+	UIState UINode::GetState() const {
+		return m_state;
+	}
+
+	UIState UINode::GetLastState() const {
+		return m_lastState;
+	}
+
 	bool UINode::GetChildHasEvent() const {
 		return m_childHasEvent;
 	}
 
+	uint64_t UINode::GetAppliedStyleHash() const {
+		return m_appliedStyleHash;
+	}
+
+	uint64_t UINode::GetAppliedStyleFrame() const {
+		return m_appliedStyleFrame;
+	}
+
 	bool UINode::IsActive() const {
 		return m_isActive;
+	}
+
+	bool UINode::HasStateChanged() const {
+		return m_state != m_lastState;
 	}
 
 	bool UINode::HasHitTestEnabled() const {
@@ -260,6 +281,14 @@ namespace SDLCore::UI {
 			return newID;
 		}
 		return it->second;
+	}
+
+	void UINode::SetAppliedStyleHash(uint64_t newHash) {
+		m_appliedStyleHash = newHash;
+	}
+
+	void UINode::SetAppliedStyleFrame(uint64_t frame) {
+		m_appliedStyleFrame = frame;
 	}
 
 	float UINode::GetAccumulatedChildSize(bool horizontal, int upToIndex) const {
@@ -428,12 +457,12 @@ namespace SDLCore::UI {
 			return;
 		}
 
-		const Vector2 mousePos = Input::GetMousePosition();
-		const Vector2 mouseDelta = Input::GetMouseDelta();
+		const Vector2 mousePos = ctx->GetMousePos();
+		const Vector2 mouseDelta = ctx->GetMouseDelta();
 
-		const bool mouseDown = Input::MousePressed(MouseButton::LEFT);
-		const bool mouseJustDown = Input::MouseJustPressed(MouseButton::LEFT);
-		const bool mouseJustUp = Input::MouseJustReleased(MouseButton::LEFT);
+		const bool mouseDown = ctx->GetLeftMouseDown();
+		const bool mouseJustDown = ctx->GetLeftMouseJustDown();
+		const bool mouseJustUp = ctx->GetLeftMouseJustUp();
 
 		const bool isHovered = IsPointInNode(mousePos);
 

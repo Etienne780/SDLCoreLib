@@ -1,20 +1,26 @@
+#include "SDLCoreTime.h"
 #include "UI/UIStyle.h"
 #include "UI/Types/UIPropertyRegistry.h"
 
 namespace SDLCore::UI {
 
-	UIStyle::UIStyle() {
+	UIStyle::UIStyle() 
+		: m_id(m_idManager.GetNewUniqueIdentifier()) {
 		UIPropertyRegistry::RegisterBaseProperties();
 	}
 
 	UIStyle::UIStyle(const std::string& name) 
-		: m_name(name) {
+		: m_name(name), m_id(m_idManager.GetNewUniqueIdentifier()) {
 		UIPropertyRegistry::RegisterBaseProperties();
 	}
 
 	UIStyle::UIStyle(std::string&& name) 
-		: m_name(name) {
+		: m_name(name), m_id(m_idManager.GetNewUniqueIdentifier()) {
 		UIPropertyRegistry::RegisterBaseProperties();
+	}
+
+	UIStyle::~UIStyle() {
+		m_idManager.FreeUniqueIdentifier(m_id.value);
 	}
 
 	std::string UIStyle::ToString() const {
@@ -28,8 +34,16 @@ namespace SDLCore::UI {
 		}
 	}
 
+	UIStyleID UIStyle::GetID() const {
+		return m_id;
+	}
+
 	std::string UIStyle::GetName() const {
 		return m_name;
+	}
+
+	uint64_t UIStyle::GetLastModified() const {
+		return m_lastModified;
 	}
 
 	UIStyleState UIStyle::GetStyleState(UIState state) {
@@ -49,7 +63,8 @@ namespace SDLCore::UI {
 
 	UIStyle& UIStyle::SetValue(UIPropertyID attID, PropertyValue value, bool important) {
 		UIStyleState* state = GetState(m_currentState);
-		state->SetValue(attID, value, important);
+		if (state->SetValue(attID, value, important))
+			UpdateLastModified();// if value could be set update last modifed
 		return *this;
 	}
 
@@ -60,6 +75,10 @@ namespace SDLCore::UI {
 			return &m_uiStates[state];
 		}
 		return &it->second;
+	}
+
+	void UIStyle::UpdateLastModified() {
+		m_lastModified = Time::GetFrameCount();
 	}
 
 }

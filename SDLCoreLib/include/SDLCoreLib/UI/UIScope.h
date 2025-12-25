@@ -25,19 +25,62 @@ namespace SDLCore::UI {
     namespace Internal {
         FrameNode* InternalBeginFrame(uintptr_t key);
         TextNode* InternalAddText(uintptr_t key);
+        void InternalSetAppliedStyleParams(UINode* node, uint64_t newHash, uint64_t frame);
+
+        inline constexpr uint64_t hashSeed = 1469598103934665603ull;
+        inline constexpr uint64_t hashMul = 1315423911ull;
+
+        // Fast path – UI hot code
+        template<typename... Styles>
+        uint64_t InternalGenerateStyleHash(const Styles&... styles) {
+            uint64_t hash = hashSeed;
+            ((hash = hash * hashMul + styles.GetID().value), ...);
+            return hash;
+        }
+
+        // Slow path – dynamic styles
+        template<typename It>
+        uint64_t InternalGenerateStyleHash(It begin, It end) {
+            uint64_t hash = hashSeed;
+            for (; begin != end; begin++) {
+                hash = hash * hashMul + begin->GetID().value;
+            }
+            return hash;
+        }
     }
 
     template<typename... Styles>
     void BeginFrame(UIKey&& key, const Styles&... styles) {
+        static_assert((std::is_same_v<Styles, UIStyle> && ...),
+            "BeginFrame only accepts UIStyle parameters");
+
         FrameNode* node = Internal::InternalBeginFrame(key.id);
-        if (node) {
+        if (!node)
+            return;
+
+        uint64_t newStyleHash = Internal::InternalGenerateStyleHash(styles...);
+
+        uint64_t newestStyleFrame = 0;
+        ((newestStyleFrame = std::max(newestStyleFrame, styles.GetLastModified())), ...);
+
+        if (node->GetAppliedStyleHash() != newStyleHash ||
+            node->GetAppliedStyleFrame() < newestStyleFrame)
+        {
             node->ClearStyles();
-            constexpr size_t numStyles = sizeof...(styles);
-            node->ReserveStyles(numStyles);
+            node->ReserveStyles(sizeof...(Styles));
             (node->AddStyle(styles), ...);
             node->ApplyStyle(GetCurrentContext());
+
+            Internal::InternalSetAppliedStyleParams(node, newStyleHash, newestStyleFrame);
+        }
+        else {
+            if (node->HasStateChanged()) {
+                node->ApplyStyle(GetCurrentContext());
+            }
         }
     }
+
+    void BeginFrame(UIKey&& key, const std::vector<UIStyle>& styles);
 
     /*
     * @brief if the root nodes ends than the UI wil be rendererd. SDLCore::Render::Present() needs to be called ot see
