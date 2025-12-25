@@ -202,13 +202,13 @@ namespace SDLCore::UI::Properties {
 	inline UIPropertyID font;
 
 	/*
-	* @brief Font size (float)
+	* @brief Text size (float)
 	*
 	* Text size in pixels.
 	*
 	* Usage: style.SetValue<float>(16.0f)
 	*/
-	inline UIPropertyID fontSize;
+	inline UIPropertyID textSize;
 
 	/*
 	* @brief Text color (Vector4)

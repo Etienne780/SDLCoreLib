@@ -27,7 +27,7 @@ namespace SDLCore::UI {
 		if (!ctx)
 			return;
 
-		styleState.TryGetValue(Properties::fontSize, m_textSize);
+		styleState.TryGetValue(Properties::textSize, m_textSize);
 		styleState.TryGetValue(Properties::textColor, m_textColor);
 	}
 

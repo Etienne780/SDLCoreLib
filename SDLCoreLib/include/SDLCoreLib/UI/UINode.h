@@ -76,7 +76,7 @@ namespace SDLCore::UI {
         // last style combination
         uint64_t GetAppliedStyleHash() const; 
         // max lastModified of applied styles
-        uint64_t GetAppliedStyleFrame() const;
+        uint64_t GetAppliedStyleNode() const;
 
 
         /*
@@ -150,13 +150,13 @@ namespace SDLCore::UI {
         UIAlignment m_verticalAligment = UIAlignment::START;
     private:
         uint64_t m_appliedStyleHash = 0;      // last style combination
-        uint64_t m_appliedStyleFrame = 0;     // max lastModified of applied styles
+        uint64_t m_appliedStyleNode = 0;     // max lastModified of applied styles
 
         static inline uint32_t m_typeIDCounter = 0;
         static uint32_t GetUITypeID(const std::string& name);
 
         void SetAppliedStyleHash(uint64_t newHash);
-        void SetAppliedStyleFrame(uint64_t frame);
+        void SetAppliedStyleNode(uint64_t node);
 
         // is size + margin
         float GetAccumulatedChildSize(bool horizontal, int upToIndex) const;
