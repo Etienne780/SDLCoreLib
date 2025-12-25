@@ -908,10 +908,9 @@ namespace SDLCore::Render {
 	* descenders below the baseline can be ignored.
 	*
 	* @param text Text block to measure.
-	* @param ignoreBelowBaseline If true, descenders below the baseline are excluded from height.
 	* @return Total text block height in pixels.
 	*/
-	float GetTextBlockHeight(const std::string& text, bool ignoreBelowBaseline = false);
+	float GetTextBlockHeight(const std::string& text);
 
 	/**
 	* @brief Calculates the total height of a multi-line text block from precomputed lines.
@@ -920,10 +919,9 @@ namespace SDLCore::Render {
 	* limits are applied. Optionally, descenders below the baseline can be ignored.
 	*
 	* @param lines Vector of text lines.
-	* @param ignoreBelowBaseline If true, descenders below the baseline are excluded from height.
 	* @return Total text block height in pixels.
 	*/
-	float GetTextBlockHeight(const std::vector<std::string>& lines, bool ignoreBelowBaseline = false);
+	float GetTextBlockHeight(const std::vector<std::string>& lines);
 
 	/**
 	* @brief Calculates the height of a single rendered text line.
