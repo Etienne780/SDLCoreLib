@@ -56,7 +56,7 @@ namespace SDLCore::UI {
                 return;
 
             node->SetAppliedStyleHash(newHash);
-            node->SetAppliedStyleFrame(frame);
+            node->SetAppliedStyleNode(frame);
         }
     };
 
@@ -191,7 +191,8 @@ namespace SDLCore::UI {
             newestStyleFrame = std::max(newestStyleFrame, style.GetLastModified());
 
         if (node->GetAppliedStyleHash() != newHash ||
-            node->GetAppliedStyleFrame() < newestStyleFrame) {
+            node->GetAppliedStyleNode() < newestStyleFrame) 
+        {
             node->ClearStyles();
             node->ReserveStyles(styles.size());
             for (const auto& style : styles)
@@ -209,6 +210,39 @@ namespace SDLCore::UI {
 
     UIEvent EndFrame() {
         return g_currentUIContext.EndFrame();
+    }
+
+    UIEvent Text(UIKey&& key, const std::string& text, const std::vector<UIStyle>& styles) {
+        TextNode* node = Internal::InternalAddText(key.id);
+        if (!node)
+            return UIEvent{};
+
+        node->m_text = text;
+
+        const uint64_t newHash =
+            Internal::InternalGenerateStyleHash(styles.begin(), styles.end());
+
+        uint64_t newestStyleFrame = 0;
+        for (const auto& style : styles)
+            newestStyleFrame = std::max(newestStyleFrame, style.GetLastModified());
+
+        if (node->GetAppliedStyleHash() != newHash ||
+            node->GetAppliedStyleNode() < newestStyleFrame)
+        {
+            node->ClearStyles();
+            node->ReserveStyles(styles.size());
+            for (const auto& style : styles)
+                node->AddStyle(style);
+            node->ApplyStyle(GetCurrentContext());
+
+            Internal::InternalSetAppliedStyleParams(node, newHash, newestStyleFrame);
+        }
+        else {
+            if (node->HasStateChanged()) {
+                node->ApplyStyle(GetCurrentContext());
+            }
+        }
+        return node->GetEvent();
     }
 
 }
