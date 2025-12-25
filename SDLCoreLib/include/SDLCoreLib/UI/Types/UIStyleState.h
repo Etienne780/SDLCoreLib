@@ -9,7 +9,7 @@ namespace SDLCore::UI {
 	class UIStyleState {
 	public:
 		UIStyleState();
-		void SetValue(UIPropertyID id, PropertyValue value, bool important = false);
+		bool SetValue(UIPropertyID id, PropertyValue value, bool important = false);
 
 		/*
 		* @brief Merges this style on top of outStyle

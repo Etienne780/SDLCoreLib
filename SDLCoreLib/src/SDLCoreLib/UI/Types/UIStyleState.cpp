@@ -11,13 +11,13 @@ namespace SDLCore::UI {
 		}
 	}
 
-	void UIStyleState::SetValue(UIPropertyID id, PropertyValue value, bool important) {
+	bool UIStyleState::SetValue(UIPropertyID id, PropertyValue value, bool important) {
 		auto it = m_properties.find(id);
 		if (it == m_properties.end()) {
 #ifndef NDEBUG
 			Log::Error("SDLCore::UI::UIStyleState: Could not set value, property '{}' not found", id);
 #endif
-			return;
+			return false;
 		}
 		auto& prop = it->second;
 
@@ -27,11 +27,12 @@ namespace SDLCore::UI {
 			Log::Error("SDLCore::UI::UIStyleState: Could not set value, value needs to be of a similer type as the property, '{}' != '{}'", 
 				prop.GetType(), value.GetType());
 #endif
-			return;
+			return false;
 		}
 
 		prop.SetValue(value.GetType(), value.GetVariant());
 		prop.SetIsImportant(important);
+		return true;
 	}
 
 	void UIStyleState::Merge(UIStyleState& outStyleState) const {
