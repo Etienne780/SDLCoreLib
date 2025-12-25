@@ -10,6 +10,8 @@
 #include "UI/Nodes/FrameNode.h"
 #include "UI/Nodes/TextNode.h"
 
+#include "Profiler.h"
+
 namespace SDLCore::UI {
 
     UIContext* CreateContext();
@@ -44,6 +46,8 @@ namespace SDLCore::UI {
     // faster begin frame. because styles canot change
     template<typename... Styles>
     void BeginFrame(UIKey&& key, const Styles&... styles) {
+        Debug::ProfilerScope frame("BeginFrame");
+
         static_assert((std::is_same_v<Styles, UIStyle> && ...),
             "BeginFrame only accepts UIStyle parameters");
 
@@ -80,6 +84,11 @@ namespace SDLCore::UI {
     // faster begin frame. because styles canot change
     template<typename... Styles>
     UIEvent Text(UIKey&& key, const std::string& text, const Styles&... styles) {
+        Debug::ProfilerScope("Text");
+
+        static_assert((std::is_same_v<Styles, UIStyle> && ...),
+            "BeginFrame only accepts UIStyle parameters");
+
         TextNode* node = Internal::InternalAddText(key.id);
         if (!node)
             return UIEvent{};

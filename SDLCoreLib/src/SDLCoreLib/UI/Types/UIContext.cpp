@@ -6,6 +6,8 @@
 #include "UI/Nodes/FrameNode.h"
 #include "UI/Types/UIContext.h"
 
+#include "Profiler.h"
+
 namespace SDLCore::UI {
 
     UIContext::UIContext() {
@@ -186,7 +188,6 @@ namespace SDLCore::UI {
         if (!m_lastChildPosition.empty() && !m_lastNodeStack.empty()) {
             UINode* node = m_lastNodeStack.back();
             if (node && m_lastChildPosition.back() < node->GetChildren().size()) {
-                Log::Print("delete");
                 node->RemoveChildrenFromIndex(m_lastChildPosition.back());
             }
             
@@ -255,6 +256,7 @@ namespace SDLCore::UI {
     }
 
     UIEvent* UIContext::ProcessEvent(UIContext* ctx, UINode* node) {
+        Debug::ProfilerScope processEvent("ProcessEvent");
         static UIEvent dummy;
 
         // skip inactive nodes
@@ -297,6 +299,7 @@ namespace SDLCore::UI {
     }
 
     void UIContext::RenderNodes(UIContext* ctx, UINode* rootNode) {
+        Debug::ProfilerScope render("Render");
         std::function<void(UINode*)> renderRecursive; 
         renderRecursive = [&](UINode* root) {
             root->CalculateLayout(ctx);

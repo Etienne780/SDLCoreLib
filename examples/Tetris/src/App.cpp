@@ -61,28 +61,33 @@ void App::OnUpdate() {
         UI::SetContextWindow(context, m_winID);
         UI::BindContext(context);
 
-        UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
-            for (int i = 0; i < 50; i++) {
-                UI::BeginFrame(UI::UIKey("element-" + std::to_string(i)), elementStyle);
-                {
-                    UI::Text(UI::UIKey("Test"), "Test", textStyle);
-                    UI::Text(UI::UIKey("Test1"), "Test", textStyle);
-                    UI::Text(UI::UIKey("Test2"), "Test", textStyle);
-                    UI::Text(UI::UIKey("Test3"), "Test", textStyle);
-                    UI::Text(UI::UIKey("Test4"), "Test", textStyle);
-                    UI::Text(UI::UIKey("Test5"), "Test", textStyle);
+            SDLCore::Debug::ProfilerScope das("UI");
+            UI::BeginFrame(UI::UIKey("root"), styleRoot);
+            {
+                for (int i = 0; i < 500; i++) {
+                    UI::BeginFrame(UI::UIKey("element-" + std::to_string(i)), elementStyle);
+                    {
+                        UI::Text(UI::UIKey("Test"), "Test", textStyle);
+                        UI::Text(UI::UIKey("Test1"), "Test", textStyle);
+                        UI::Text(UI::UIKey("Test2"), "Test", textStyle);
+                        UI::Text(UI::UIKey("Test3"), "Test", textStyle);
+                        UI::Text(UI::UIKey("Test4"), "Test", textStyle);
+                        UI::Text(UI::UIKey("Test5"), "Test", textStyle);
+                    }
+                    UI::EndFrame();
                 }
-                UI::EndFrame();
             }
+            UI::EndFrame();
         }
-        UI::EndFrame();
 
         // Log::Print(UI::GetContextStringHierarchy(context));
         RE::Present();
 
-        if (SDLCore::Time::GetFrameCount() % 240 == 0)
-            Log::Print("FPS: {}", SDLCore::Time::GetFrameRate());
+        if(SDLCore::Time::GetFrameCount() % 120 == 0)
+            SDLCore::Debug::Profiler::PrintAndReset();
+        else 
+            SDLCore::Debug::Profiler::Reset();
     }
 
     /*
