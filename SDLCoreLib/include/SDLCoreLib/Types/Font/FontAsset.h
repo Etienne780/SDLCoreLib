@@ -22,12 +22,14 @@ namespace SDLCore {
 		FontAsset(FontAsset&& other) noexcept;
 		FontAsset& operator=(FontAsset&& other) noexcept;
 
-		float fontSize = -1;
-		size_t lastUseTick = 0;
-		TTF_Font* ttfFont = nullptr;
-		SDL_Surface* glyphAtlasSurf = nullptr;
+		float m_fontSize = -1;
+		size_t m_lastUseTick = 0;
+		TTF_Font* m_ttfFont = nullptr;
+		SDL_Surface* m_glyphAtlasSurf = nullptr;
+		int m_ascent = 0;
+		int m_descent = 0;
+		int m_lineSkip = 0;
 
-		
 		GlyphMetrics* GetGlyphMetrics(uint32_t code);
 		SDL_Texture* GetGlyphAtlasTexture(WindowID winID);
 

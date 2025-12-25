@@ -63,7 +63,7 @@ namespace SDLCore {
 		}
 
 		// is for font caching (LRU)
-		fontAsset->lastUseTick = m_globalAccessCounter;
+		fontAsset->m_lastUseTick = m_globalAccessCounter;
 		m_globalAccessCounter++;
 		CalculateCachedFonts();
 
@@ -123,7 +123,7 @@ namespace SDLCore {
 
 	FontAsset* Font::GetFontAsset(float size) {
 		auto it = std::find_if(m_fontAssets.begin(), m_fontAssets.end(),
-			[size](const FontAsset& fontAsset) { return fontAsset.fontSize == size; });
+			[size](const FontAsset& fontAsset) { return fontAsset.m_fontSize == size; });
 
 		if (it != m_fontAssets.end())
 			return &(*it);
@@ -215,13 +215,13 @@ namespace SDLCore {
 
 		size_t diff = m_fontAssets.size() - m_maxFontSizesCached;
 		std::sort(m_fontAssets.begin(), m_fontAssets.end(),
-			[](const FontAsset& a, const FontAsset& b) { return a.lastUseTick > b.lastUseTick; });
+			[](const FontAsset& a, const FontAsset& b) { return a.m_lastUseTick > b.m_lastUseTick; });
 
 		m_fontAssets.erase(m_fontAssets.end() - diff, m_fontAssets.end());
 
 		float selectedSize = m_selectedSize;
 		if (std::find_if(m_fontAssets.begin(), m_fontAssets.end(),
-			[selectedSize](const FontAsset& asset) { return asset.fontSize == selectedSize; }) == m_fontAssets.end()) {
+			[selectedSize](const FontAsset& asset) { return asset.m_fontSize == selectedSize; }) == m_fontAssets.end()) {
 			m_selectedSize = -1;
 		}
 	}
