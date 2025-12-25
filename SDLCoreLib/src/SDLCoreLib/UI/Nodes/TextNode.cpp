@@ -13,10 +13,12 @@ namespace SDLCore::UI {
 
 	void TextNode::RenderNode(UIContext* ctx) const {
 		namespace RE = SDLCore::Render;
-		RE::SetFontSize(m_textSize);
-		RE::SetColor(m_textColor);
-		RE::CachText(true);
-		RE::Text(m_text, this->GetPosition());
+		if(m_textSize > 0) {
+			RE::SetFontSize(m_textSize);
+			RE::SetColor(m_textColor);
+			RE::CachText(true);
+			RE::Text(m_text, this->GetPosition());
+		}
 	}
 
 	uint32_t TextNode::GetType() {
@@ -33,6 +35,9 @@ namespace SDLCore::UI {
 
 	Vector2 TextNode::CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h) {
 		namespace RE = SDLCore::Render;
+		if (m_textSize <= 0) 
+			return Vector2(0);
+
 		RE::SetFontSize(m_textSize);
 		return Vector2(
 			RE::GetTextBlockWidth(m_text),
