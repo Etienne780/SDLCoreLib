@@ -154,8 +154,8 @@ namespace SDLCore::UI {
 		return m_appliedStyleHash;
 	}
 
-	uint64_t UINode::GetAppliedStyleFrame() const {
-		return m_appliedStyleFrame;
+	uint64_t UINode::GetAppliedStyleNode() const {
+		return m_appliedStyleNode;
 	}
 
 	bool UINode::IsActive() const {
@@ -287,8 +287,8 @@ namespace SDLCore::UI {
 		m_appliedStyleHash = newHash;
 	}
 
-	void UINode::SetAppliedStyleFrame(uint64_t frame) {
-		m_appliedStyleFrame = frame;
+	void UINode::SetAppliedStyleNode(uint64_t node) {
+		m_appliedStyleNode = node;
 	}
 
 	float UINode::GetAccumulatedChildSize(bool horizontal, int upToIndex) const {

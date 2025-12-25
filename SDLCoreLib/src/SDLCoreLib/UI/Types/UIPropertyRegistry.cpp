@@ -140,9 +140,9 @@ namespace SDLCore::UI {
             PropertyValue(UIFontID{ 0 })
         );
 
-        fontSize = RegisterProperty(
-            "font_size",
-            "Font size in pixels",
+        textSize = RegisterProperty(
+            "text_size",
+            "Text size in pixels",
             PropertyValue(24.0f)
         );
 
