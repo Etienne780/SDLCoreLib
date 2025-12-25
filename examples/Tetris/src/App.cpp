@@ -82,7 +82,10 @@ void App::OnUpdate() {
         }
 
         // Log::Print(UI::GetContextStringHierarchy(context));
-        RE::Present();
+        {
+            SDLCore::Debug::ProfilerScope RenderPresent("RenderPresent");
+            RE::Present();
+        }
 
         if(SDLCore::Time::GetFrameCount() % 120 == 0)
             SDLCore::Debug::Profiler::PrintAndReset();
