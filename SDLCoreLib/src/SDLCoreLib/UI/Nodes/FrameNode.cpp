@@ -4,14 +4,18 @@
 #include "SDLCoreRenderer.h"
 #include "UI/Nodes/FrameNode.h"
 
+#include "Profiler.h"
+
 namespace SDLCore::UI {
 
 	static std::string frameNodeName = "Frame";
 	FrameNode::FrameNode(int childPos, uintptr_t key)
 		: UINode(childPos, key, frameNodeName) {
 	}
+
 	void FrameNode::RenderNode(UIContext* ctx) const {
 		namespace RE = SDLCore::Render;
+		SDLCore::Debug::ProfilerScope das("Render(Frame)");
 
 		if (m_useTexture && m_texture) {
 			const Vector2& size = this->GetSize();

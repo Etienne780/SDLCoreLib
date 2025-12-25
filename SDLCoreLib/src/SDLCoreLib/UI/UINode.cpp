@@ -6,6 +6,8 @@
 #include "UI/Nodes/FrameNode.h"
 #include "UI/UINode.h"
 
+#include "Profiler.h"
+
 namespace SDLCore::UI {
 
 	UINode::UINode(int childPos, uintptr_t id, const std::string& typeName)
@@ -364,6 +366,7 @@ namespace SDLCore::UI {
 	}
 
 	void UINode::CalculateLayout(const UIContext* uiContext) {
+		Debug::ProfilerScope layout("Calc layout");
 		if (!uiContext || !m_parent)
 			return;
 
