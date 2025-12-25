@@ -4,6 +4,7 @@
 #include "UI/Types/UIPropertyRegistry.h"
 #include "UI/Types/UITypes.h"
 #include "UI/Types/UIStyleState.h"
+#include "IDManager.h"
 
 namespace SDLCore::UI {
 
@@ -12,7 +13,8 @@ namespace SDLCore::UI {
 		UIStyle();
 		UIStyle(const std::string& name);
 		UIStyle(std::string&& name);
-		
+		~UIStyle();
+
 		/*
 		* not finished
 		*/
@@ -23,7 +25,10 @@ namespace SDLCore::UI {
 		*/
 		void Merge(UIStyle& outStyle) const;
 
+		UIStyleID GetID() const;
 		std::string GetName() const;
+		// number that represents on which frame the style was last modified
+		uint64_t GetLastModified() const;
 		UIStyleState GetStyleState(UIState state);
 		const UIStyleState& GetStyleState(UIState state) const;
 
@@ -36,15 +41,21 @@ namespace SDLCore::UI {
 		UIStyle& SetValue(UIPropertyID attID, PropertyValue value, bool important = false);
 
 	private:
+		static inline IDManager m_idManager;
+		UIStyleID m_id{ SDLCORE_INVALID_ID };
 		std::string m_name = "UNKOWN";
 		UIState m_currentState = UIState::NORMAL;
 		mutable std::unordered_map<UIState, UIStyleState> m_uiStates;
+		uint64_t m_lastModified = 0;
 
 		/*
 		* @brief Gets the state or creates a new one
 		* @return allways returns a valid ptr
 		*/
 		UIStyleState* GetState(UIState state) const;
+
+		// updates the last modified to current frame count
+		void UpdateLastModified();
 	};
 
 }

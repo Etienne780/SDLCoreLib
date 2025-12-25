@@ -32,6 +32,7 @@ namespace SDLCore::UI {
 
 	void FrameNode::RenderNode(UIContext* ctx) const {
 		namespace RE = SDLCore::Render;
+
 		if (m_useTexture && m_texture) {
 			const Vector2& size = this->GetSize();
 			if (size != Vector2::zero) {

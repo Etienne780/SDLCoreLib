@@ -8,6 +8,10 @@ App::App()
 SDLCore::UI::UINumberID spacingXS;
 SDLCore::UI::UITextureID testImageID;
 SDLCore::UI::UIContext* context = SDLCore::UI::CreateContext();
+
+SDLCore::UI::UIStyle styleRoot("root");
+SDLCore::UI::UIStyle elementStyle("element");
+
 void App::OnStart() {
     SDLCore::Texture tex("J:/images/image.png");
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
@@ -16,6 +20,23 @@ void App::OnStart() {
     using namespace SDLCore;
     spacingXS = UI::UIRegistry::RegisterNumber(16);
     testImageID = UI::UIRegistry::RegisterTexture("image.trust");
+
+    namespace Prop = SDLCore::UI::Properties;
+    styleRoot.SetValue(Prop::backgroundColor, Vector4(0, 0, 0, 0))
+        .SetValue(Prop::layoutDirection, UI::UILayoutDir::ROW)
+        .SetValue(Prop::alignHorizontal, UI::UIAlignment::START)
+        .SetValue(Prop::alignVertical, UI::UIAlignment::CENTER)
+        .SetValue(Prop::widthUnit, UI::UISizeUnit::PERCENTAGE)
+        .SetValue(Prop::heightUnit, UI::UISizeUnit::PERCENTAGE)
+        .SetValue(Prop::width, 100.0f)
+        .SetValue(Prop::height, 100.0f);
+
+    elementStyle.SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
+        .SetValue(Prop::borderWidth, 12.0f)
+        .SetValue(Prop::borderColor, Vector4(255, 0, 0, 255))
+        .SetValue(Prop::backgroundTexture, testImageID);
+    elementStyle.SetActiveState(UI::UIState::HOVER)
+        .SetValue(Prop::borderInset, true);
 }
 
 void App::OnUpdate() {
@@ -34,36 +55,23 @@ void App::OnUpdate() {
         UI::SetContextWindow(context, m_winID);
         UI::BindContext(context);
 
-        UI::UIStyle styleRoot("root");
-        styleRoot.SetValue(Prop::backgroundColor, Vector4(0, 0, 0, 0))
-            .SetValue(Prop::layoutDirection, UI::UILayoutDir::ROW)
-            .SetValue(Prop::alignHorizontal, UI::UIAlignment::CENTER)
-            .SetValue(Prop::alignVertical, UI::UIAlignment::CENTER)
-            .SetValue(Prop::widthUnit, UI::UISizeUnit::PERCENTAGE)
-            .SetValue(Prop::heightUnit, UI::UISizeUnit::PERCENTAGE)
-            .SetValue(Prop::width, 100.0f)
-            .SetValue(Prop::height, 100.0f);
 
-        UI::UIStyle elementStyle("element");
-        elementStyle.SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
-            .SetValue(Prop::borderWidth, 12.0f)
-            .SetValue(Prop::borderColor, Vector4(255, 0, 0, 255))
-            .SetValue(Prop::backgroundTexture, testImageID);
-        elementStyle.SetActiveState(UI::UIState::HOVER)
-            .SetValue(Prop::borderInset, true);
 
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
-            UI::BeginFrame(UI::UIKey("element"), elementStyle);
-            {
-
+            for (int i = 0; i < 50; i++) {
+                UI::BeginFrame(UI::UIKey("element-" + std::to_string(i)), elementStyle);
+                
+                UI::EndFrame();
             }
-            UI::EndFrame();
         }
         UI::EndFrame();
 
         // Log::Print(UI::GetContextStringHierarchy(context));
         RE::Present();
+
+        if (SDLCore::Time::GetFrameCount() % 240 == 0)
+            Log::Print("FPS: {}", SDLCore::Time::GetFrameRate());
     }
 
     /*

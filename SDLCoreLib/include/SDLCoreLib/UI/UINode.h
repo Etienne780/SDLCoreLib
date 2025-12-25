@@ -18,9 +18,11 @@ namespace SDLCore::UI {
     }
 
     class UIContext;
+    class UICTXWrapper;
     class FrameNode;
 
     class UINode {
+        friend class UICTXWrapper;
         friend class UIContext;
     public:
         UINode(int childPos, uintptr_t id, const std::string& typeName);
@@ -68,11 +70,22 @@ namespace SDLCore::UI {
         std::string GetName() const;
         UINode* GetParent();
         const std::vector<std::shared_ptr<UINode>>& GetChildren() const;
+        UIState GetState() const;
+        UIState GetLastState() const;
         bool GetChildHasEvent() const;
+        // last style combination
+        uint64_t GetAppliedStyleHash() const; 
+        // max lastModified of applied styles
+        uint64_t GetAppliedStyleFrame() const;
+
+
         /*
         * @brief node will be active after the first frame of creation
         */
         bool IsActive() const;
+
+        // return true if last state is diff to current state
+        bool HasStateChanged() const;
 
         bool HasHitTestEnabled() const;
         bool IsInteractible() const;
@@ -119,6 +132,7 @@ namespace SDLCore::UI {
         std::vector<std::shared_ptr<UINode>> m_children;
         std::vector<UIStyle> m_appliedStyles;
         UIState m_state = UIState::NORMAL;
+        UIState m_lastState = UIState::NORMAL;
         UIStyle m_finalStyle;
         UIEvent m_eventState;
         bool m_childHasEvent = false;
@@ -135,8 +149,14 @@ namespace SDLCore::UI {
         UIAlignment m_horizontalAligment = UIAlignment::START;
         UIAlignment m_verticalAligment = UIAlignment::START;
     private:
+        uint64_t m_appliedStyleHash = 0;      // last style combination
+        uint64_t m_appliedStyleFrame = 0;     // max lastModified of applied styles
+
         static inline uint32_t m_typeIDCounter = 0;
         static uint32_t GetUITypeID(const std::string& name);
+
+        void SetAppliedStyleHash(uint64_t newHash);
+        void SetAppliedStyleFrame(uint64_t frame);
 
         // is size + margin
         float GetAccumulatedChildSize(bool horizontal, int upToIndex) const;

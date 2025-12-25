@@ -50,6 +50,14 @@ namespace SDLCore::UI {
                 return;
             ctx->SetWindowParams(id);
         }
+
+        void SetAppliedStyleParams(UINode* node, uint64_t newHash, uint64_t frame) {
+            if (!node)
+                return;
+
+            node->SetAppliedStyleHash(newHash);
+            node->SetAppliedStyleFrame(frame);
+        }
     };
 
     static inline UICTXWrapper g_currentUIContext;
@@ -62,6 +70,10 @@ namespace SDLCore::UI {
 
         TextNode* InternalAddText(uintptr_t key) {
             return g_currentUIContext.AddNode<TextNode>(key);// node with key or new node
+        }
+
+        void InternalSetAppliedStyleParams(UINode* node, uint64_t newHash, uint64_t frame) {
+            g_currentUIContext.SetAppliedStyleParams(node, newHash, frame);
         }
     }
 
@@ -164,6 +176,35 @@ namespace SDLCore::UI {
 
         BuildHierarchy(stream, root);
         return stream.str();
+    }
+
+    void BeginFrame(UIKey&& key, const std::vector<UIStyle>& styles) {
+        FrameNode* node = Internal::InternalBeginFrame(key.id);
+        if (!node)
+            return;
+
+        const uint64_t newHash =
+            Internal::InternalGenerateStyleHash(styles.begin(), styles.end());
+
+        uint64_t newestStyleFrame = 0;
+        for (const auto& style : styles)
+            newestStyleFrame = std::max(newestStyleFrame, style.GetLastModified());
+
+        if (node->GetAppliedStyleHash() != newHash ||
+            node->GetAppliedStyleFrame() < newestStyleFrame) {
+            node->ClearStyles();
+            node->ReserveStyles(styles.size());
+            for (const auto& style : styles)
+                node->AddStyle(style);
+            node->ApplyStyle(GetCurrentContext());
+
+            g_currentUIContext.SetAppliedStyleParams(node, newHash, newestStyleFrame);
+        }
+        else {
+            if (node->HasStateChanged()) {
+                node->ApplyStyle(GetCurrentContext());
+            }
+        }
     }
 
     UIEvent EndFrame() {

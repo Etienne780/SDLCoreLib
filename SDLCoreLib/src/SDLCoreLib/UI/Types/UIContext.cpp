@@ -1,11 +1,19 @@
 #include <functional>
 
 #include "Application.h"
+#include "SDLCoreTime.h"
 #include "UI/UINode.h"
 #include "UI/Nodes/FrameNode.h"
 #include "UI/Types/UIContext.h"
 
 namespace SDLCore::UI {
+
+    UIContext::UIContext() {
+        size_t amount = 128;
+        m_lastChildPosition.reserve(amount);
+        m_nodeCreationStack.reserve(amount);
+        m_lastNodeStack.reserve(amount);
+    }
 
 	UIContext* UIContext::CreateContext() {
 		return new UIContext();
@@ -68,6 +76,26 @@ namespace SDLCore::UI {
         return m_windowSize;
     }
 
+    Vector2 UIContext::GetMousePos() const {
+        return m_mousePos;
+    }
+
+    Vector2 UIContext::GetMouseDelta() const {
+        return m_mouseDelta;
+    }
+
+    bool UIContext::GetLeftMouseDown() const {
+        return m_leftMouseDown;
+    }
+
+    bool UIContext::GetLeftMouseJustDown() const {
+        return m_leftMouseJustDown;
+    }
+
+    bool UIContext::GetLeftMouseJustUp() const {
+        return m_leftMouseJustUp;
+    }
+
     uintptr_t UIContext::GetActiveCapturedPressNode() const {
         return m_pressNodeID;
     }
@@ -98,14 +126,14 @@ namespace SDLCore::UI {
         if (!m_rootNode) {
             m_rootNode = std::make_shared<FrameNode>(-1, id);
             FrameNode* frame = m_rootNode.get();
-            m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
+            m_nodeCreationStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastChildPosition.push_back(0);
             return frame;
         }
 
-        if (!m_nodeStack.empty()) {
-            UINode* parentNode = m_nodeStack.back();
+        if (!m_nodeCreationStack.empty()) {
+            UINode* parentNode = m_nodeCreationStack.back();
             if (!parentNode)
                 return nullptr;
 
@@ -117,7 +145,7 @@ namespace SDLCore::UI {
 #endif
 
             FrameNode* frame = parentNode->AddChild<FrameNode>(currentChildPos, id);
-            m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
+            m_nodeCreationStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastChildPosition.push_back(0);
 
@@ -145,7 +173,7 @@ namespace SDLCore::UI {
                 // element does not exist. create element and create stack
                 FrameNode* frame = parentNode->AddChild<FrameNode>(static_cast<int>(pos), id);
                 m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
-                m_nodeStack.push_back(reinterpret_cast<UINode*>(frame));
+                m_nodeCreationStack.push_back(reinterpret_cast<UINode*>(frame));
                 m_lastChildPosition.push_back(0);
                 return frame;
             }
@@ -158,6 +186,7 @@ namespace SDLCore::UI {
         if (!m_lastChildPosition.empty() && !m_lastNodeStack.empty()) {
             UINode* node = m_lastNodeStack.back();
             if (node && m_lastChildPosition.back() < node->GetChildren().size()) {
+                Log::Print("delete");
                 node->RemoveChildrenFromIndex(m_lastChildPosition.back());
             }
             
@@ -167,8 +196,9 @@ namespace SDLCore::UI {
             }
         }
 
-        if (!m_nodeStack.empty())
-            m_nodeStack.pop_back();
+        if (!m_nodeCreationStack.empty()) {
+            m_nodeCreationStack.pop_back();
+        }
 
         if (!m_lastNodeStack.empty()) {
             UIEvent* uiEvent = ProcessEvent(this, m_lastNodeStack.back());
@@ -210,6 +240,20 @@ namespace SDLCore::UI {
         m_windowSize = win->GetSize();
     }
 
+    void UIContext::UpdateInput() {
+        uint64_t frameCount = Time::GetFrameCount();
+        if (m_updateInputFrame >= Time::GetFrameCount())
+            return;
+        m_updateInputFrame = frameCount;
+
+        m_mousePos = Input::GetMousePosition();
+        m_mouseDelta = Input::GetMouseDelta();
+
+        m_leftMouseDown = Input::MousePressed(MouseButton::LEFT);
+        m_leftMouseJustDown = Input::MouseJustPressed(MouseButton::LEFT);
+        m_leftMouseJustUp = Input::MouseJustReleased(MouseButton::LEFT);
+    }
+
     UIEvent* UIContext::ProcessEvent(UIContext* ctx, UINode* node) {
         static UIEvent dummy;
 
@@ -246,6 +290,7 @@ namespace SDLCore::UI {
         node->SetChildHasEvent(false);
         UIEvent* event = node->GetEventPtr();
         
+        ctx->UpdateInput();
         node->ProcessEventInternal(ctx, event);
 
         return event;
@@ -292,10 +337,8 @@ namespace SDLCore::UI {
 #ifndef NDEBUG
     void UIContext::LogDuplicateIDIfAny(uintptr_t id, UINode* parent) {
         if (!IsIDUnique(id, parent)) {
-            const char* text = reinterpret_cast<const char*>(id);
             Log::Warn(
-                "SDLCore::UI::UIContext::BeginFrame: id '{}' ({}) is not unique on this layer, will lead to problems!",
-                text,
+                "SDLCore::UI::UIContext::BeginFrame: id '{}' is not unique on this layer, will lead to problems!",
                 id
             );
         }
