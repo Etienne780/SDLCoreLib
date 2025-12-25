@@ -10,10 +10,13 @@
 namespace SDLCore {
 
 	FontAsset::FontAsset(TTF_Font* font, float size)
-		: ttfFont(font), fontSize(size) {
+		: m_ttfFont(font), m_fontSize(size) {
         if (font) {
-            glyphAtlasSurf = GenerateGlypeAtlas(font, size);
-            if (!glyphAtlasSurf) {
+            m_ascent = TTF_GetFontAscent(font);
+            m_descent = TTF_GetFontDescent(font);
+            m_lineSkip = TTF_GetFontLineSkip(font);
+            m_glyphAtlasSurf = GenerateGlypeAtlas(font, size);
+            if (!m_glyphAtlasSurf) {
                 Log::Error("SDLCore::FontAsset: Font asset of font '{}' with size '{}' can not be used, glyph atlas was not generated",
                     TTF_GetFontFamilyName(font), size);
             }
@@ -57,13 +60,13 @@ namespace SDLCore {
                 auto* win = app->GetWindow(winID);
                 if (win) {
                     Log::Error("SDLCore::FontAsset::GetGlyphAtlasTexture: Could not create texture for window '{} ({})', Font: '{}' size: '{}'", 
-                        win->GetName(), winID, TTF_GetFontFamilyName(ttfFont), fontSize);
+                        win->GetName(), winID, TTF_GetFontFamilyName(m_ttfFont), m_fontSize);
                     return tex;
                 }
             }
 
             Log::Error("SDLCore::FontAsset::GetGlyphAtlasTexture: Could not create texture for window '{}', Font: '{}' size: '{}'",
-                winID, TTF_GetFontFamilyName(ttfFont), fontSize);
+                winID, TTF_GetFontFamilyName(m_ttfFont), m_fontSize);
         }
         return tex;
     }
@@ -73,15 +76,17 @@ namespace SDLCore {
 
         Cleanup();
 
-        fontSize = other.fontSize;
-        lastUseTick = other.lastUseTick;
-        ttfFont = other.ttfFont;
-        glyphAtlasSurf = other.glyphAtlasSurf;
+        m_fontSize = other.m_fontSize;
+        m_lastUseTick = other.m_lastUseTick;
+        m_ttfFont = other.m_ttfFont;
+        m_glyphAtlasSurf = other.m_glyphAtlasSurf;
+        m_ascent = other.m_ascent;
+        m_descent = other.m_descent;
+        m_lineSkip = other.m_lineSkip;
 
         m_charToGlyphMetrics = std::move(other.m_charToGlyphMetrics);
         m_asciiGlyphs = std::move(other.m_asciiGlyphs);
         m_asciiPresent = std::move(other.m_asciiPresent);
-
 
         m_winIDToGlyphAtlasTexture = std::move(other.m_winIDToGlyphAtlasTexture);
         auto* app = Application::GetInstance();
@@ -95,10 +100,13 @@ namespace SDLCore {
             }
         }
 
-        other.fontSize = 0;
-        other.lastUseTick = 0;
-        other.ttfFont = nullptr;
-        other.glyphAtlasSurf = nullptr;
+        other.m_fontSize = 0;
+        other.m_lastUseTick = 0;
+        other.m_ttfFont = nullptr;
+        other.m_glyphAtlasSurf = nullptr;
+        other.m_ascent = 0;
+        other.m_descent = 0;
+        other.m_lineSkip = 0;
         other.m_charToGlyphMetrics.clear();
         other.m_asciiGlyphs.fill({});
         other.m_asciiPresent.fill(false);
@@ -115,15 +123,15 @@ namespace SDLCore {
         m_charToGlyphMetrics.clear();
         m_winIDToGlyphAtlasTexture.clear();
 
-		if (glyphAtlasSurf)
-			SDL_DestroySurface(glyphAtlasSurf);
-		if (ttfFont)
-			TTF_CloseFont(ttfFont);
-		glyphAtlasSurf = nullptr;
-		ttfFont = nullptr;
+		if (m_glyphAtlasSurf)
+			SDL_DestroySurface(m_glyphAtlasSurf);
+		if (m_ttfFont)
+			TTF_CloseFont(m_ttfFont);
+		m_glyphAtlasSurf = nullptr;
+		m_ttfFont = nullptr;
 
-		lastUseTick = 0;
-		fontSize = 0;
+		m_lastUseTick = 0;
+		m_fontSize = 0;
 	}
 
     SDL_Surface* FontAsset::GenerateGlypeAtlas(TTF_Font* font, float size) {
@@ -247,7 +255,7 @@ namespace SDLCore {
         if (!renderer)
             return nullptr;
 
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer.get(), glyphAtlasSurf);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer.get(), m_glyphAtlasSurf);
         if (texture) {
             m_winIDToGlyphAtlasTexture[winID] = texture;
             m_winIDToWinCallbackID[winID] = win->AddOnSDLRendererDestroy([this, winID]() { FreeTextureForWindow(winID); });
