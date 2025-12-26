@@ -4,8 +4,6 @@
 #include "SDLCoreRenderer.h"
 #include "UI/Nodes/TextNode.h"
 
-#include "Profiler.h"
-
 namespace SDLCore::UI {
 
 	static std::string textNodeName = "Text";
@@ -15,7 +13,6 @@ namespace SDLCore::UI {
 
 	void TextNode::RenderNode(UIContext* ctx) const {
 		namespace RE = SDLCore::Render;
-		SDLCore::Debug::ProfilerScope das("Render(Text)");
 		if(m_textSize > 0) {
 			RE::SetFontSize(m_textSize);
 			RE::SetColor(m_textColor);
