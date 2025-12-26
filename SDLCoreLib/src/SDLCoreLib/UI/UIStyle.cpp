@@ -27,11 +27,12 @@ namespace SDLCore::UI {
 		return m_name;
 	}
 	
-	void UIStyle::Merge(const UIStyle& other) {
+	UIStyle& UIStyle::Merge(const UIStyle& other) {
 		for (const auto& [state, styleState] : other.GetAllStates()) {
 			UIStyleState* outStyleState = this->GetState(state);
 			outStyleState->Merge(styleState);
 		}
+		return *this;
 	}
 
 	UIStyleID UIStyle::GetID() const {
