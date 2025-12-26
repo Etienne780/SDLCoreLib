@@ -50,12 +50,6 @@ namespace SDLCore::UI {
 		m_borderColor.Set(0);
 		styleState.TryGetValue<Vector4>(Properties::borderColor, m_borderColor);
 
-		m_borderWidth = 0;
-		styleState.TryGetValue<float>(Properties::borderWidth, m_borderWidth);
-
-		m_innerBorder = false;
-		styleState.TryGetValue<bool>(Properties::borderInset, m_innerBorder);
-
 		m_useTexture = styleState.TryGetValue<std::shared_ptr<Texture>>(Properties::backgroundTexture, m_texture);
 	}
 

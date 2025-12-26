@@ -78,7 +78,6 @@ namespace SDLCore::UI {
         // max lastModified of applied styles
         uint64_t GetAppliedStyleNode() const;
 
-
         /*
         * @brief node will be active after the first frame of creation
         */
@@ -105,6 +104,9 @@ namespace SDLCore::UI {
         UILayoutDirection GetLayoutDirection() const;
         UIAlignment GetHorizontalAlignment() const;
         UIAlignment GetVerticalAlignment() const;
+
+        Vector4 GetBorderLayoutPadding() const;
+        Vector4 GetBorderLayoutMargin() const;
 
     protected:
         void RemoveChildrenFromIndex(uint16_t position);
@@ -135,10 +137,13 @@ namespace SDLCore::UI {
         UIState m_lastState = UIState::NORMAL;
         UIStyle m_finalStyle;
         UIEvent m_eventState;
+        float m_borderWidth = 0.0f;
+        bool m_innerBorder = false;
         bool m_childHasEvent = false;
         bool m_isActive = false;
         bool m_isHitTestEnabled = true;
         bool m_notInteractible = false;
+        bool m_borderAffectsLayout = true;
 
         Vector2 m_position;
         Vector2 m_size;
