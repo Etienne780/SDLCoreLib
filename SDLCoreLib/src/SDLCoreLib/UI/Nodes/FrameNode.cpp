@@ -14,19 +14,21 @@ namespace SDLCore::UI {
 	void FrameNode::RenderNode(UIContext* ctx) const {
 		namespace RE = SDLCore::Render;
 
-		if (m_useTexture && m_texture) {
-			const Vector2& size = this->GetSize();
-			if (size != Vector2::zero) {
-				m_texture->SetColorTint(m_backgroundColor);
-				m_texture->Render(this->GetPosition(), size);
+		if (m_backgroundColor.w > 0) {
+			if (m_useTexture && m_texture) {
+				const Vector2& size = this->GetSize();
+				if (size != Vector2::zero) {
+					m_texture->SetColorTint(m_backgroundColor);
+					m_texture->Render(this->GetPosition(), size);
+				}
+			}
+			else {
+				RE::SetColor(m_backgroundColor);
+				RE::FillRect(this->GetPosition(), this->GetSize());
 			}
 		}
-		else {
-			RE::SetColor(m_backgroundColor);
-			RE::FillRect(this->GetPosition(), this->GetSize());
-		}
 
-		if (m_borderWidth > 0) {
+		if (m_borderWidth > 0 && m_borderColor.w > 0) {
 			RE::SetColor(m_borderColor);
 			RE::SetInnerStroke(m_innerBorder);
 			RE::SetStrokeWidth(m_borderWidth);
