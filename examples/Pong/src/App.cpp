@@ -132,7 +132,7 @@ void App::Render() {
     RE::SetColor(0, 150);
     RE::FillRect(0, 0, 150, 32);
     RE::SetColor(255);
-    RE::SetFontSize(24);
+    RE::SetTextSize(24);
     RE::Text(strFPS, 10, 10);
     
     // Border
@@ -170,15 +170,15 @@ void App::Render() {
 
         // Left
         RE::SetColor((scoreSideL) ? 255 : 150);
-        RE::SetFontSize((scoreSideL) ? 96.0f : 64.0f);
+        RE::SetTextSize((scoreSideL) ? 96.0f : 64.0f);
         RE::Text(strLScore, fwinWidth/4 - RE::GetTextWidth(strLScore)/2,
-            fwinHeight/2 - RE::GetTextHeight(strLScore)/2);
+            fwinHeight/2 - RE::GetTextHeight()/2);
 
         // Right
         RE::SetColor((!scoreSideL) ? 255 : 150);
-        RE::SetFontSize((!scoreSideL) ? 96.0f : 64.0f);
+        RE::SetTextSize((!scoreSideL) ? 96.0f : 64.0f);
         RE::Text(strRScore, fwinWidth - fwinWidth/4 - RE::GetTextWidth(strRScore)/2,
-            fwinHeight/2 - RE::GetTextHeight(strRScore)/2);
+            fwinHeight/2 - RE::GetTextHeight()/2);
     }
 
     // CountDown
@@ -190,19 +190,19 @@ void App::Render() {
         RE::SetColor(0, 200);
         RE::FillRect(fwinWidth/2 - rectSize/2, fwinHeight/2 - rectSize/2, rectSize, rectSize);
 
-        RE::SetFontSize(46);
+        RE::SetTextSize(46);
         RE::SetColor(255);
-        RE::Text(msg, fwinWidth/2 - RE::GetTextWidth(msg)/2, fwinHeight/2 - RE::GetTextHeight(msg)/2);
+        RE::Text(msg, fwinWidth/2 - RE::GetTextWidth(msg)/2, fwinHeight/2 - RE::GetTextHeight()/2);
     }
 
     // How to play info
     if (m_startGame && IsCountDownActive()) {
         float a = (255 / m_startCountDown) * m_startCounter;
         std::string msg = "W/S = Move left paddle";
-        RE::SetFontSize(32);
+        RE::SetTextSize(32);
         RE::SetColor(255, static_cast<Uint8>(a));
         RE::Text(msg, 20, 40);
-        RE::Text("O/L = Move right paddle", 20, 40 + RE::GetTextHeight(msg) + 7);
+        RE::Text("O/L = Move right paddle", 20, 40 + RE::GetTextHeight() + 7);
     }
 
     // Pause
@@ -211,7 +211,7 @@ void App::Render() {
         RE::FillRect(0, 0, fwinWidth, fwinHeight);
 
         std::string msg = "Pause";
-        RE::SetFontSize(46);
+        RE::SetTextSize(46);
         float strPauseH = RE::GetTextWidth(msg);
         RE::SetColor(255);
         RE::Text(msg, fwinWidth/2 - strPauseH /2, 10);
@@ -246,7 +246,7 @@ void App::Render() {
         float btnPadding = 10;
         
         // Resume
-        RE::SetFontSize(46);
+        RE::SetTextSize(46);
         RE::SetColor(255);
         if (DrawButton(fwinWidth/2 - btnWidth/2, strPauseH + yOffset, btnWidth, btnHeight)) {
             m_pause = false;
@@ -254,7 +254,7 @@ void App::Render() {
         }
         RE::SetColor(0);
         RE::Text(strResume, fwinWidth/2 - RE::GetTextWidth(strResume)/2, 
-            strPauseH + yOffset + RE::GetTextHeight(strResume)/2);
+            strPauseH + yOffset + RE::GetTextHeight()/2);
         
         // Quit
         RE::SetColor(255);
@@ -263,7 +263,7 @@ void App::Render() {
         }
         RE::SetColor(0);
         RE::Text(strQuit, fwinWidth/2 - RE::GetTextWidth(strQuit)/2, 
-            strPauseH + btnHeight + btnPadding + yOffset + RE::GetTextHeight(strQuit)/2);
+            strPauseH + btnHeight + btnPadding + yOffset + RE::GetTextHeight()/2);
     }
 
     RE::Present();
