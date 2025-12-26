@@ -33,6 +33,8 @@ namespace SDLCore::UI::Properties {
 	*
 	* Defines how the width value is interpreted (pixels, percentage, etc.).
 	*
+	* Default: UISizeUnit::PX
+	*
 	* Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
 	*/
 	inline UIPropertyID widthUnit;
@@ -42,6 +44,8 @@ namespace SDLCore::UI::Properties {
 	*
 	* Defines how the height value is interpreted (pixels, percentage, etc.).
 	*
+	* Default: UISizeUnit::PX
+	*
 	* Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
 	*/
 	inline UIPropertyID heightUnit;
@@ -49,7 +53,9 @@ namespace SDLCore::UI::Properties {
 	/*
 	* @brief Element width (float)
 	*
-	* Interpreted according to sizeUnitW.
+	* Interpreted according to widthUnit.
+	*
+	* Default: 0.0f
 	*
 	* Usage: style.SetValue<float>(100.0f)
 	*/
@@ -58,7 +64,9 @@ namespace SDLCore::UI::Properties {
 	/*
 	* @brief Element height (float)
 	*
-	* Interpreted according to sizeUnitH.
+	* Interpreted according to heightUnit.
+	*
+	* Default: 0.0f
 	*
 	* Usage: style.SetValue<float>(50.0f)
 	*/
@@ -69,6 +77,8 @@ namespace SDLCore::UI::Properties {
 	*
 	* Order: Top, Left, Bottom, Right.
 	*
+	* Default: Vector4(0, 0, 0, 0)
+	*
 	* Usage: style.SetValue<Vector4>(Vector4(top, left, bottom, right))
 	*/
 	inline UIPropertyID padding;
@@ -77,6 +87,8 @@ namespace SDLCore::UI::Properties {
 	* @brief Outer spacing (Vector4)
 	*
 	* Order: Top, Left, Bottom, Right.
+	*
+	* Default: Vector4(0, 0, 0, 0)
 	*
 	* Usage: style.SetValue<Vector4>(Vector4(top, left, bottom, right))
 	*/
@@ -87,6 +99,8 @@ namespace SDLCore::UI::Properties {
 	*
 	* Controls how children are arranged inside this element.
 	*
+	* Default: UILayoutDirection::ROW
+	*
 	* Usage: style.SetValue<int>(static_cast<int>(UILayoutDirection::ROW))
 	*/
 	inline UIPropertyID layoutDirection;
@@ -95,6 +109,8 @@ namespace SDLCore::UI::Properties {
 	* @brief Horizontal alignment of children (int, UIAlignment)
 	*
 	* Affects child placement on the X axis inside this element.
+	*
+	* Default: UIAlignment::START
 	*
 	* Usage: style.SetValue<int>(static_cast<int>(UIAlignment::CENTER))
 	*/
@@ -105,9 +121,12 @@ namespace SDLCore::UI::Properties {
 	*
 	* Affects child placement on the Y axis inside this element.
 	*
+	* Default: UIAlignment::START
+	*
 	* Usage: style.SetValue<int>(static_cast<int>(UIAlignment::START))
 	*/
 	inline UIPropertyID alignVertical;
+
 
 	#pragma endregion
 
@@ -118,6 +137,8 @@ namespace SDLCore::UI::Properties {
 	*
 	* References a texture used as element background.
 	*
+	* Default: UITextureID{ SDLCORE_INVALID_ID } (no texture)
+	*
 	* Usage: style.SetValue<UITextureID>(UITextureID{0})
 	*/
 	inline UIPropertyID backgroundTexture;
@@ -126,6 +147,8 @@ namespace SDLCore::UI::Properties {
 	* @brief Background color (Vector4)
 	*
 	* RGBA color used when no background texture is present.
+	*
+	* Default: Vector4(255, 255, 255, 255)
 	*
 	* Usage: style.SetValue<Vector4>(Vector4(r, g, b, a))
 	*/
@@ -136,6 +159,8 @@ namespace SDLCore::UI::Properties {
 	*
 	* RGBA color of the element border.
 	*
+	* Default: Vector4(255, 255, 255, 255)
+	*
 	* Usage: style.SetValue<Vector4>(Vector4(r, g, b, a))
 	*/
 	inline UIPropertyID borderColor;
@@ -144,6 +169,8 @@ namespace SDLCore::UI::Properties {
 	* @brief Border width (float)
 	*
 	* Width of the element border in pixels.
+	*
+	* Default: 0.0f
 	*
 	* Usage: style.SetValue<float>(2.0f)
 	*/
@@ -154,12 +181,24 @@ namespace SDLCore::UI::Properties {
 	*
 	* Controls whether the border is rendered inside the element bounds.
 	*
-	* - true  -> Border is drawn inside the element
-	* - false -> Border is drawn outside the element
+	* Default: true
 	*
 	* Usage: style.SetValue<bool>(true)
 	*/
 	inline UIPropertyID borderInset;
+
+	/*
+	* @brief Controls whether the border affects layout calculations (bool)
+	*
+	* If true, the border contributes to element size and child layout.
+	* If false, the border is rendered visually only.
+	*
+	* Default: true
+	*
+	* Usage: style.SetValue<bool>(false)
+	*/
+	inline UIPropertyID borderAffectsLayout;
+
 
 	#pragma endregion
 
@@ -170,8 +209,8 @@ namespace SDLCore::UI::Properties {
 	*
 	* If false, the element is rendered visually but does not receive
 	* hover, click, or any other interaction events.
-	* Events will pass through to elements below.
-	* Commonly used for Text.
+	*
+	* Default: true
 	*
 	* Usage: style.SetValue<bool>(true)
 	*/
@@ -180,9 +219,9 @@ namespace SDLCore::UI::Properties {
 	/*
 	* @brief Disables all interaction for this element (bool)
 	*
-	* If true, the element will not respond to any events
-	* (clicks, hover, etc.) and behaves as disabled.
-	* Useful for disabling buttons or making elements non-interactive.
+	* Element is visible but behaves as disabled.
+	*
+	* Default: false
 	*
 	* Usage: style.SetValue<bool>(true)
 	*/
@@ -197,6 +236,8 @@ namespace SDLCore::UI::Properties {
 	*
 	* Defines which font is used for text rendering.
 	*
+	* Default: UIFontID{0}
+	*
 	* Usage: style.SetValue<UIFontID>(UIFontID{0})
 	*/
 	inline UIPropertyID font;
@@ -206,6 +247,8 @@ namespace SDLCore::UI::Properties {
 	*
 	* Text size in pixels.
 	*
+	* Default: 16.0f
+	*
 	* Usage: style.SetValue<float>(16.0f)
 	*/
 	inline UIPropertyID textSize;
@@ -214,6 +257,8 @@ namespace SDLCore::UI::Properties {
 	* @brief Text color (Vector4)
 	*
 	* RGBA color of rendered text.
+	*
+	* Default: Vector4(255, 255, 255, 255)
 	*
 	* Usage: style.SetValue<Vector4>(Vector4(r, g, b, a))
 	*/

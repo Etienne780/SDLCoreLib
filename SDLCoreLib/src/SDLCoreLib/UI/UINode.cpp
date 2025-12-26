@@ -75,16 +75,25 @@ namespace SDLCore::UI {
 		styleState.TryGetValue<int>(Properties::widthUnit, sizeUnitW);
 		styleState.TryGetValue<int>(Properties::heightUnit, sizeUnitH);
 
-		m_padding.Set(0);
-		m_margin.Set(0);
+		m_padding.Set(0.0f);
+		m_margin.Set(0.0f);
 		styleState.TryGetValue<Vector4>(Properties::padding, m_padding);
 		styleState.TryGetValue<Vector4>(Properties::margin, m_margin);
+
+		m_borderWidth = 0.0f;
+		styleState.TryGetValue<float>(Properties::borderWidth, m_borderWidth);
+
+		m_innerBorder = false;
+		styleState.TryGetValue<bool>(Properties::borderInset, m_innerBorder);
 
 		m_isHitTestEnabled = true;
 		styleState.TryGetValue<bool>(Properties::hitTestEnabled, m_isHitTestEnabled);
 
 		m_notInteractible = false;
 		styleState.TryGetValue<bool>(Properties::notInteractible, m_notInteractible);
+
+		m_borderAffectsLayout = true;
+		styleState.TryGetValue<bool>(Properties::borderAffectsLayout, m_borderAffectsLayout);
 
 		ApplyStyleCalled(ctx, styleState);
 
@@ -206,6 +215,20 @@ namespace SDLCore::UI {
 		return m_verticalAligment;
 	}
 
+	Vector4 UINode::GetBorderLayoutPadding() const {
+		if (!m_borderAffectsLayout || !m_innerBorder)
+			return Vector4(0.0f);
+
+		return Vector4(m_borderWidth);
+	}
+
+	Vector4 UINode::GetBorderLayoutMargin() const {
+		if (!m_borderAffectsLayout || m_innerBorder)
+			return Vector4(0.0f);
+
+		return Vector4(m_borderWidth);
+	}
+
 	void UINode::RemoveChildrenFromIndex(uint16_t pos) {
 		if (pos >= m_children.size())
 			return;
@@ -241,7 +264,7 @@ namespace SDLCore::UI {
 
 		auto resolveBaseSize = [&](bool horizontal) -> float {
 			if (m_parent) {
-				const auto& pPadding = m_parent->m_padding;
+				const auto& pPadding = m_parent->m_padding + m_parent->GetBorderLayoutPadding();
 				return horizontal ? m_parent->m_size.x - pPadding.y - pPadding.w : m_parent->m_size.y - pPadding.x - pPadding.z;
 			}
 			return horizontal ? ctx->GetWindowSize().x : ctx->GetWindowSize().y;
@@ -299,7 +322,7 @@ namespace SDLCore::UI {
 		float size = 0.0f;
 
 		for (int i = 0; i < upToIndex && i < static_cast<int>(childs.size()); ++i) {
-			const auto& cMargin = childs[i]->m_margin;
+			const auto& cMargin = childs[i]->m_margin + childs[i]->GetBorderLayoutMargin();
 			size += horizontal ? childs[i]->m_size.x + cMargin.y + cMargin.w : childs[i]->m_size.y + cMargin.x + cMargin.z;
 		}
 
@@ -314,7 +337,7 @@ namespace SDLCore::UI {
 		float size = 0.0f;
 
 		for (const auto& c : childs) {
-			const auto& cMargin = c->m_margin;
+			const auto& cMargin = c->m_margin + c->GetBorderLayoutMargin();
 			size += horizontal ? c->m_size.x + cMargin.y + cMargin.w : c->m_size.y + cMargin.x + cMargin.z;
 		}
 
@@ -373,7 +396,8 @@ namespace SDLCore::UI {
 		const bool isRow = IsRow(dir);
 		const bool isReverse = IsReverse(dir);
 
-		const auto& pPad = m_parent->m_padding;
+		const Vector4 margin = m_margin + this->GetBorderLayoutMargin();
+		const auto& pPad = m_parent->m_padding + m_parent->GetBorderLayoutPadding();
 		const float contentWidth =
 			parentSize.x - pPad.y - pPad.w;
 		const float contentHeight =
@@ -393,7 +417,7 @@ namespace SDLCore::UI {
 			if (isReverse)
 				x = contentWidth - x - m_size.x;
 
-			m_position.x = contentStartX + x + m_margin.y;
+			m_position.x = contentStartX + x + margin.y;
 		}
 		else {
 			float y = AlignOffset(false, m_parent->GetVerticalAlignment(), contentHeight);
@@ -401,13 +425,13 @@ namespace SDLCore::UI {
 			if (isReverse)
 				y = contentHeight - y - m_size.y;
 
-			m_position.y = contentStartY + y + m_margin.x;
+			m_position.y = contentStartY + y + margin.x;
 		}
 
 		if (isRow) {
 			switch (m_parent->GetVerticalAlignment()) {
 			case UIAlignment::START:
-				m_position.y = contentStartY + m_margin.x;
+				m_position.y = contentStartY + margin.x;
 				break;
 
 			case UIAlignment::CENTER:
@@ -417,14 +441,14 @@ namespace SDLCore::UI {
 
 			case UIAlignment::END:
 				m_position.y =
-					contentStartY + contentHeight - m_size.y - m_margin.z;
+					contentStartY + contentHeight - m_size.y - margin.z;
 				break;
 			}
 		}
 		else {
 			switch (m_parent->GetHorizontalAlignment()) {
 			case UIAlignment::START:
-				m_position.x = contentStartX + m_margin.y;
+				m_position.x = contentStartX + margin.y;
 				break;
 
 			case UIAlignment::CENTER:
@@ -434,7 +458,7 @@ namespace SDLCore::UI {
 
 			case UIAlignment::END:
 				m_position.x =
-					contentStartX + contentWidth - m_size.x - m_margin.w;
+					contentStartX + contentWidth - m_size.x - margin.w;
 				break;
 			}
 		}
