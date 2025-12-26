@@ -91,7 +91,11 @@ namespace SDLCore::UI {
 	struct UIKey {
 		uintptr_t id;
 
-		explicit UIKey(const std::string& str)
+		UIKey(const std::string& str)
+			: id(std::hash<std::string>{}(str)) {
+		}
+
+		UIKey(const char* str)
 			: id(std::hash<std::string>{}(str)) {
 		}
 
