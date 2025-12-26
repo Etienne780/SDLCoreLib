@@ -660,10 +660,10 @@ namespace SDLCore::Render {
 	void SetFont(const SystemFilePath& path);
 
 	/**
-	* @brief Sets the active font size in pixels.
-	* @param size Font size. Values below 0 are clamped to 0.
+	* @brief Sets the active text size in pixels.
+	* @param size text size. Values below 0 are clamped to 0.
 	*/
-	void SetFontSize(float size);
+	void SetTextSize(float size);
 
 	/**
 	* @brief Returns the currently active font size in pixels.

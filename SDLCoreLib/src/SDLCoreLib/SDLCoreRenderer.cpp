@@ -23,7 +23,7 @@ namespace SDLCore::Render {
 
     // ========== Text ==========
     std::shared_ptr<SDLCore::Font> s_font = std::make_shared<SDLCore::Font>(true);// loads the default font
-    float s_fontSize = s_font->GetSelectedSize();
+    float s_textSize = s_font->GetSelectedSize();
     static Align s_textHorAlign = Align::START;
     static Align s_textVerAlign = Align::START;
     float s_textLineHeightMultiplier = 0.4f;
@@ -899,7 +899,7 @@ namespace SDLCore::Render {
         TextCacheKey key{
             s_font.get(),
             text,
-            s_fontSize,
+            s_textSize,
             s_textClipWidth,
             s_textMaxLines,
             s_textLimitType,
@@ -1134,7 +1134,7 @@ namespace SDLCore::Render {
                 penX += m->advance;
             }
 
-            penY += lineH + (s_textLineHeightMultiplier * s_fontSize);
+            penY += lineH + (s_textLineHeightMultiplier * s_textSize);
             currentLine++;
         }
     }
@@ -1177,7 +1177,7 @@ namespace SDLCore::Render {
     }
 
     void ResetTextParams() {
-        SetFontSize(16.0f);
+        SetTextSize(16.0f);
         SetTextAlign(Align::START);
         SetTextEllipsis(s_textEllipsisDefault);
         SetMaxLines(0);
@@ -1187,23 +1187,23 @@ namespace SDLCore::Render {
 
     void SetFont(std::shared_ptr<Font> font) {
         s_font = font;
-        s_font->SelectSize(s_fontSize);
+        s_font->SelectSize(s_textSize);
     }
 
     void SetFont(const SystemFilePath& path) {
         s_font = std::make_shared<Font>(path);
-        s_font->SelectSize(s_fontSize);
+        s_font->SelectSize(s_textSize);
     }
 
-    void SetFontSize(float size) {
-        s_fontSize = std::max(size, 0.0f);
+    void SetTextSize(float size) {
+        s_textSize = std::max(size, 0.0f);
         if (!s_font)
             s_font = std::make_shared<SDLCore::Font>(true);// loads the default font
-        s_font->SelectSize(s_fontSize);
+        s_font->SelectSize(s_textSize);
     }
 
     float GetActiveFontSize() {
-        return (s_font) ? s_font->GetSelectedSize() : s_fontSize;
+        return (s_font) ? s_font->GetSelectedSize() : s_textSize;
     }
 
     std::shared_ptr<Font> GetActiveFont() {
@@ -1342,7 +1342,7 @@ namespace SDLCore::Render {
         if (text.empty() || targetW <= 1.0f || targetH <= 1.0f)
             return 1.0f;
 
-        float baseSize = (s_fontSize > 0.0f) ? s_fontSize : 16.0f;
+        float baseSize = (s_textSize > 0.0f) ? s_textSize : 16.0f;
 
         float baseW = GetTextBlockWidth(text);
         float baseH = GetTextBlockHeight(text);
@@ -1453,7 +1453,7 @@ namespace SDLCore::Render {
         const float ascent = static_cast<float>(asset->m_ascent);
         const float descent = static_cast<float>(-asset->m_descent);
         const float lineSkip = static_cast<float>(asset->m_lineSkip);
-        const float extra = s_textLineHeightMultiplier * s_fontSize;
+        const float extra = s_textLineHeightMultiplier * s_textSize;
 
         if (lines.size() == 1) {
             return ascent + descent;
@@ -1475,7 +1475,7 @@ namespace SDLCore::Render {
             return 0.0f;
 
         return static_cast<float>(asset->m_lineSkip)
-            + (s_textLineHeightMultiplier * s_fontSize);
+            + (s_textLineHeightMultiplier * s_textSize);
     }
 
     #pragma endregion
