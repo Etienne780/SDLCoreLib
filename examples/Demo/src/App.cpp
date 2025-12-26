@@ -330,7 +330,7 @@ void App::OnUpdate() {
         if (Input::KeyPressed(KeyCode::D)) pos.x -= speed * Time::GetDeltaTime();
 
         std::string msg = "Hello World!";
-        float textHeight = RE::GetTextHeight(msg);
+        float textHeight = RE::GetTextHeight();
         RE::SetColor(0);
         RE::FillRect(pos.x, pos.y, RE::GetTextWidth(msg), textHeight);
         RE::SetColor(0, 255, 0);
@@ -338,7 +338,7 @@ void App::OnUpdate() {
 
         msg = FormatUtils::toString(frameRate);
         RE::SetColor(0);
-        RE::FillRect(pos.x, pos.y + textHeight + 10, RE::GetTextWidth(msg), RE::GetTextHeight(msg));
+        RE::FillRect(pos.x, pos.y + textHeight + 10, RE::GetTextWidth(msg), RE::GetTextHeight());
         RE::SetColor(255);
         RE::Text(msg, pos.x, pos.y + textHeight + 10);
 
@@ -483,7 +483,7 @@ void App::OnUpdate() {
                 RE::SetColor(255);
                 RE::SetFontSize(24);
                 RE::Text("2D-Audio", 10, 10);
-                RE::Text(Log::GetFormattedString("Current Song {}{}", (SoundManager::IsPlaying(testSound2D_1) ? "Sound 1" : ""), (SoundManager::IsPlaying(testSound2D_2) ? "Sound 2" : "")), 10, 10 + RE::GetTextHeight("2D-Audio") + 5);
+                RE::Text(Log::GetFormattedString("Current Song {}{}", (SoundManager::IsPlaying(testSound2D_1) ? "Sound 1" : ""), (SoundManager::IsPlaying(testSound2D_2) ? "Sound 2" : "")), 10, 10 + RE::GetTextHeight() + 5);
             }
 
             // ========= MODE SELECTION =========
