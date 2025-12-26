@@ -93,7 +93,7 @@ namespace SDLCore::UI {
         backgroundColor = RegisterProperty(
             "background_color",
             "Background color (RGBA)",
-            PropertyValue(Vector4(255))
+            PropertyValue(Vector4(0))
         );
 
         borderColor = RegisterProperty(
