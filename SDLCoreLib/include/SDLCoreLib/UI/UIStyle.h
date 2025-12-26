@@ -23,7 +23,7 @@ namespace SDLCore::UI {
 		/*
 		* @brief Merges other style on top of this
 		*/
-		void Merge(const UIStyle& other);
+		UIStyle& Merge(const UIStyle& other);
 
 		UIStyleID GetID() const;
 		std::string GetName() const;
