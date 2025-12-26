@@ -16,6 +16,8 @@ namespace SDLCore::UI {
 	class UIContext {
 		friend class UICTXWrapper;
 	public:
+		~UIContext();
+
 		static UIContext* CreateContext();
 
 		void CapturePressNode(uintptr_t id);
@@ -49,6 +51,7 @@ namespace SDLCore::UI {
 
 	private:
 		UIContext();
+		WindowCallbackID m_windowResizeCBID;
 
 		std::vector<uint16_t> m_lastChildPosition;/*< is the position of the current child inside of last node*/
 		std::vector<UINode*> m_nodeCreationStack;/*< is for creating nodes. if a node is this stack, than those nodes are currently created*/
@@ -108,7 +111,10 @@ namespace SDLCore::UI {
 
 		UINode* GetRootNode() const;
 		void SetWindowParams(WindowID id);
+		void RemoveWindowCB();
 
+		// gets called on window resize
+		void UpdateNodeStyles();
 		void UpdateInput();
 		static UIEvent* ProcessEvent(UIContext* ctx, UINode* node);
 		static void RenderNodes(UIContext* ctx, UINode* rootNode);
