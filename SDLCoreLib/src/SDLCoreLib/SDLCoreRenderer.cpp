@@ -69,6 +69,8 @@ namespace SDLCore::Render {
         float blockHeight = 0.0f;
         float textWidth = 0.0f;
 
+        bool firstCall = true;
+        SDL_Color color{ 255, 255, 255, 255 };
         SDL_Texture* preRenderedTexture = nullptr;
 
         uint64_t lastUseFrame = 0;
@@ -1017,8 +1019,29 @@ namespace SDLCore::Render {
             ct->blockHeight
         };
 
-        SDL_SetTextureColorMod(ct->preRenderedTexture, s_activeColor.r, s_activeColor.g, s_activeColor.b);
-        SDL_SetTextureAlphaMod(ct->preRenderedTexture, s_activeColor.a);
+        if (!ct->firstCall) {
+            SDL_Color& col = ct->color;
+            if (col.r != s_activeColor.r ||
+                col.g != s_activeColor.g ||
+                col.b != s_activeColor.b) 
+            {
+                SDL_SetTextureColorMod(ct->preRenderedTexture, s_activeColor.r, s_activeColor.g, s_activeColor.b);
+                col.r = s_activeColor.r;
+                col.g = s_activeColor.g;
+                col.b = s_activeColor.b;
+            }
+
+            if (col.a != s_activeColor.a) {
+                SDL_SetTextureAlphaMod(ct->preRenderedTexture, s_activeColor.a);
+                col.a = s_activeColor.a;
+            }
+        }
+        else {
+            ct->firstCall = false;
+            SDL_SetTextureColorMod(ct->preRenderedTexture, s_activeColor.r, s_activeColor.g, s_activeColor.b);
+            SDL_SetTextureAlphaMod(ct->preRenderedTexture, s_activeColor.a);
+            ct->color = s_activeColor;
+        }
 
         SDL_RenderTexture(renderer.get(), ct->preRenderedTexture, nullptr, &dst);
     }
