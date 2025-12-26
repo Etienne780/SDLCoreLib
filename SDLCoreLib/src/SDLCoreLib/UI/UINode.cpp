@@ -46,12 +46,12 @@ namespace SDLCore::UI {
 		// if state pressed apply hover
 		if (m_state == UIState::PRESSED) {
 			const UIStyleState& st = m_finalStyle.GetStyleState(UIState::HOVER);
-			st.Merge(styleState);
+			styleState.Merge(st);
 		}
 
 		if (m_state != UIState::NORMAL) {
 			const UIStyleState& st = m_finalStyle.GetStyleState(m_state);
-			st.Merge(styleState);
+			styleState.Merge(st);
 		}
 		
 		int layoutDir = 0;
@@ -218,7 +218,7 @@ namespace SDLCore::UI {
 		UIStyle outStyle;
 		
 		for (auto& style : m_appliedStyles) {
-			style.Merge(outStyle);
+			outStyle.Merge(style);
 		}
 
 		return outStyle;
