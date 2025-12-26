@@ -28,9 +28,9 @@ namespace SDLCore::UI {
 	}
 	
 	void UIStyle::Merge(const UIStyle& other) {
-		for (auto& [state, styleState] : this->m_uiStates) {
-			UIStyleState* outStyleState = other.GetState(state);
-			styleState.Merge(*outStyleState);
+		for (const auto& [state, styleState] : other.GetAllStates()) {
+			UIStyleState* outStyleState = this->GetState(state);
+			outStyleState->Merge(styleState);
 		}
 	}
 
@@ -54,6 +54,10 @@ namespace SDLCore::UI {
 	const UIStyleState& UIStyle::GetStyleState(UIState state) const {
 		UIStyleState* styleState = GetState(state);
 		return *styleState;
+	}
+
+	const std::unordered_map<UIState, UIStyleState>& UIStyle::GetAllStates() const {
+		return m_uiStates;
 	}
 
 	UIStyle& UIStyle::SetActiveState(UIState state) {

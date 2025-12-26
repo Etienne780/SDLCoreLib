@@ -31,6 +31,7 @@ namespace SDLCore::UI {
 		uint64_t GetLastModified() const;
 		UIStyleState GetStyleState(UIState state);
 		const UIStyleState& GetStyleState(UIState state) const;
+		const std::unordered_map<UIState, UIStyleState>& GetAllStates() const;
 
 		/*
 		* @brief Sets the state that will be used when setting properties
