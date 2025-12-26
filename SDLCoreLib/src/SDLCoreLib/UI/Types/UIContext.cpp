@@ -15,6 +15,10 @@ namespace SDLCore::UI {
         m_lastNodeStack.reserve(amount);
     }
 
+    UIContext::~UIContext() {
+        RemoveWindowCB();
+    }
+
 	UIContext* UIContext::CreateContext() {
 		return new UIContext();
 	}
@@ -221,8 +225,6 @@ namespace SDLCore::UI {
     }
 
     void UIContext::SetWindowParams(WindowID id) {
-        m_windowID = id;
-
         auto* app = Application::GetInstance();
         if (!app) {
             Log::Error("SDLCore::UI::SetWindowParams: Failed to resolve Window '{}': application instance not available", id);
@@ -235,8 +237,49 @@ namespace SDLCore::UI {
             return;
         }
 
+        if (m_windowID != id) {
+            // remove old window resize callback
+            RemoveWindowCB();
+
+            // sub to window resize callback
+            m_windowResizeCBID = win->AddOnWindowResize([this](Window& win) {
+                this->m_windowSize = win.GetSize();
+                this->UpdateNodeStyles();
+            });
+        }
+
         m_windowContentScale = win->GetContentScale();
         m_windowSize = win->GetSize();
+
+        m_windowID = id;
+    }
+
+    void UIContext::RemoveWindowCB() {
+        if (m_windowResizeCBID.IsInvalid())
+            return;
+
+        auto* app = Application::GetInstance();
+        if (!app) {
+            Log::Error("SDLCore::UI::RemoveWindowCB: Failed to remove Callbacks for Window '{}': application instance not available", m_windowID);
+            return;
+        }
+
+        if (Window* win = app->GetWindow(m_windowID)) {
+            win->RemoveOnWindowResize(m_windowResizeCBID);
+        }
+    }
+
+    void UIContext::UpdateNodeStyles() {
+        std::function<void(UINode*)> updateRecursive;
+        updateRecursive = [&](UINode* root) {
+            root->ApplyStyle(this);
+
+            for (const std::shared_ptr<UINode>& child : root->GetChildren()) {
+                updateRecursive(child.get());
+            }
+        };
+
+        updateRecursive(m_rootNode.get());
     }
 
     void UIContext::UpdateInput() {
