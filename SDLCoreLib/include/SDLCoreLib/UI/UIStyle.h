@@ -21,9 +21,9 @@ namespace SDLCore::UI {
 		std::string ToString() const;
 
 		/*
-		* @brief Merges this style on top of outStyle
+		* @brief Merges other style on top of this
 		*/
-		void Merge(UIStyle& outStyle) const;
+		void Merge(const UIStyle& other);
 
 		UIStyleID GetID() const;
 		std::string GetName() const;
