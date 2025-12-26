@@ -99,6 +99,10 @@ namespace SDLCore::UI {
 			: id(std::hash<std::string>{}(str)) {
 		}
 
+		UIKey(char c)
+			: id(std::hash<std::string>{}(std::string(1, c))) {
+		}
+
 		UIKey(const UIKey&) = delete;
 		UIKey(UIKey&&) = default;
 	};
