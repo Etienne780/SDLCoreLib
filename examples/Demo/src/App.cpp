@@ -168,7 +168,7 @@ void App::OnStart() {
     SetFPSCap(APPLICATION_FPS_UNCAPPED);
 
     // SDLCore::Render::SetFont("C:/Users/Etienne Richter/AppData/Roaming/Opera Software/Opera GX Stable/Default/Extensions/igpdmclhhlcpoindmhkhillbfhdgoegm/6.12.0.7_0/assets/b25893558c7f1ad49e5e.ttf");
-    SDLCore::Render::SetFontSize(120);
+    SDLCore::Render::SetTextSize(120);
 }
 
 void App::OnUpdate() {
@@ -320,7 +320,7 @@ void App::OnUpdate() {
             currentTextSize = std::clamp(fontsize, 6.0f, 144.0f);
             
         }
-        RE::SetFontSize(currentTextSize);
+        RE::SetTextSize(currentTextSize);
 
         static Vector2 pos{ 20, 100 };
         float speed = 2;
@@ -432,7 +432,7 @@ void App::OnUpdate() {
                 RE::Text("Stop", x + 10, y + 10 + 110);
 
                 RE::SetColor(255);
-                RE::SetFontSize(24);
+                RE::SetTextSize(24);
                 RE::Text("Simple-test", 10, 10);
             }
 
@@ -481,7 +481,7 @@ void App::OnUpdate() {
                 }
 
                 RE::SetColor(255);
-                RE::SetFontSize(24);
+                RE::SetTextSize(24);
                 RE::Text("2D-Audio", 10, 10);
                 RE::Text(Log::GetFormattedString("Current Song {}{}", (SoundManager::IsPlaying(testSound2D_1) ? "Sound 1" : ""), (SoundManager::IsPlaying(testSound2D_2) ? "Sound 2" : "")), 10, 10 + RE::GetTextHeight() + 5);
             }
