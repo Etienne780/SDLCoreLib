@@ -43,6 +43,37 @@ namespace SDLCore::UI {
 		SECONDS
 	};
 
+	enum class UIEasing : uint16_t {
+		// Linear
+		Linear = 0,        // constant speed
+
+		// Quadratic
+		EaseInQuad,         // accelerates
+		EaseOutQuad,        // decelerates
+		EaseInOutQuad,      // accelerates then decelerates
+
+		// Cubic
+		EaseInCubic,        // strong acceleration
+		EaseOutCubic,       // strong deceleration
+		EaseInOutCubic,     // combination of acceleration and deceleration
+
+		// Quartic
+		EaseInQuart,        // steep acceleration
+		EaseOutQuart,       // steep deceleration
+		EaseInOutQuart,     // combination of steep acceleration and deceleration
+
+		// Quintic
+		EaseInQuint,        // very steep acceleration
+		EaseOutQuint,       // very steep deceleration
+		EaseInOutQuint,     // combination of very steep acceleration and deceleration
+
+		// Sinusoidal
+		EaseInSine,         // smooth acceleration
+		EaseOutSine,        // smooth deceleration
+		EaseInOutSine       // smooth acceleration and deceleration
+	};
+
+
 	struct UIColorTag {};
 	struct UIFontTag {};
 	struct UITextureTag {};
@@ -154,6 +185,50 @@ static inline std::string FormatUtils::toString<SDLCore::UI::UISizeUnit>(SDLCore
 	case SDLCore::UI::UISizeUnit::PERCENTAGE_W: return "%w";
 	case SDLCore::UI::UISizeUnit::PERCENTAGE_H: return "%h";
 	default:									return "UNKOWN";
+	}
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::UI::UITimeUnit>(SDLCore::UI::UITimeUnit unit) {
+	switch (unit) {
+	case SDLCore::UI::UITimeUnit::MILLISECONDS: return "Milliseconds";
+	case SDLCore::UI::UITimeUnit::SECONDS:		return "Seconds";
+	default:									return "UNKOWN";
+	}
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::UI::UIEasing>(SDLCore::UI::UIEasing easing) {
+	switch (easing) {
+		// Linear
+	case SDLCore::UI::UIEasing::Linear:       return "Linear";
+
+		// Quadratic
+	case SDLCore::UI::UIEasing::EaseInQuad:   return "EaseInQuad";
+	case SDLCore::UI::UIEasing::EaseOutQuad:  return "EaseOutQuad";
+	case SDLCore::UI::UIEasing::EaseInOutQuad:return "EaseInOutQuad";
+
+		// Cubic
+	case SDLCore::UI::UIEasing::EaseInCubic:   return "EaseInCubic";
+	case SDLCore::UI::UIEasing::EaseOutCubic:  return "EaseOutCubic";
+	case SDLCore::UI::UIEasing::EaseInOutCubic:return "EaseInOutCubic";
+
+		// Quartic
+	case SDLCore::UI::UIEasing::EaseInQuart:   return "EaseInQuart";
+	case SDLCore::UI::UIEasing::EaseOutQuart:  return "EaseOutQuart";
+	case SDLCore::UI::UIEasing::EaseInOutQuart:return "EaseInOutQuart";
+
+		// Quintic
+	case SDLCore::UI::UIEasing::EaseInQuint:   return "EaseInQuint";
+	case SDLCore::UI::UIEasing::EaseOutQuint:  return "EaseOutQuint";
+	case SDLCore::UI::UIEasing::EaseInOutQuint:return "EaseInOutQuint";
+
+		// Sinus
+	case SDLCore::UI::UIEasing::EaseInSine:    return "EaseInSine";
+	case SDLCore::UI::UIEasing::EaseOutSine:   return "EaseOutSine";
+	case SDLCore::UI::UIEasing::EaseInOutSine: return "EaseInOutSine";
+
+	default: return "UNKNOWN";
 	}
 }
 

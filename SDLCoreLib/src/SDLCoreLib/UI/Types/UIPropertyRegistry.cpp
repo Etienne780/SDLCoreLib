@@ -149,6 +149,12 @@ namespace SDLCore::UI {
             PropertyValue(static_cast<int>(UITimeUnit::SECONDS))
         );
 
+        durationEasing = RegisterProperty(
+            "duration_easing",
+            "Easing function applied to transitions (linear, ease-in, ease-out, etc.)",
+            PropertyValue(static_cast<int>(UIEasing::Linear))
+        );
+        
         // ============ Text ============
 
         font = RegisterProperty(

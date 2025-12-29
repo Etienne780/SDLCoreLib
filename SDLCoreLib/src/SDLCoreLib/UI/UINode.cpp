@@ -284,6 +284,10 @@ namespace SDLCore::UI {
 		SetTransitionTime(transitionDuration, 
 			static_cast<UITimeUnit>(transitionTimeUnit));
 
+		int transitionEasing = 0;
+		styleState.TryGetValue<int>(Properties::durationEasing, transitionEasing);
+		m_transitionEasing = static_cast<UIEasing>(transitionEasing);
+
 		m_innerBorder = false;
 		styleState.TryGetValue<bool>(Properties::borderInset, m_innerBorder);
 
@@ -364,7 +368,7 @@ namespace SDLCore::UI {
 			m_transitionActive = false;
 		}
 		else {
-			m_renderedStyleState = UIStyleState::Interpolate(m_transitionFrom, m_transitionTo, time);
+			m_renderedStyleState = UIStyleState::Interpolate(m_transitionFrom, m_transitionTo, time, m_transitionEasing);
 		}
 
 		ApplyStyle(ctx);

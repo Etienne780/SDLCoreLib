@@ -132,6 +132,7 @@ namespace SDLCore::UI {
         UIEvent m_eventState;
         float m_borderWidth = 0.0f;
         float m_transitionDuration = 0.0f;/*< is in milliseconds */
+        UIEasing m_transitionEasing = UIEasing::Linear;
         bool m_innerBorder = false;
         bool m_childHasEvent = false;
         bool m_isActive = false;

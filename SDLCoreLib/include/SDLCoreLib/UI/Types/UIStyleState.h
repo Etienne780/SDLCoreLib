@@ -16,7 +16,7 @@ namespace SDLCore::UI {
 		* @param end
 		* @param time 0 = start; 1 = end is clamped to 0-1
 		*/
-		static UIStyleState Interpolate(const UIStyleState& start, const UIStyleState& end, float time);
+		static UIStyleState Interpolate(const UIStyleState& start, const UIStyleState& end, float time, UIEasing easing = UIEasing::Linear);
 		
 		bool SetValue(UIPropertyID id, PropertyValue value, bool important = false);
 
