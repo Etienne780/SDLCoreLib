@@ -72,11 +72,12 @@ namespace SDLCore::UI {
 		*this = other;
 	}
 
-	bool PropertyValue::Interpolate(const PropertyValue& start, const PropertyValue& end, float time) {
+	bool PropertyValue::Interpolate(const PropertyValue& start, const PropertyValue& end, float time, UIEasing easing) {
 		if (start.GetIsImportant() || !end.GetIsSet())
 			*this = start;
 
 		time = std::clamp(time, 0.0f, 1.0f);
+		time = ResolveEasing(time, easing);
 		
 		if (!start.IsSameType(end.GetType())) {
 			SetErrorF(
@@ -230,6 +231,45 @@ namespace SDLCore::UI {
 
 		default:
 			return false;
+		}
+	}
+
+	float PropertyValue::ResolveEasing(float time, UIEasing easing) {
+		switch (easing) {
+		case UIEasing::Linear:
+			return time;
+
+		case UIEasing::EaseInQuad:
+			return time * time;
+
+		case UIEasing::EaseOutQuad:
+			return 1.0f - (1.0f - time) * (1.0f - time);
+
+		case UIEasing::EaseInOutQuad:
+			if (time < 0.5f) return 2.0f * time * time;
+			return 1.0f - static_cast<float>(std::pow(-2.0f * time + 2.0f, 2.0f)) / 2.0f;
+
+		case UIEasing::EaseInCubic:
+			return time * time * time;
+
+		case UIEasing::EaseOutCubic:
+			return 1.0f - static_cast<float>(std::pow(1.0f - time, 3.0f));
+
+		case UIEasing::EaseInOutCubic:
+			if (time < 0.5f) return 4.0f * time * time * time;
+			return 1.0f - static_cast<float>(std::pow(-2.0f * time + 2.0f, 3.0f)) / 2.0f;
+
+		case UIEasing::EaseInSine:
+			return 1.0f - static_cast<float>(std::cos((time * CORE_PI) / 2.0f));
+
+		case UIEasing::EaseOutSine:
+			return  static_cast<float>(std::sin((time * CORE_PI) / 2.0f));
+
+		case UIEasing::EaseInOutSine:
+			return  static_cast<float>( - (std::cos(CORE_PI * time) - 1.0f) / 2.0f);
+
+		default:
+			return time;
 		}
 	}
 
