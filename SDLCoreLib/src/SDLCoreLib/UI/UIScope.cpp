@@ -189,7 +189,7 @@ namespace SDLCore::UI {
         uint64_t newestStyleFrame = 0;
         for (const auto& style : styles)
             newestStyleFrame = std::max(newestStyleFrame, style.GetLastModified());
-
+        
         if (!node->IsActive() || node->GetAppliedStyleHash() != newHash ||
             node->GetAppliedStyleNode() < newestStyleFrame) 
         {
@@ -197,14 +197,9 @@ namespace SDLCore::UI {
             node->ReserveStyles(styles.size());
             for (const auto& style : styles)
                 node->AddStyle(style);
-            node->ApplyStyle(GetCurrentContext());
-
+            node->UpdateFinalStyle(g_currentUIContext.ctx);
+            
             g_currentUIContext.SetAppliedStyleParams(node, newHash, newestStyleFrame);
-        }
-        else {
-            if (node->HasStateChanged()) {
-                node->ApplyStyle(GetCurrentContext());
-            }
         }
     }
 
@@ -234,14 +229,9 @@ namespace SDLCore::UI {
             node->ReserveStyles(styles.size());
             for (const auto& style : styles)
                 node->AddStyle(style);
-            node->ApplyStyle(GetCurrentContext());
+            node->UpdateFinalStyle(g_currentUIContext.ctx);
 
             Internal::InternalSetAppliedStyleParams(node, newHash, newestStyleFrame);
-        }
-        else {
-            if (node->HasStateChanged()) {
-                node->ApplyStyle(GetCurrentContext());
-            }
         }
         return node->GetEvent();
     }

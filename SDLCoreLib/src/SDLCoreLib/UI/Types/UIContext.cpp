@@ -244,7 +244,7 @@ namespace SDLCore::UI {
             // sub to window resize callback
             m_windowResizeCBID = win->AddOnWindowResize([this](Window& win) {
                 this->m_windowSize = win.GetSize();
-                this->UpdateNodeStyles();
+                this->UpdateNodeStylesWindowResize();
             });
         }
 
@@ -269,7 +269,7 @@ namespace SDLCore::UI {
         }
     }
 
-    void UIContext::UpdateNodeStyles() {
+    void UIContext::UpdateNodeStylesWindowResize() {
         std::function<void(UINode*)> updateRecursive;
         updateRecursive = [&](UINode* root) {
             root->ApplyStyle(this);
@@ -341,7 +341,7 @@ namespace SDLCore::UI {
     void UIContext::RenderNodes(UIContext* ctx, UINode* rootNode) {
         std::function<void(UINode*)> renderRecursive; 
         renderRecursive = [&](UINode* root) {
-            root->CalculateLayout(ctx);
+            root->Update(ctx, Time::GetDeltaTime());
 
             if (!root || !root->IsActive()) 
                 return;
