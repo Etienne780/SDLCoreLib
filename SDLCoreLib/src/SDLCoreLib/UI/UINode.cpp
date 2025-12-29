@@ -275,8 +275,14 @@ namespace SDLCore::UI {
 		m_borderWidth = 0.0f;
 		styleState.TryGetValue<float>(Properties::borderWidth, m_borderWidth);
 
-		m_transitionDuration = 0.0f;
-		styleState.TryGetValue<float>(Properties::duration, m_transitionDuration);
+		int transitionTimeUnit = 1;
+		styleState.TryGetValue<int>(Properties::durationUnit, transitionTimeUnit);
+
+		float transitionDuration = 0.0f;
+		styleState.TryGetValue<float>(Properties::duration, transitionDuration);
+
+		SetTransitionTime(transitionDuration, 
+			static_cast<UITimeUnit>(transitionTimeUnit));
 
 		m_innerBorder = false;
 		styleState.TryGetValue<bool>(Properties::borderInset, m_innerBorder);
@@ -374,6 +380,18 @@ namespace SDLCore::UI {
 
 	void UINode::SetAppliedStyleNode(uint64_t node) {
 		m_appliedStyleNode = node;
+	}
+
+	void UINode::SetTransitionTime(float time, UITimeUnit unit) {
+		switch (unit) {
+		case SDLCore::UI::UITimeUnit::SECONDS:
+			m_transitionDuration = time * 1000.0f;
+			break;
+		case SDLCore::UI::UITimeUnit::MILLISECONDS:
+		default:
+			m_transitionDuration = time;
+			break;
+		}
 	}
 
 	float UINode::GetAccumulatedChildSize(bool horizontal, int upToIndex) const {
