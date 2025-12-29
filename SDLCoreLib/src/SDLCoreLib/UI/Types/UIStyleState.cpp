@@ -13,7 +13,7 @@ namespace SDLCore::UI {
 		}
 	}
 
-	UIStyleState UIStyleState::Interpolate(const UIStyleState& start, const UIStyleState& end, float time) {
+	UIStyleState UIStyleState::Interpolate(const UIStyleState& start, const UIStyleState& end, float time, UIEasing easing) {
 		time = std::clamp(time, 0.0f, 1.0f);
 
 		if (time == 0.0f)
@@ -37,7 +37,7 @@ namespace SDLCore::UI {
 			
 			const PropertyValue& startProp = startIt->second;
 			const PropertyValue& endProp = endIt->second;
-			prop.Interpolate(startProp, endProp, time);
+			prop.Interpolate(startProp, endProp, time, easing);
 		}
 
 		return result;

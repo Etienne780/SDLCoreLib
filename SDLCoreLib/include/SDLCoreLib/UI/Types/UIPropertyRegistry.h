@@ -245,9 +245,20 @@ namespace SDLCore::UI::Properties {
 	* 
 	* Default: UITimeUnit::SECONDS
 	*
-	* Usage: style.SetValue<int>(static_cast<int>(UITimeUnit::SECONDS))
+	* Usage: style.SetValue<int>(UITimeUnit::SECONDS)
 	*/
 	inline UIPropertyID durationUnit;
+
+	/*
+	* @brief Easing function for transitions.
+	*
+	* Determines how values interpolate over time (linear, quadratic, cubic, sinus, etc.).
+	*
+	* Default: UIEasing::Linear
+	*
+	* Usage: style.SetValue<int>(UIEasing::EaseInOutSine)
+	*/
+	inline UIPropertyID durationEasing;
 
 	#pragma endregion
 
