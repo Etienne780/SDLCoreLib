@@ -38,6 +38,11 @@ namespace SDLCore::UI {
 		PERCENTAGE_H
 	};
 
+	enum class UITimeUnit : uint16_t {
+		MILLISECONDS = 0,
+		SECONDS
+	};
+
 	struct UIColorTag {};
 	struct UIFontTag {};
 	struct UITextureTag {};

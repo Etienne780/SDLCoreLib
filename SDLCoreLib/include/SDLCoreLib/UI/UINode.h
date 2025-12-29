@@ -131,7 +131,7 @@ namespace SDLCore::UI {
         UIStyle m_finalStyle;
         UIEvent m_eventState;
         float m_borderWidth = 0.0f;
-        float m_transitionDuration = 0.0f;
+        float m_transitionDuration = 0.0f;/*< is in milliseconds */
         bool m_innerBorder = false;
         bool m_childHasEvent = false;
         bool m_isActive = false;
@@ -176,6 +176,7 @@ namespace SDLCore::UI {
 
         void SetAppliedStyleHash(uint64_t newHash);
         void SetAppliedStyleNode(uint64_t node);
+        void SetTransitionTime(float time, UITimeUnit unit);
 
         // is size + margin
         float GetAccumulatedChildSize(bool horizontal, int upToIndex) const;

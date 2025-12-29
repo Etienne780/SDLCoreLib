@@ -143,6 +143,12 @@ namespace SDLCore::UI {
             PropertyValue(0.0f)
         );
 
+        durationUnit = RegisterProperty(
+            "duration_unit",
+            "Unit for transition duration",
+            PropertyValue(static_cast<int>(UITimeUnit::SECONDS))
+        );
+
         // ============ Text ============
 
         font = RegisterProperty(

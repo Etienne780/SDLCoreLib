@@ -35,7 +35,7 @@ namespace SDLCore::UI::Properties {
 	*
 	* Default: UISizeUnit::PX
 	*
-	* Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
+	* Usage: style.SetValue<int>(UISizeUnit::PX)
 	*/
 	inline UIPropertyID widthUnit;
 
@@ -46,7 +46,7 @@ namespace SDLCore::UI::Properties {
 	*
 	* Default: UISizeUnit::PX
 	*
-	* Usage: style.SetValue<int>(static_cast<int>(UISizeUnit::PX))
+	* Usage: style.SetValue<int>(UISizeUnit::PX)
 	*/
 	inline UIPropertyID heightUnit;
 
@@ -101,7 +101,7 @@ namespace SDLCore::UI::Properties {
 	*
 	* Default: UILayoutDirection::ROW
 	*
-	* Usage: style.SetValue<int>(static_cast<int>(UILayoutDirection::ROW))
+	* Usage: style.SetValue<int>(UILayoutDirection::ROW)
 	*/
 	inline UIPropertyID layoutDirection;
 
@@ -112,7 +112,7 @@ namespace SDLCore::UI::Properties {
 	*
 	* Default: UIAlignment::START
 	*
-	* Usage: style.SetValue<int>(static_cast<int>(UIAlignment::CENTER))
+	* Usage: style.SetValue<int>(UIAlignment::CENTER)
 	*/
 	inline UIPropertyID alignHorizontal;
 
@@ -123,7 +123,7 @@ namespace SDLCore::UI::Properties {
 	*
 	* Default: UIAlignment::START
 	*
-	* Usage: style.SetValue<int>(static_cast<int>(UIAlignment::START))
+	* Usage: style.SetValue<int>(UIAlignment::START)
 	*/
 	inline UIPropertyID alignVertical;
 
@@ -237,6 +237,17 @@ namespace SDLCore::UI::Properties {
 	* Usage: style.SetValue<float>(0.0f)
 	*/
 	inline UIPropertyID duration;
+
+	/*
+	* @brief Unit for the transition duration.
+	*
+	* Determines whether 'duration'is interpreted in milliseconds or seconds.
+	* 
+	* Default: UITimeUnit::SECONDS
+	*
+	* Usage: style.SetValue<int>(static_cast<int>(UITimeUnit::SECONDS))
+	*/
+	inline UIPropertyID durationUnit;
 
 	#pragma endregion
 
