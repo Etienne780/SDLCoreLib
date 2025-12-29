@@ -33,12 +33,17 @@ void App::OnStart() {
         .SetValue(Prop::height, 100.0f);
 
     elementStyle.SetValue(Prop::layoutDirection, UI::UILayoutDir::COLUMN)
+        .SetValue(Prop::backgroundColor, Vector4(255.0f))
+        .SetValue(Prop::duration, 1000.0f)
         .SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
         .SetValue(Prop::borderWidth, 12.0f)
         .SetValue(Prop::borderColor, Vector4(255, 0, 0, 255))
         .SetValue(Prop::backgroundTexture, testImageID);
     elementStyle.SetActiveState(UI::UIState::HOVER)
-        .SetValue(Prop::borderInset, true);
+        .SetValue(Prop::width, 400.0f).SetValue(Prop::height, 400.0f)
+        .SetValue(Prop::backgroundColor, Vector4(150.0f, 0.0f, 255.0f, 255.0f))
+        .SetValue(Prop::borderColor, Vector4(255, 255, 0, 255))
+        .SetValue(Prop::duration, 2000.0f);
 
     textStyle.SetValue(Prop::hitTestEnabled, false)
         .SetValue(Prop::textSize, 64.0f)
@@ -61,36 +66,18 @@ void App::OnUpdate() {
         UI::SetContextWindow(context, m_winID);
         UI::BindContext(context);
 
+        UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
-            SDLCore::Debug::ProfilerScope das("UI");
-            UI::BeginFrame(UI::UIKey("root"), styleRoot);
+            UI::BeginFrame(UI::UIKey("element"), elementStyle);
             {
-                for (int i = 0; i < 500; i++) {
-                    UI::BeginFrame(UI::UIKey("element-" + std::to_string(i)), elementStyle);
-                    {
-                        UI::Text(UI::UIKey("Test"), "Test", textStyle);
-                        UI::Text(UI::UIKey("Test1"), "Test", textStyle);
-                        UI::Text(UI::UIKey("Test2"), "Test", textStyle);
-                        UI::Text(UI::UIKey("Test3"), "Test", textStyle);
-                        UI::Text(UI::UIKey("Test4"), "Test", textStyle);
-                        UI::Text(UI::UIKey("Test5"), "Test", textStyle);
-                    }
-                    UI::EndFrame();
-                }
+                UI::Text(UI::UIKey("Test"), "Test", textStyle);
             }
             UI::EndFrame();
         }
+        UI::EndFrame();
 
         // Log::Print(UI::GetContextStringHierarchy(context));
-        {
-            SDLCore::Debug::ProfilerScope RenderPresent("RenderPresent");
-            RE::Present();
-        }
-
-        if(SDLCore::Time::GetFrameCount() % 120 == 0)
-            SDLCore::Debug::Profiler::PrintAndReset();
-        else 
-            SDLCore::Debug::Profiler::Reset();
+        RE::Present();
     }
 
     /*

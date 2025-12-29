@@ -52,12 +52,16 @@ namespace SDLCore::UI {
 
 		void ApplyWithPriority(const PropertyValue& other);
 
+		// time = 0-1
+		bool Interpolate(const PropertyValue& start, const PropertyValue& end, float time);
+
 		bool IsSameType(Type type) const;
 
 		Type GetType() const;
 		bool GetIsSet() const;
 		bool GetIsImportant() const;
-		ValueVariant GetVariant() const;
+		ValueVariant& GetVariant();
+		const ValueVariant& GetVariant() const;
 
 		PropertyValue& SetIsImportant(bool value);
 
@@ -135,6 +139,7 @@ namespace SDLCore::UI {
 		};
 
 		PropertyValue& SetIsSet(bool value);
+		bool InterpolateInternal(const PropertyValue& a, const PropertyValue& b, float t);
 
 		static PropertyTypeClass GetTypeClass(PropertyValue::Type t);
 

@@ -114,7 +114,7 @@ namespace SDLCore::UI {
 		void RemoveWindowCB();
 
 		// gets called on window resize
-		void UpdateNodeStyles();
+		void UpdateNodeStylesWindowResize();
 		void UpdateInput();
 		static UIEvent* ProcessEvent(UIContext* ctx, UINode* node);
 		static void RenderNodes(UIContext* ctx, UINode* rootNode);
