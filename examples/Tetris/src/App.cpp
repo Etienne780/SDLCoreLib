@@ -34,7 +34,7 @@ void App::OnStart() {
 
     elementStyle.SetValue(Prop::layoutDirection, UI::UILayoutDir::COLUMN)
         .SetValue(Prop::backgroundColor, Vector4(255.0f))
-        .SetValue(Prop::duration, 1000.0f)
+        .SetValue(Prop::duration, 1.0f)
         .SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
         .SetValue(Prop::borderWidth, 12.0f)
         .SetValue(Prop::borderColor, Vector4(255, 0, 0, 255))
@@ -43,7 +43,7 @@ void App::OnStart() {
         .SetValue(Prop::width, 400.0f).SetValue(Prop::height, 400.0f)
         .SetValue(Prop::backgroundColor, Vector4(150.0f, 0.0f, 255.0f, 255.0f))
         .SetValue(Prop::borderColor, Vector4(255, 255, 0, 255))
-        .SetValue(Prop::duration, 2000.0f);
+        .SetValue(Prop::duration, 2.0f);
 
     textStyle.SetValue(Prop::hitTestEnabled, false)
         .SetValue(Prop::textSize, 64.0f)
