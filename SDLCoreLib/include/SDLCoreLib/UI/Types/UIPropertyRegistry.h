@@ -227,6 +227,17 @@ namespace SDLCore::UI::Properties {
 	*/
 	inline UIPropertyID notInteractible;
 
+	/*
+	* @brief Transition duration (float). 
+	* 
+	* Transitions number, colors other values get instantly set
+	* 
+	* Default: 0.0f
+	* 
+	* Usage: style.SetValue<float>(0.0f)
+	*/
+	inline UIPropertyID duration;
+
 	#pragma endregion
 
 	#pragma region ================= Text ==========================

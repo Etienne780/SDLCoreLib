@@ -15,6 +15,12 @@ namespace SDLCore::UI {
 		UIStyle(std::string&& name);
 		~UIStyle();
 
+		UIStyle(const UIStyle&);
+		UIStyle& operator=(const UIStyle&);
+
+		UIStyle(UIStyle&&) noexcept;
+		UIStyle& operator=(UIStyle&&) noexcept;
+		
 		/*
 		* not finished
 		*/
@@ -51,12 +57,15 @@ namespace SDLCore::UI {
 
 		/*
 		* @brief Gets the state or creates a new one
+		* @param state state to get
 		* @return allways returns a valid ptr
 		*/
 		UIStyleState* GetState(UIState state) const;
 
 		// updates the last modified to current frame count
 		void UpdateLastModified();
+
+		void MoveFrom(UIStyle&& other) noexcept;
 	};
 
 }

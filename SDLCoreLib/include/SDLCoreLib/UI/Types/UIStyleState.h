@@ -9,6 +9,15 @@ namespace SDLCore::UI {
 	class UIStyleState {
 	public:
 		UIStyleState();
+
+		/*
+		* @brief idk
+		* @param start
+		* @param end
+		* @param time 0 = start; 1 = end is clamped to 0-1
+		*/
+		static UIStyleState Interpolate(const UIStyleState& start, const UIStyleState& end, float time);
+		
 		bool SetValue(UIPropertyID id, PropertyValue value, bool important = false);
 
 		/*
@@ -26,8 +35,9 @@ namespace SDLCore::UI {
 			return prop.TryGetValue<T>(outValue);
 		}
 
-		std::unordered_map<UIPropertyID, PropertyValue>& GetAllProperties();
-		const std::unordered_map<UIPropertyID, PropertyValue>& GetAllProperties() const;
+		std::unordered_map<UIPropertyID, PropertyValue>& GetAllPropertiesMap();
+		const std::unordered_map<UIPropertyID, PropertyValue>& GetAllPropertiesMap() const;
+		std::vector<PropertyValue> GetAllProperties();
 
 	private:
 		std::unordered_map<UIPropertyID, PropertyValue> m_properties;

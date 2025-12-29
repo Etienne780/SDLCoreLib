@@ -47,10 +47,7 @@ namespace SDLCore::UI {
         // copys style
         void AddStyle(const UIStyle& style);
 
-        /*
-        * @brief Create and applys the style from all of the added styles
-        */
-        void ApplyStyle(UIContext* context);
+        void UpdateFinalStyle(UIContext* ctx);
 
         /*
         * @brief Resets the state of the node to NORMAL
@@ -82,9 +79,6 @@ namespace SDLCore::UI {
         * @brief node will be active after the first frame of creation
         */
         bool IsActive() const;
-
-        // return true if last state is diff to current state
-        bool HasStateChanged() const;
 
         bool HasHitTestEnabled() const;
         bool IsInteractible() const;
@@ -134,10 +128,10 @@ namespace SDLCore::UI {
         std::vector<std::shared_ptr<UINode>> m_children;
         std::vector<UIStyle> m_appliedStyles;
         UIState m_state = UIState::NORMAL;
-        UIState m_lastState = UIState::NORMAL;
         UIStyle m_finalStyle;
         UIEvent m_eventState;
         float m_borderWidth = 0.0f;
+        float m_transitionDuration = 0.0f;
         bool m_innerBorder = false;
         bool m_childHasEvent = false;
         bool m_isActive = false;
@@ -154,11 +148,31 @@ namespace SDLCore::UI {
         UIAlignment m_horizontalAligment = UIAlignment::START;
         UIAlignment m_verticalAligment = UIAlignment::START;
     private:
-        uint64_t m_appliedStyleHash = 0;      // last style combination
-        uint64_t m_appliedStyleNode = 0;     // max lastModified of applied styles
+        UIStyleState m_renderedStyleState;
+        UIStyleState m_transitionFrom;
+        UIStyleState m_transitionTo;
+
+        UIState m_lastState = UIState::NORMAL;
+        uint64_t m_appliedStyleHash = 0;    // last style combination
+        uint64_t m_appliedStyleNode = 0;    // max lastModified of applied styles
+        float m_currentTransitionEnd = 0.0f;
+        float m_currentTransition = 0.0f;
+        bool m_transitionActive = false;
 
         static inline uint32_t m_typeIDCounter = 0;
         static uint32_t GetUITypeID(const std::string& name);
+
+        /*
+        * @brief Create and applys the style from all of the added styles
+        */
+        void ApplyStyle(UIContext* context);
+        UIStyleState ComputeTargetStyleState();
+        void OnStyleStateChanged();
+        void Update(UIContext* ctx, float dt);
+        void UpdateStyle(UIContext* ctx, float dt);
+
+        // return true if last state is diff to current state
+        bool HasStateChanged() const;
 
         void SetAppliedStyleHash(uint64_t newHash);
         void SetAppliedStyleNode(uint64_t node);

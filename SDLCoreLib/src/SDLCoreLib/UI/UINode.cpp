@@ -1,6 +1,7 @@
 #include <unordered_map>
 
 #include "SDLCoreInput.h"
+#include "SDLCoreTime.h"
 #include "UI/Types/UIStyleState.h"
 #include "UI/Types/UIContext.h"
 #include "UI/Nodes/FrameNode.h"
@@ -31,77 +32,11 @@ namespace SDLCore::UI {
 		m_appliedStyles.push_back(style);
 	}
 
-	void UINode::ApplyStyle(UIContext* ctx) {
-		if (!ctx)
-			return;
 
-		m_lastState = m_state;
+	void UINode::UpdateFinalStyle(UIContext* ctx) {
 		m_finalStyle = CreateStyle();
-		
-		// allways uses normal state as a base
-		UIStyleState styleState = m_finalStyle.GetStyleState(UIState::NORMAL);
-
-		// if state pressed apply hover
-		if (m_state == UIState::PRESSED) {
-			const UIStyleState& st = m_finalStyle.GetStyleState(UIState::HOVER);
-			styleState.Merge(st);
-		}
-
-		if (m_state != UIState::NORMAL) {
-			const UIStyleState& st = m_finalStyle.GetStyleState(m_state);
-			styleState.Merge(st);
-		}
-		
-		int layoutDir = 0;
-		int alignHorizontal = 0;
-		int alignVertical = 0;
-
-		styleState.TryGetValue<int>(Properties::layoutDirection, layoutDir);
-		styleState.TryGetValue<int>(Properties::alignHorizontal, alignHorizontal);
-		styleState.TryGetValue<int>(Properties::alignVertical, alignVertical);
-
-		m_layoutDir = static_cast<UILayoutDirection>(layoutDir);
-		m_horizontalAligment = static_cast<UIAlignment>(alignHorizontal);
-		m_verticalAligment = static_cast<UIAlignment>(alignVertical);
-
-		float width = 0.0f;
-		float height = 0.0f;
-
-		styleState.TryGetValue<float>(Properties::width, width);
-		styleState.TryGetValue<float>(Properties::height, height);
-
-		int sizeUnitW = 0;// 0 = PX
-		int sizeUnitH = 0;
-		styleState.TryGetValue<int>(Properties::widthUnit, sizeUnitW);
-		styleState.TryGetValue<int>(Properties::heightUnit, sizeUnitH);
-
-		m_padding.Set(0.0f);
-		m_margin.Set(0.0f);
-		styleState.TryGetValue<Vector4>(Properties::padding, m_padding);
-		styleState.TryGetValue<Vector4>(Properties::margin, m_margin);
-
-		m_borderWidth = 0.0f;
-		styleState.TryGetValue<float>(Properties::borderWidth, m_borderWidth);
-
-		m_innerBorder = false;
-		styleState.TryGetValue<bool>(Properties::borderInset, m_innerBorder);
-
-		m_isHitTestEnabled = true;
-		styleState.TryGetValue<bool>(Properties::hitTestEnabled, m_isHitTestEnabled);
-
-		m_notInteractible = false;
-		styleState.TryGetValue<bool>(Properties::notInteractible, m_notInteractible);
-
-		m_borderAffectsLayout = true;
-		styleState.TryGetValue<bool>(Properties::borderAffectsLayout, m_borderAffectsLayout);
-
-		ApplyStyleCalled(ctx, styleState);
-
-		m_size.Set(0);
-		m_size = CalculateSize(ctx,
-			static_cast<UISizeUnit>(sizeUnitW),
-			static_cast<UISizeUnit>(sizeUnitH),
-			width, height);
+		OnStyleStateChanged();
+		ApplyStyle(ctx);
 	}
 
 	void UINode::ResetState() {
@@ -169,10 +104,6 @@ namespace SDLCore::UI {
 
 	bool UINode::IsActive() const {
 		return m_isActive;
-	}
-
-	bool UINode::HasStateChanged() const {
-		return m_state != m_lastState;
 	}
 
 	bool UINode::HasHitTestEnabled() const {
@@ -304,6 +235,137 @@ namespace SDLCore::UI {
 			return newID;
 		}
 		return it->second;
+	}
+
+	void UINode::ApplyStyle(UIContext* ctx) {
+		if (!ctx)
+			return;
+
+		m_lastState = m_state;
+		const UIStyleState& styleState = m_renderedStyleState;
+
+		int layoutDir = 0;
+		int alignHorizontal = 0;
+		int alignVertical = 0;
+
+		styleState.TryGetValue<int>(Properties::layoutDirection, layoutDir);
+		styleState.TryGetValue<int>(Properties::alignHorizontal, alignHorizontal);
+		styleState.TryGetValue<int>(Properties::alignVertical, alignVertical);
+
+		m_layoutDir = static_cast<UILayoutDirection>(layoutDir);
+		m_horizontalAligment = static_cast<UIAlignment>(alignHorizontal);
+		m_verticalAligment = static_cast<UIAlignment>(alignVertical);
+
+		float width = 0.0f;
+		float height = 0.0f;
+
+		styleState.TryGetValue<float>(Properties::width, width);
+		styleState.TryGetValue<float>(Properties::height, height);
+
+		int sizeUnitW = 0;// 0 = PX
+		int sizeUnitH = 0;
+		styleState.TryGetValue<int>(Properties::widthUnit, sizeUnitW);
+		styleState.TryGetValue<int>(Properties::heightUnit, sizeUnitH);
+
+		m_padding.Set(0.0f);
+		m_margin.Set(0.0f);
+		styleState.TryGetValue<Vector4>(Properties::padding, m_padding);
+		styleState.TryGetValue<Vector4>(Properties::margin, m_margin);
+
+		m_borderWidth = 0.0f;
+		styleState.TryGetValue<float>(Properties::borderWidth, m_borderWidth);
+
+		m_transitionDuration = 0.0f;
+		styleState.TryGetValue<float>(Properties::duration, m_transitionDuration);
+
+		m_innerBorder = false;
+		styleState.TryGetValue<bool>(Properties::borderInset, m_innerBorder);
+
+		m_isHitTestEnabled = true;
+		styleState.TryGetValue<bool>(Properties::hitTestEnabled, m_isHitTestEnabled);
+
+		m_notInteractible = false;
+		styleState.TryGetValue<bool>(Properties::notInteractible, m_notInteractible);
+
+		m_borderAffectsLayout = true;
+		styleState.TryGetValue<bool>(Properties::borderAffectsLayout, m_borderAffectsLayout);
+
+		ApplyStyleCalled(ctx, styleState);
+
+		m_size.Set(0);
+		m_size = CalculateSize(ctx,
+			static_cast<UISizeUnit>(sizeUnitW),
+			static_cast<UISizeUnit>(sizeUnitH),
+			width, height);
+	}
+
+	UIStyleState UINode::ComputeTargetStyleState() {
+		UIStyleState state = m_finalStyle.GetStyleState(UIState::NORMAL);
+
+		if (m_state == UIState::PRESSED)
+			state.Merge(m_finalStyle.GetStyleState(UIState::HOVER));
+
+		if (m_state != UIState::NORMAL)
+			state.Merge(m_finalStyle.GetStyleState(m_state));
+
+		return state;
+	}
+
+	void UINode::OnStyleStateChanged() {
+		UIStyleState target = ComputeTargetStyleState();
+
+		if (m_transitionDuration <= 0.0f) {
+			m_renderedStyleState = target;
+			m_transitionActive = false;
+			return;
+		}
+
+		m_transitionFrom = m_renderedStyleState;
+		m_transitionTo = target;
+
+		// interrupt old transition
+		if (m_transitionActive) {
+			m_currentTransitionEnd = m_currentTransition;
+			m_currentTransition = 0.0f;
+		}
+		else {
+			// start new transition
+			m_currentTransition = 0.0f;
+			m_currentTransitionEnd = m_transitionDuration;
+		}
+
+		m_transitionActive = true;
+	}
+	
+	void UINode::Update(UIContext* ctx, float dt) {
+		UpdateStyle(ctx, dt);
+		CalculateLayout(ctx);
+	}
+
+	void UINode::UpdateStyle(UIContext* ctx, float dt) {
+		if (HasStateChanged()) {
+			OnStyleStateChanged();
+			ApplyStyle(ctx);
+		}
+		
+		if (!m_transitionActive)	
+			return;
+
+		m_currentTransition += dt;
+		float time = std::clamp(m_currentTransition / m_currentTransitionEnd, 0.0f, 1.0f);
+		if (time >= 1.0f) {
+			m_renderedStyleState = m_transitionTo;
+			m_transitionActive = false;
+		}
+		else {
+			m_renderedStyleState = UIStyleState::Interpolate(m_transitionFrom, m_transitionTo, time);
+		}
+
+		ApplyStyle(ctx);
+	}
+
+	bool UINode::HasStateChanged() const {
+		return m_state != m_lastState;
 	}
 
 	void UINode::SetAppliedStyleHash(uint64_t newHash) {

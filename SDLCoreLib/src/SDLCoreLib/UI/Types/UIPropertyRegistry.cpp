@@ -137,6 +137,12 @@ namespace SDLCore::UI {
             PropertyValue(false)
         );
 
+        duration = RegisterProperty(
+            "duration",
+            "Transitions number, colors other values get instantly set",
+            PropertyValue(0.0f)
+        );
+
         // ============ Text ============
 
         font = RegisterProperty(

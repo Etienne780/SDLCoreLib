@@ -58,14 +58,9 @@ namespace SDLCore::UI {
             node->ClearStyles();
             node->ReserveStyles(sizeof...(Styles));
             (node->AddStyle(styles), ...);
-            node->ApplyStyle(GetCurrentContext());
+            node->UpdateFinalStyle(GetCurrentContext());
 
             Internal::InternalSetAppliedStyleParams(node, 0, newestStyleFrame);
-        }
-        else {
-            if (node->HasStateChanged()) {
-                node->ApplyStyle(GetCurrentContext());
-            }
         }
     }
 
@@ -97,14 +92,9 @@ namespace SDLCore::UI {
             node->ClearStyles();
             node->ReserveStyles(sizeof...(Styles));
             (node->AddStyle(styles), ...);
-            node->ApplyStyle(GetCurrentContext());
+            node->UpdateFinalStyle(GetCurrentContext());
 
             Internal::InternalSetAppliedStyleParams(node, 0, newestStyleFrame);
-        }
-        else {
-            if (node->HasStateChanged()) {
-                node->ApplyStyle(GetCurrentContext());
-            }
         }
       
         return node->GetEvent();

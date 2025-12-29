@@ -1,3 +1,6 @@
+﻿#include <cmath>
+
+#include "SDLCoreError.h"
 #include "UI/Types/PropertyValue.h"
 
 namespace SDLCore::UI {
@@ -69,6 +72,34 @@ namespace SDLCore::UI {
 		*this = other;
 	}
 
+	bool PropertyValue::Interpolate(const PropertyValue& start, const PropertyValue& end, float time) {
+		if (start.GetIsImportant() || !end.GetIsSet())
+			*this = start;
+
+		time = std::clamp(time, 0.0f, 1.0f);
+		
+		if (!start.IsSameType(end.GetType())) {
+			SetErrorF(
+				"PropertyValue::Interpolate: Type mismatch {} != {}",
+				start.GetType(), end.GetType()
+			);
+			*this = (time < 1.0f) ? start : end;
+			return false;
+		}
+
+		if (time == 0.0f) {
+			*this = start;
+			return true;
+		}
+
+		if (time == 1.0f) {
+			*this = end;
+			return true;
+		}
+
+		return InterpolateInternal(start, end, time);
+	}
+
 	bool PropertyValue::IsSameType(Type other) const {
 		return GetTypeClass(m_valueType) == GetTypeClass(other);
 	}
@@ -85,13 +116,121 @@ namespace SDLCore::UI {
 		return m_isImportant;
 	}
 
-	PropertyValue::ValueVariant PropertyValue::GetVariant() const {
+	PropertyValue::ValueVariant& PropertyValue::GetVariant() {
+		return m_value;
+	}
+		
+	const PropertyValue::ValueVariant& PropertyValue::GetVariant() const {
 		return m_value;
 	}
 
 	PropertyValue& PropertyValue::SetIsSet(bool value) {
 		m_isSet = value;
 		return *this;
+	}
+
+	template<typename T>
+	constexpr T Lerp(T a, T b, float t) {
+		return a + (b - a) * static_cast<T>(t);
+	}
+
+	template<typename T>
+	bool LerpInternalNumber(PropertyValue& out, const PropertyValue& a, const PropertyValue& b, float t) {
+		if (!std::holds_alternative<T>(a.GetVariant()) ||
+			!std::holds_alternative<T>(b.GetVariant())) {
+			return false;
+		}
+
+		T result = Lerp<T>(
+			std::get<T>(a.GetVariant()),
+			std::get<T>(b.GetVariant()),
+			t
+		);
+
+		out.SetValue(result);
+		return true;
+	}
+
+	template<typename T, typename LerpFunc>
+	bool LerpInternalVector(PropertyValue& out, const PropertyValue& a, const PropertyValue& b, float t, LerpFunc lerpFn) {
+		if (!std::holds_alternative<T>(a.GetVariant()) ||
+			!std::holds_alternative<T>(b.GetVariant())) {
+			return false;
+		}
+
+		out.SetValue(
+			lerpFn(
+				std::get<T>(a.GetVariant()),
+				std::get<T>(b.GetVariant()),
+				t
+			)
+		);
+		return true;
+	}
+
+	bool PropertyValue::InterpolateInternal(const PropertyValue& a, const PropertyValue& b, float t) {
+		switch (a.m_valueType) {
+		case Type::INT: {
+			return LerpInternalNumber<int>(*this, a, b, t);
+		}
+		case Type::FLOAT:
+			return LerpInternalNumber<float>(*this, a, b, t);
+
+		case Type::DOUBLE:
+			return LerpInternalNumber<double>(*this, a, b, t);
+
+		case Type::VECTOR2:
+			return LerpInternalVector<Vector2>(
+				*this, a, b, t, Vector2::Lerp
+			);
+
+		case Type::VECTOR4:
+			return LerpInternalVector<Vector4>(
+				*this, a, b, t, Vector4::Lerp
+			);
+		case Type::NUMBER_ID: {
+			double aNum, bNum;
+			if (!UIRegistry::TryResolve(std::get<UINumberID>(a.m_value), aNum) ||
+				!UIRegistry::TryResolve(std::get<UINumberID>(b.m_value), bNum))
+				return false;
+
+			switch (m_valueType) {
+			case Type::INT:
+				SetValue(static_cast<int>(std::round(Lerp(aNum, bNum, t))));
+				return true;
+			case Type::FLOAT:
+				SetValue(static_cast<float>(Lerp<double>(aNum, bNum, t)));
+				return true;
+			case Type::DOUBLE:
+				SetValue(Lerp<double>(aNum, bNum, t));
+				return true;
+			default:
+				return false;
+			}
+		}
+		case Type::COLOR_ID: {
+			Vector4 aColor, bColor;
+			if (!UIRegistry::TryResolve(std::get<UIColorID>(a.m_value), aColor) ||
+				!UIRegistry::TryResolve(std::get<UIColorID>(b.m_value), bColor))
+				return false;
+
+			return LerpInternalVector<Vector4>(
+				*this, a, b, t, Vector4::Lerp
+			);
+
+			return true;
+		}
+		case Type::BOOL:
+		case Type::TEXTURE:
+		case Type::FONT:
+		case Type::FONT_ID:
+		case Type::TEXTURE_ID:
+			*this = (t < 1.0f) ? a : b;
+			return true;
+
+		default:
+			return false;
+		}
 	}
 
 	PropertyValue::PropertyTypeClass PropertyValue::GetTypeClass(PropertyValue::Type t) {

@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "UI/Types/UIPropertyRegistry.h"
 #include "UI/Types/UIStyleState.h"
 
@@ -9,6 +11,36 @@ namespace SDLCore::UI {
 		for (const auto& [id, prop] : allProps) {
 			m_properties[id] = PropertyValue(prop.GetType(), prop.GetDefaultValue());
 		}
+	}
+
+	UIStyleState UIStyleState::Interpolate(const UIStyleState& start, const UIStyleState& end, float time) {
+		time = std::clamp(time, 0.0f, 1.0f);
+
+		if (time == 0.0f)
+			return start;
+		if (time == 1.0f)
+			return end;
+
+		UIStyleState result;
+		const auto& startMap = start.GetAllPropertiesMap();
+		const auto& endMap = end.GetAllPropertiesMap();
+		auto& outMap = result.GetAllPropertiesMap();
+
+		for (auto& [id, prop] : outMap) {
+			auto startIt = startMap.find(id);
+			if (startIt == startMap.end())
+				continue;
+
+			auto endIt = endMap.find(id);
+			if (endIt == endMap.end())
+				continue;
+			
+			const PropertyValue& startProp = startIt->second;
+			const PropertyValue& endProp = endIt->second;
+			prop.Interpolate(startProp, endProp, time);
+		}
+
+		return result;
 	}
 
 	bool UIStyleState::SetValue(UIPropertyID id, PropertyValue value, bool important) {
@@ -37,19 +69,19 @@ namespace SDLCore::UI {
 
 	void UIStyleState::Merge(const UIStyleState& other) {
 		using propMap = std::unordered_map<UIPropertyID, PropertyValue>;
-		propMap& sourceProps = this->GetAllProperties();
-		const propMap& otherProps = other.GetAllProperties();
+		propMap& sourceProps = this->GetAllPropertiesMap();
+		const propMap& otherProps = other.GetAllPropertiesMap();
 
 		for (auto& [id, prop] : otherProps) {
 			sourceProps[id].ApplyWithPriority(prop);
 		}
 	}
 
-	std::unordered_map<UIPropertyID, PropertyValue>& UIStyleState::GetAllProperties() {
+	std::unordered_map<UIPropertyID, PropertyValue>& UIStyleState::GetAllPropertiesMap() {
 		return m_properties;
 	}
 
-	const std::unordered_map<UIPropertyID, PropertyValue>& UIStyleState::GetAllProperties() const {
+	const std::unordered_map<UIPropertyID, PropertyValue>& UIStyleState::GetAllPropertiesMap() const {
 		return m_properties;
 	}
 
