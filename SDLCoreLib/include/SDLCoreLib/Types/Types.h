@@ -108,15 +108,6 @@ namespace SDLCore {
 
 }
 
-namespace std {
-	template<typename Tag>
-	struct hash<SDLCore::SDLCoreID<Tag>> {
-		size_t operator()(const SDLCore::SDLCoreID<Tag>& id) const noexcept {
-			return std::hash<uint32_t>{}(id.value);
-		}
-	};
-}
-
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::WindowTag>>(SDLCore::WindowID id) {
 	return id.ToString();

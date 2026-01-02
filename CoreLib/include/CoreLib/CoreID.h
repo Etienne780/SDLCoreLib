@@ -1,4 +1,5 @@
 #pragma once
+#include <xhash>
 
 template<typename ID_TYPE, ID_TYPE INVALID_ID, typename TAG>
 class CoreID {
@@ -46,3 +47,12 @@ public:
 
 	explicit constexpr operator bool() const { return value != 0; }
 };
+
+namespace std {
+	template<typename ID_TYPE, ID_TYPE INVALID_ID, typename TAG>
+	struct hash<CoreID<ID_TYPE, INVALID_ID, TAG>> {
+		size_t operator()(const CoreID<ID_TYPE, INVALID_ID, TAG>& id) const noexcept {
+			return std::hash<uint32_t>{}(id.value);
+		}
+	};
+}
