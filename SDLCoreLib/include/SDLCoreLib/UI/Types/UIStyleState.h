@@ -26,13 +26,18 @@ namespace SDLCore::UI {
 		void Merge(const UIStyleState& other);
 
 		template<typename T>
-		bool TryGetValue(UIPropertyID id, T& outValue) const {
-			auto it = m_properties.find(id);
-			if (it == m_properties.end())
-				return false;
+		bool TryGetValue(UIPropertyID id, T& outValue, const T& fallback) const {
+			bool result = false;
 
-			auto& prop = it->second;
-			return prop.TryGetValue<T>(outValue);
+			auto it = m_properties.find(id);
+			if (it != m_properties.end()) {
+				result = it->second.TryGetValue<T>(outValue);
+			}
+
+			if(!result)
+				outValue = fallback;
+
+			return result;
 		}
 
 		std::unordered_map<UIPropertyID, PropertyValue>& GetAllPropertiesMap();

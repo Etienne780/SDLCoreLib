@@ -13,6 +13,7 @@ namespace SDLCore::UI {
 		bool IsPressed() const;
 		bool IsClick() const;
 		bool IsDragging() const;
+		bool IsDisabled() const;
 
 		float GetScrollDir() const;
 		bool TryGetScrollDir(float& outDir) const;
@@ -22,6 +23,7 @@ namespace SDLCore::UI {
 		bool m_isPressed = false;
 		bool m_isClicked = false;
 		bool m_isDragging = false;
+		bool m_isDisabled = false;
 
 		float m_scrollDir = 0;
 
@@ -29,6 +31,7 @@ namespace SDLCore::UI {
 		void SetIsPressed(bool value);
 		void SetIsClicked(bool value);
 		void SetIsDragging(bool value);
+		void SetIsDisabled(bool value);
 		void SetScrollDir(float dir);
 		void Reset();
 	};

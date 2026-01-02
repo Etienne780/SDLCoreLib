@@ -122,21 +122,39 @@ namespace SDLCore::UI {
 
         // ============ Other ============
 
-        hitTestEnabled = RegisterProperty(
-            "hit_test_enabled",
-            "Enables or disables event hit-testing for this element. "
-            "If false, the element is visible but does not receive interaction events; events pass through. Commonly used for text. Default: true",
+        pointerEvents = RegisterProperty(
+            "pointer_events",
+            "Controls whether this element receives pointer interaction events. "
+            "If false, the element does not receive hover, click, or any other pointer events, "
+            "but it is still rendered and participates in layout.",
             PropertyValue(true)
         );
 
-        notInteractible = RegisterProperty(
-            "not_interactible",
-            "Disables all interaction for this element. "
-            "If true, the element will not respond to any events (clicks, hover, etc.). Default: false"
-            "and behaves as disabled.",
+        hitTestTransparent = RegisterProperty(
+            "hit_test_transparent",
+            "Allows pointer events to pass through this element to elements behind it. "
+            "If true, this element does not block hit-testing for underlying elements, "
+            "even though it may still receive its own pointer events.",
             PropertyValue(false)
         );
 
+        propagateStateToChildren = RegisterProperty(
+            "propagate_state_to_children",
+            "Forces all child elements to inherit this element's interaction and visual state "
+            "(e.g. hover, active, disabled). "
+            "Useful for compound widgets such as buttons with icons and labels.",
+            PropertyValue(false)
+        );
+
+        disabled = RegisterProperty(
+            "disabled",
+            "Marks this element as disabled. "
+            "A disabled element does not react to interaction states such as hover, active, or focus. "
+            "Visual appearance may reflect the disabled state. "
+            "Pointer event handling is controlled separately via pointer_events and hit_test_transparent.",
+            PropertyValue(false)
+        );
+        
         duration = RegisterProperty(
             "duration",
             "Transitions number, colors other values get instantly set",

@@ -49,6 +49,8 @@ namespace SDLCore::UI {
 		// should be used with HasFocusNodeCaptured() to check if a node is Captured
 		uintptr_t GetActiveCapturedFocusNode() const;
 
+		void SetNodeState(UINode* node, UIState state);
+
 	private:
 		UIContext();
 		WindowCallbackID m_windowResizeCBID;
@@ -109,6 +111,41 @@ namespace SDLCore::UI {
 			return childNode;
 		}
 
+		/*
+		* @brief Traverses the UI node tree in depth-first (pre-order) order and applies a function to each node.
+		*
+		* This helper performs a recursive traversal starting from the given node.
+		* The provided callable is invoked once for every node in the subtree,
+		* including the root node itself.
+		*
+		* The traversal order is:
+		*   1. Current node
+		*   2. All children recursively (depth-first)
+		*
+		* The function is implemented as a template to avoid std::function overhead
+		* and allow full inlining by the compiler.
+		*
+		* @tparam Func Callable type. Must be invocable as: void(UINode*)
+		* @param node  Root node of the traversal. If null, the function returns immediately.
+		* @param fn    Function to execute for each visited node.
+		*
+		* Example:
+		*   ForEachNode(root, [](UINode* node) {
+		*       node->ApplyStyle(ctx);
+		*   });
+		*/
+		template<typename Func>
+		void ForEachNode(UINode* node, Func&& fn) {
+			if (!node)
+				return;
+
+			fn(node);
+
+			for (const auto& child : node->GetChildren()) {
+				ForEachNode(child.get(), fn);
+			}
+		}
+
 		UINode* GetRootNode() const;
 		void SetWindowParams(WindowID id);
 		void RemoveWindowCB();
@@ -116,8 +153,9 @@ namespace SDLCore::UI {
 		// gets called on window resize
 		void UpdateNodeStylesWindowResize();
 		void UpdateInput();
-		static UIEvent* ProcessEvent(UIContext* ctx, UINode* node);
-		static void RenderNodes(UIContext* ctx, UINode* rootNode);
+		void ResolveNodeState(UIContext* ctx, UINode* node);
+		UIEvent* ProcessEvent(UIContext* ctx, UINode* node);
+		void RenderNodes(UIContext* ctx, UINode* rootNode);
 
 		/**
 		* @brief Checks whether an ID is unique among siblings and all parent layers.

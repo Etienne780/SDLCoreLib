@@ -44,13 +44,9 @@ namespace SDLCore::UI {
 		if (!ctx)
 			return;
 
-		m_backgroundColor.Set(0);
-		styleState.TryGetValue<Vector4>(Properties::backgroundColor, m_backgroundColor);
-
-		m_borderColor.Set(0);
-		styleState.TryGetValue<Vector4>(Properties::borderColor, m_borderColor);
-
-		m_useTexture = styleState.TryGetValue<std::shared_ptr<Texture>>(Properties::backgroundTexture, m_texture);
+		styleState.TryGetValue<Vector4>(Properties::backgroundColor, m_backgroundColor, Vector4(0.0f));
+		styleState.TryGetValue<Vector4>(Properties::borderColor, m_borderColor, Vector4(0.0f));
+		m_useTexture = styleState.TryGetValue<std::shared_ptr<Texture>>(Properties::backgroundTexture, m_texture, nullptr);
 	}
 
 

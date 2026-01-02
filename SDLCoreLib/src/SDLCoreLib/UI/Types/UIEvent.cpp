@@ -18,6 +18,10 @@ namespace SDLCore::UI {
 		return m_isDragging;
 	}
 
+	bool UIEvent::IsDisabled() const {
+		return m_isDisabled;
+	}
+
 	float UIEvent::GetScrollDir() const {
 		return m_scrollDir;
 	}
@@ -43,6 +47,10 @@ namespace SDLCore::UI {
 		m_isDragging = value;
 	}
 
+	void UIEvent::SetIsDisabled(bool value) {
+		m_isDisabled = value;
+	}
+
 	void UIEvent::SetScrollDir(float dir) {
 		m_scrollDir = dir;
 	}
@@ -52,8 +60,9 @@ namespace SDLCore::UI {
 		m_isPressed = false;
 		m_isClicked = false;
 		m_isDragging = false;
+		m_isDisabled = false;
 
-		 m_scrollDir = 0;
+		m_scrollDir = 0;
 	}
 
 }

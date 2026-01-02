@@ -10,7 +10,7 @@ SDLCore::UI::UITextureID testImageID;
 SDLCore::UI::UIContext* context = SDLCore::UI::CreateContext();
 
 SDLCore::UI::UIStyle styleRoot("root");
-SDLCore::UI::UIStyle elementStyle("element");
+SDLCore::UI::UIStyle buttenStyle("element");
 SDLCore::UI::UIStyle textStyle("text");
 
 void App::OnStart() {
@@ -32,22 +32,26 @@ void App::OnStart() {
         .SetValue(Prop::width, 100.0f)
         .SetValue(Prop::height, 100.0f);
 
-    elementStyle.SetValue(Prop::layoutDirection, UI::UILayoutDir::COLUMN)
+    buttenStyle.SetValue(Prop::layoutDirection, UI::UILayoutDir::COLUMN)
+        // .SetValue(Prop::propagateStateToChildren, true)
         .SetValue(Prop::backgroundColor, Vector4(255.0f))
         .SetValue(Prop::duration, 1.0f)
         .SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
         .SetValue(Prop::borderWidth, 12.0f)
         .SetValue(Prop::borderColor, Vector4(255, 0, 0, 255))
         .SetValue(Prop::backgroundTexture, testImageID);
-    elementStyle.SetActiveState(UI::UIState::HOVER)
-        .SetValue(Prop::width, 400.0f).SetValue(Prop::height, 400.0f)
+    buttenStyle.SetActiveState(UI::UIState::HOVER)
         .SetValue(Prop::backgroundColor, Vector4(150.0f, 0.0f, 255.0f, 255.0f))
         .SetValue(Prop::borderColor, Vector4(255, 255, 0, 255))
         .SetValue(Prop::duration, 2.0f);
 
-    textStyle.SetValue(Prop::hitTestEnabled, false)
+    textStyle.SetValue(Prop::pointerEvents, true)
+        .SetValue(Prop::hitTestTransparent, true)
+        .SetValue(Prop::duration, 0.2f)
         .SetValue(Prop::textSize, 64.0f)
         .SetValue(Prop::textColor, Vector4(0, 0, 255, 255));
+    textStyle.SetActiveState(UI::UIState::HOVER)
+        .SetValue(Prop::textColor, Vector4(255, 100, 100, 255));
 }
 
 void App::OnUpdate() {
@@ -68,9 +72,9 @@ void App::OnUpdate() {
 
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
-            UI::BeginFrame(UI::UIKey("element"), elementStyle);
+            UI::BeginFrame(UI::UIKey("butten"), buttenStyle);
             {
-                UI::Text(UI::UIKey("Test"), "Test", textStyle);
+                UI::Text(UI::UIKey("text"), "text", textStyle);
             }
             UI::EndFrame();
         }

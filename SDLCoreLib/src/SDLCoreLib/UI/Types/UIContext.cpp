@@ -112,6 +112,11 @@ namespace SDLCore::UI {
         return m_focusNodeID;
     }
 
+    void UIContext::SetNodeState(UINode* node, UIState state) {
+        if(node)
+            node->SetState(state);
+    }
+
     FrameNode* UIContext::BeginFrame(uintptr_t id) {
         if (m_lastNodeStack.empty() && m_rootNode) {
             if (m_rootNode->GetID() != id) {
@@ -127,6 +132,7 @@ namespace SDLCore::UI {
             }
         }
         
+        // create root node
         if (!m_rootNode) {
             m_rootNode = std::make_shared<FrameNode>(-1, id);
             FrameNode* frame = m_rootNode.get();
@@ -136,6 +142,7 @@ namespace SDLCore::UI {
             return frame;
         }
 
+        // create child node 
         if (!m_nodeCreationStack.empty()) {
             UINode* parentNode = m_nodeCreationStack.back();
             if (!parentNode)
@@ -159,14 +166,22 @@ namespace SDLCore::UI {
             UINode* parentNode = m_lastNodeStack.back();
             uint16_t pos = (m_lastChildPosition.empty()) ? 0 : m_lastChildPosition.back();
             UINode* currentNode = nullptr;
+            // node exists at position
             if (parentNode->ContainsChildAtPos(pos, id, currentNode)) {
                 // element with id exists at position. set it as last position
                 m_lastNodeStack.push_back(currentNode);
                 m_lastChildPosition.push_back(0);
                 currentNode->SetNodeActive();
+
+                // is state propagation is enabled calc event before  begin
+                if (currentNode->IsStatePropagationEnabled()) {
+                    ResolveNodeState(this, currentNode);
+                }
+
                 return reinterpret_cast<FrameNode*>(currentNode);
             }
             else {
+                // create node if it is not at its correct position
                 // remove pos and every entry after
                 parentNode->RemoveChildrenFromIndex(pos);
 
@@ -270,16 +285,9 @@ namespace SDLCore::UI {
     }
 
     void UIContext::UpdateNodeStylesWindowResize() {
-        std::function<void(UINode*)> updateRecursive;
-        updateRecursive = [&](UINode* root) {
+        ForEachNode(m_rootNode.get(), [&](UINode* root) {
             root->ApplyStyle(this);
-
-            for (const std::shared_ptr<UINode>& child : root->GetChildren()) {
-                updateRecursive(child.get());
-            }
-        };
-
-        updateRecursive(m_rootNode.get());
+        });
     }
 
     void UIContext::UpdateInput() {
@@ -296,6 +304,20 @@ namespace SDLCore::UI {
         m_leftMouseJustUp = Input::MouseJustReleased(MouseButton::LEFT);
     }
 
+    void UIContext::ResolveNodeState(UIContext* ctx, UINode* node) {
+        if (!ctx || !node)
+            return;
+
+        UIEvent* event = node->GetEventPtr();
+        UIState prev = node->GetState();
+
+        ctx->UpdateInput();
+        node->ProcessEventInternal(ctx, event);
+
+        node->SetResolvedState(node->GetState());
+        node->SetState(prev);
+    }
+
     UIEvent* UIContext::ProcessEvent(UIContext* ctx, UINode* node) {
         static UIEvent dummy;
 
@@ -308,51 +330,52 @@ namespace SDLCore::UI {
         if (app && app->IsCursorLocked())
             return &dummy;
 
+        auto parent = node->GetParent();
+        if (parent && parent->GetResolvedState() != UIState::NORMAL) {
+            ctx->SetNodeState(node, parent->GetResolvedState());
+            return node->GetEventPtr();
+        }
+
         // skips this element if a child has a event
         const auto& children = node->GetChildren();
         for (const auto& child : children) {
             if (!child)
                 continue;
 
-            if (child->GetChildHasEvent() || (!child->IsInteractible() && child->IsMouseInNode())) {
+            // if a child of the child has an event
+            if (child->GetChildHasEvent() || (!child->IsDisabled() && child->IsMouseInNode())) {
                 node->SetChildHasEvent(true);
                 node->ResetState();// resets the node to normal
                 return node->GetEventPtr();
             }
 
-            if (UIEvent* childEvent = child->GetEventPtr()) {
-                if (childEvent->IsHover()) {
-                    node->SetChildHasEvent(true);
-                    node->ResetState();// resets the node to normal
-                    return node->GetEventPtr();
-                }
+            UIEvent* childEvent = child->GetEventPtr();
+            // if this child as an event 
+            if (childEvent && childEvent->IsHover() && !child->HasHitTestTransparent()) {
+                node->SetChildHasEvent(true);
+                node->ResetState();// resets the node to normal
+                return node->GetEventPtr();
             }
         }
-        
-        node->SetChildHasEvent(false);
+            
         UIEvent* event = node->GetEventPtr();
         
         ctx->UpdateInput();
         node->ProcessEventInternal(ctx, event);
 
+        node->SetResolvedState(UIState::NORMAL);
         return event;
     }
 
     void UIContext::RenderNodes(UIContext* ctx, UINode* rootNode) {
-        std::function<void(UINode*)> renderRecursive; 
-        renderRecursive = [&](UINode* root) {
+        ForEachNode(rootNode, [&](UINode* root) {
             root->Update(ctx, Time::GetDeltaTime());
 
-            if (!root || !root->IsActive()) 
+            if (!root || !root->IsActive())
                 return;
 
             root->RenderNode(ctx);
-            for (const std::shared_ptr<UINode>& child : root->GetChildren()) {
-                renderRecursive(child.get());
-            }
-        };
-
-        renderRecursive(rootNode);
+        });
     }
 
     bool UIContext::IsIDUnique(uintptr_t idToCheck, UINode* parent) {
