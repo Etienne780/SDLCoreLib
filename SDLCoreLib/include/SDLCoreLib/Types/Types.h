@@ -6,6 +6,7 @@
 #include <CoreLib/FormatUtils.h>
 #include <CoreLib/CoreMath.h>
 #include <CoreLib/IDManager.h>
+#include <CoreLib/CoreID.h>
 
 inline constexpr uint32_t SDLCORE_INVALID_ID = std::numeric_limits<uint32_t>::max();
 inline constexpr int APPLICATION_FPS_UNCAPPED = 0;
@@ -29,62 +30,16 @@ namespace SDLCore {
 
 	using SDLCoreIDManager = IDManager<uint32_t, SDLCORE_INVALID_ID>;
 
-	template<typename Tag>
-	class SDLCoreID {
-	public:
-		uint32_t value = SDLCORE_INVALID_ID;
-
-		/*
-		* @brief The result of value == SDLCORE_INVALID_ID
-		* @return true on invalid value
-		*/
-		bool IsInvalid() const {
-			return value == invalidValue;
-		}
-
-		/*
-		* @brief Sets the id to an invalid value
-		*/
-		void SetInvalid() {
-			value = invalidValue;
-		}
-
-		/*
-		* @brief Converts the ID to a string
-		*/
-		std::string ToString() const {
-			return IsInvalid() ? "InvalidID" : FormatUtils::toString(value);
-		}
-
-		constexpr SDLCoreID() = default;
-		explicit constexpr SDLCoreID(uint32_t v) : value(v) {}
-
-		constexpr bool operator==(uint32_t other) const { return value == other; }
-		constexpr bool operator!=(uint32_t other) const { return value != other; }
-		constexpr bool operator<(uint32_t other) const { return value < other; }
-		constexpr bool operator>(uint32_t other) const { return value > other; }
-		constexpr bool operator<=(uint32_t other) const { return value <= other; }
-		constexpr bool operator>=(uint32_t other) const { return value >= other; }
-
-		constexpr bool operator==(const SDLCoreID& other) const { return value == other.value; }
-		constexpr bool operator!=(const SDLCoreID& other) const { return value != other.value; }
-		constexpr bool operator<(const SDLCoreID& other) const { return value < other.value; }
-		constexpr bool operator>(const SDLCoreID& other) const { return value > other.value; }
-		constexpr bool operator<=(const SDLCoreID& other) const { return value <= other.value; }
-		constexpr bool operator>=(const SDLCoreID& other) const { return value >= other.value; }
-
-		explicit constexpr operator bool() const { return value != 0; }
-
-	private: 
-		static inline constexpr uint32_t invalidValue = SDLCORE_INVALID_ID;
-	};
-
 	struct WindowTag {};
 	struct WindowCallbackTag {};
 	struct AudioPlaybackDeviceTag {};
 	struct AudioClipTag {};
 	struct AudioTrackTag {};
 	struct TextureTag {};
+
+	
+	template<typename Tag>
+	using SDLCoreID = CoreID<uint32_t, SDLCORE_INVALID_ID, Tag>;
 
 	/**
 	* @brief Identifier for a window.
