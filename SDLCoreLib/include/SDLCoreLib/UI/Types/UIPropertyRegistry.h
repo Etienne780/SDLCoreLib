@@ -205,27 +205,55 @@ namespace SDLCore::UI::Properties {
 	#pragma region ================= Interaction ===================
 
 	/*
-	* @brief Enables or disables event hit-testing (bool)
+	* @brief Controls whether the element receives pointer interaction events (bool)
 	*
-	* If false, the element is rendered visually but does not receive
-	* hover, click, or any other interaction events.
+	* If false, the element does not receive hover, click, or any other pointer events,
+	* but it may still be rendered and participate in layout.
 	*
 	* Default: true
 	*
 	* Usage: style.SetValue<bool>(true)
 	*/
-	inline UIPropertyID hitTestEnabled;
+	inline UIPropertyID pointerEvents;
 
 	/*
-	* @brief Disables all interaction for this element (bool)
+	* @brief Allows pointer events to pass through to elements below (bool)
 	*
-	* Element is visible but behaves as disabled.
+	* If true, this element does not block hit-testing for elements behind it,
+	* even though it may still receive its own pointer events.
 	*
 	* Default: false
 	*
 	* Usage: style.SetValue<bool>(true)
 	*/
-	inline UIPropertyID notInteractible;
+	inline UIPropertyID hitTestTransparent;
+
+	/*
+	* @brief Propagates this element's state to all child elements (bool)
+	*
+	* If true, all children are forced to use the same interaction and visual state
+	* as this element (e.g. hover, active, disabled).
+	*
+	* Default: false
+	*
+	* Usage: style.SetValue<bool>(true)
+	*/
+	inline UIPropertyID propagateStateToChildren;
+
+	/*
+	* @brief Marks the element as disabled (bool)
+	*
+	* A disabled element does not react to interaction states such as hover,
+	* active or focus. Visual appearance may reflect the disabled state.
+	*
+	* Pointer event handling is controlled separately via pointerEvents
+	* and hitTestTransparent.
+	*
+	* Default: false
+	*
+	* Usage: style.SetValue<bool>(true)
+	*/
+	inline UIPropertyID disabled;
 
 	/*
 	* @brief Transition duration (float). 

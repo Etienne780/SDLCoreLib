@@ -106,12 +106,20 @@ namespace SDLCore::UI {
 		return m_isActive;
 	}
 
-	bool UINode::HasHitTestEnabled() const {
-		return m_isHitTestEnabled;
+	bool UINode::HasPointerEvents() const {
+		return m_hasPointerEvents;
 	}
 
-	bool UINode::IsInteractible() const {
-		return !m_notInteractible;
+	bool UINode::HasHitTestTransparent() const {
+		return m_hasHitTestTransparent;
+	}
+
+	bool UINode::IsStatePropagationEnabled() const {
+		return m_propagateStateToChildren;
+	}
+
+	bool UINode::IsDisabled() const {
+		return !m_isDisabled;
 	}
 
 	void UINode::SetChildHasEvent(bool value) {
@@ -160,6 +168,10 @@ namespace SDLCore::UI {
 		return Vector4(m_borderWidth);
 	}
 
+	UIState UINode::GetResolvedState() const {
+		return m_resolvedState;
+	}
+
 	void UINode::RemoveChildrenFromIndex(uint16_t pos) {
 		if (pos >= m_children.size())
 			return;
@@ -178,6 +190,14 @@ namespace SDLCore::UI {
 
 	void UINode::SetNodeActive() {
 		m_isActive = true;
+	}
+
+	void UINode::SetState(UIState state) {
+		m_state = state;
+	}
+
+	void UINode::SetResolvedState(UIState state) {
+		m_resolvedState = state;
 	}
 
 	bool UINode::IsMouseInNode() const {
@@ -248,9 +268,9 @@ namespace SDLCore::UI {
 		int alignHorizontal = 0;
 		int alignVertical = 0;
 
-		styleState.TryGetValue<int>(Properties::layoutDirection, layoutDir);
-		styleState.TryGetValue<int>(Properties::alignHorizontal, alignHorizontal);
-		styleState.TryGetValue<int>(Properties::alignVertical, alignVertical);
+		styleState.TryGetValue<int>(Properties::layoutDirection, layoutDir, 0);
+		styleState.TryGetValue<int>(Properties::alignHorizontal, alignHorizontal, 0);
+		styleState.TryGetValue<int>(Properties::alignVertical, alignVertical, 0);
 
 		m_layoutDir = static_cast<UILayoutDirection>(layoutDir);
 		m_horizontalAligment = static_cast<UIAlignment>(alignHorizontal);
@@ -259,46 +279,38 @@ namespace SDLCore::UI {
 		float width = 0.0f;
 		float height = 0.0f;
 
-		styleState.TryGetValue<float>(Properties::width, width);
-		styleState.TryGetValue<float>(Properties::height, height);
+		styleState.TryGetValue<float>(Properties::width, width, 0.0f);
+		styleState.TryGetValue<float>(Properties::height, height, 0.0f);
 
 		int sizeUnitW = 0;// 0 = PX
 		int sizeUnitH = 0;
-		styleState.TryGetValue<int>(Properties::widthUnit, sizeUnitW);
-		styleState.TryGetValue<int>(Properties::heightUnit, sizeUnitH);
+		styleState.TryGetValue<int>(Properties::widthUnit, sizeUnitW, 0);
+		styleState.TryGetValue<int>(Properties::heightUnit, sizeUnitH, 0);
 
-		m_padding.Set(0.0f);
-		m_margin.Set(0.0f);
-		styleState.TryGetValue<Vector4>(Properties::padding, m_padding);
-		styleState.TryGetValue<Vector4>(Properties::margin, m_margin);
+		styleState.TryGetValue<Vector4>(Properties::padding, m_padding, Vector4(0.0f));
+		styleState.TryGetValue<Vector4>(Properties::margin, m_margin, Vector4(0.0f));
 
-		m_borderWidth = 0.0f;
-		styleState.TryGetValue<float>(Properties::borderWidth, m_borderWidth);
+		styleState.TryGetValue<float>(Properties::borderWidth, m_borderWidth, 0.0f);
 
 		int transitionTimeUnit = 1;
-		styleState.TryGetValue<int>(Properties::durationUnit, transitionTimeUnit);
+		styleState.TryGetValue<int>(Properties::durationUnit, transitionTimeUnit, 1);
 
 		float transitionDuration = 0.0f;
-		styleState.TryGetValue<float>(Properties::duration, transitionDuration);
+		styleState.TryGetValue<float>(Properties::duration, transitionDuration, 0.0f);
 
 		SetTransitionTime(transitionDuration, 
 			static_cast<UITimeUnit>(transitionTimeUnit));
 
 		int transitionEasing = 0;
-		styleState.TryGetValue<int>(Properties::durationEasing, transitionEasing);
+		styleState.TryGetValue<int>(Properties::durationEasing, transitionEasing, 0);
 		m_transitionEasing = static_cast<UIEasing>(transitionEasing);
 
-		m_innerBorder = false;
-		styleState.TryGetValue<bool>(Properties::borderInset, m_innerBorder);
-
-		m_isHitTestEnabled = true;
-		styleState.TryGetValue<bool>(Properties::hitTestEnabled, m_isHitTestEnabled);
-
-		m_notInteractible = false;
-		styleState.TryGetValue<bool>(Properties::notInteractible, m_notInteractible);
-
-		m_borderAffectsLayout = true;
-		styleState.TryGetValue<bool>(Properties::borderAffectsLayout, m_borderAffectsLayout);
+		styleState.TryGetValue<bool>(Properties::borderInset, m_innerBorder, false);
+		styleState.TryGetValue<bool>(Properties::pointerEvents, m_hasPointerEvents, true);
+		styleState.TryGetValue<bool>(Properties::hitTestTransparent, m_hasHitTestTransparent, false);
+		styleState.TryGetValue<bool>(Properties::propagateStateToChildren, m_propagateStateToChildren, false);
+		styleState.TryGetValue<bool>(Properties::disabled, m_isDisabled, false);
+		styleState.TryGetValue<bool>(Properties::borderAffectsLayout, m_borderAffectsLayout, true);
 
 		ApplyStyleCalled(ctx, styleState);
 
@@ -368,7 +380,11 @@ namespace SDLCore::UI {
 			m_transitionActive = false;
 		}
 		else {
-			m_renderedStyleState = UIStyleState::Interpolate(m_transitionFrom, m_transitionTo, time, m_transitionEasing);
+			m_renderedStyleState = UIStyleState::Interpolate(
+				m_transitionFrom, 
+				m_transitionTo, 
+				time, 
+				m_transitionEasing);
 		}
 
 		ApplyStyle(ctx);
@@ -554,13 +570,14 @@ namespace SDLCore::UI {
 
 		event->Reset();
 
-		if (m_notInteractible) {
-			m_state = UIState::NORMAL;
+		if (m_isDisabled) {
+			SetState(UIState::DISABLED);
+			event->SetIsDisabled(true);
 			return;
 		}
 
-		if (!m_isHitTestEnabled) {
-			m_state = UIState::NORMAL;
+		if (!m_hasPointerEvents) {
+			SetState(UIState::NORMAL);
 			ProcessEvent(event);
 			return;
 		}
@@ -584,7 +601,7 @@ namespace SDLCore::UI {
 		// Press start
 		if (mouseJustDown && isHovered) {
 			ctx->CapturePressNode(m_id);
-			m_state = UIState::PRESSED;
+			SetState(UIState::PRESSED);
 			event->SetIsPressed(true);
 			event->SetIsClicked(true);
 		}
@@ -606,14 +623,14 @@ namespace SDLCore::UI {
 
 		// Press state, press ends if mouse out of node
 		if (pressCaptured && isHovered && mouseDown) {
-			m_state = UIState::PRESSED;
+			SetState(UIState::PRESSED);
 			event->SetIsPressed(true);
 		}
 		else {
 			if (pressCaptured && !isHovered) {
 				ctx->ReleasePressNode(m_id);
 			}
-			m_state = isHovered ? UIState::HOVER : UIState::NORMAL;
+			SetState(isHovered ? UIState::HOVER : UIState::NORMAL);
 		}
 
 		ProcessEvent(event);

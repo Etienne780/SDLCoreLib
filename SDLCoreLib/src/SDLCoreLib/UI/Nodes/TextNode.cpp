@@ -29,14 +29,14 @@ namespace SDLCore::UI {
 		if (!ctx)
 			return;
 
-		styleState.TryGetValue(Properties::textSize, m_textSize);
-		styleState.TryGetValue(Properties::textColor, m_textColor);
+		styleState.TryGetValue<float>(Properties::textSize, m_textSize, 0.0f);
+		styleState.TryGetValue<Vector4>(Properties::textColor, m_textColor, Vector4(0.0f));
 	}
 
 	Vector2 TextNode::CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h) {
 		namespace RE = SDLCore::Render;
 		if (m_textSize <= 0) 
-			return Vector2(0);
+			return Vector2(0.0f);
 
 		RE::SetFontSize(m_textSize);
 		return Vector2(
