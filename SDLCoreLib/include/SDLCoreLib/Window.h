@@ -7,7 +7,6 @@
 #include <CoreLib/FormatUtils.h>
 
 #include "Types/TextureSurface.h"
-#include "IDManager.h"
 #include "SDLCoreTypes.h"
 
 namespace SDLCore {
@@ -652,7 +651,7 @@ namespace SDLCore {
 		Vector2 m_minSize{ 0.0f, 0.0f };/**< Is in px, 0 to disable. Default [0, 0]*/
 		Vector2 m_maxSize{ 0.0f, 0.0f };/**< Is in px, 0 to disable. Default [0, 0]*/
 
-		IDManager m_callbackIDManager;
+		SDLCoreIDManager m_callbackIDManager;
 		std::vector<WindowCallback<VoidCallback>> m_onDestroyCallbacks;
 		std::vector<WindowCallback<VoidCallback>> m_onSDLWindowCloseCallbacks;
 		std::vector<WindowCallback<VoidCallback>> m_onSDLRendererDestroyCallbacks;

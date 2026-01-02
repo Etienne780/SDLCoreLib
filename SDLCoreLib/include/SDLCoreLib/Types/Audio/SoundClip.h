@@ -159,7 +159,7 @@ namespace SDLCore {
 
     private:
         static inline constexpr float autoPredecodeThresholdMS = 2000.0f;   // upper bound for PREDECODED
-        static inline IDManager idManager{ IDOrder::ASCENDING };
+        static inline SDLCoreIDManager idManager{ IDOrder::ASCENDING };
 
         SoundClipID m_id{ SDLCORE_INVALID_ID };
         SoundClipID m_subID{ SDLCORE_INVALID_ID };

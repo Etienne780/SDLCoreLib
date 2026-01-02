@@ -7,7 +7,6 @@
 #include "SDLCoreRenderer.h"
 #include "SDLCoreTime.h"
 #include "SDLCoreInput.h"
-#include "IDManager.h"
 #include "types/Version.h"
 #include "Window.h"
 
@@ -206,7 +205,7 @@ namespace SDLCore {
 		SDL_Event m_sdlEvent;
 		std::vector<std::unique_ptr<Window>> m_windows;
 		std::vector<WindowID> m_windowsToClose;
-		IDManager m_windowIDManager;
+		SDLCoreIDManager m_windowIDManager;
 
 		bool m_closeApplication = false;
 		int m_vsync = 0;

@@ -3,7 +3,6 @@
 #include <SDL3/SDL.h>
 
 #include "Types/Types.h"
-#include "IDManager.h"
 
 namespace SDLCore {
 
@@ -26,7 +25,7 @@ namespace SDLCore {
 		TextureManager() = default;
 		~TextureManager();
 
-		IDManager m_idManager;
+		SDLCoreIDManager m_idManager;
 		std::unordered_map<TextureID, TextureAsset> m_textureAssets;
 
 		static TextureManager& GetInstance();

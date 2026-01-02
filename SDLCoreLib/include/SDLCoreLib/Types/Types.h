@@ -5,6 +5,7 @@
 #include <CoreLib/File.h>
 #include <CoreLib/FormatUtils.h>
 #include <CoreLib/CoreMath.h>
+#include <CoreLib/IDManager.h>
 
 inline constexpr uint32_t SDLCORE_INVALID_ID = std::numeric_limits<uint32_t>::max();
 inline constexpr int APPLICATION_FPS_UNCAPPED = 0;
@@ -25,6 +26,8 @@ namespace SDLCore {
 
 	FRect ToFRect(const Rect& rect);
 	FRect ToFRect(const Vector4& rect);
+
+	using SDLCoreIDManager = IDManager<uint32_t, SDLCORE_INVALID_ID>;
 
 	template<typename Tag>
 	class SDLCoreID {
@@ -84,21 +87,21 @@ namespace SDLCore {
 	struct TextureTag {};
 
 	/**
-	 * @brief Identifier for a window.
-	 *        Internally stored as an uint32_t
-	 */
+	* @brief Identifier for a window.
+	*        Internally stored as an uint32_t
+	*/
 	using WindowID = SDLCoreID<WindowTag>;
 
 	/**
-	 * @brief Identifier for a window callback.
-	 *        Internally stored as an uint32_t
-	 */
+	* @brief Identifier for a window callback.
+	*        Internally stored as an uint32_t
+	*/
 	using WindowCallbackID = SDLCoreID<WindowCallbackTag>;
 
 	/**
-	 * @brief Identifier for an audio playback device.
-	 *        Internally stored as an uint32_t
-	 */
+	* @brief Identifier for an audio playback device.
+	*        Internally stored as an uint32_t
+	*/
 	using AudioPlaybackDeviceID = SDLCoreID<AudioPlaybackDeviceTag>;
 
 	/**

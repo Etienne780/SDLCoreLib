@@ -2,7 +2,6 @@
 #include <vector>
 #include <SDL3_mixer/SDL_mixer.h>
 
-#include "IDManager.h"
 #include "SoundClip.h"
 #include "AudioPlaybackDevice.h"
 
@@ -186,7 +185,6 @@ namespace SDLCore {
         SoundManager(SoundManager&& s) = delete;
         SoundManager operator=(SoundManager & s) = delete;
 
-        IDManager m_trackIDManager;
         struct Audio {
             MIX_Audio* mixAudio = nullptr;
             AudioTrackID audioTrackID{ SDLCORE_INVALID_ID };
@@ -278,7 +276,8 @@ namespace SDLCore {
         std::unordered_map<SoundClipID, Audio> m_audios;// audio gets added from clip
         std::unordered_map<SoundClipID, SoundClipID> m_subAudio;// map from sub sound to sound
         std::vector<AudioPlaybackDevice> m_devices;
-        IDManager m_deviceIDManager{ 1 };
+        SDLCoreIDManager m_deviceIDManager{ 1 };
+        SDLCoreIDManager m_trackIDManager;
 
         void Cleanup();
 
