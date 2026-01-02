@@ -80,8 +80,10 @@ namespace SDLCore::UI {
         */
         bool IsActive() const;
 
-        bool HasHitTestEnabled() const;
-        bool IsInteractible() const;
+        bool HasPointerEvents() const;
+        bool HasHitTestTransparent() const;
+        bool IsStatePropagationEnabled() const;
+        bool IsDisabled() const;
 
         /*
         * @brief used internaly to find out what elements have events
@@ -102,6 +104,8 @@ namespace SDLCore::UI {
         Vector4 GetBorderLayoutPadding() const;
         Vector4 GetBorderLayoutMargin() const;
 
+        UIState GetResolvedState() const;
+
     protected:
         void RemoveChildrenFromIndex(uint16_t position);
 
@@ -111,6 +115,8 @@ namespace SDLCore::UI {
         UIStyle CreateStyle();
 
         void SetNodeActive();
+        void SetState(UIState state);
+        void SetResolvedState(UIState state);
 
         bool IsMouseInNode() const;
         bool IsPointInNode(const Vector2& point) const;
@@ -127,7 +133,6 @@ namespace SDLCore::UI {
 
         std::vector<std::shared_ptr<UINode>> m_children;
         std::vector<UIStyle> m_appliedStyles;
-        UIState m_state = UIState::NORMAL;
         UIStyle m_finalStyle;
         UIEvent m_eventState;
         float m_borderWidth = 0.0f;
@@ -136,8 +141,10 @@ namespace SDLCore::UI {
         bool m_innerBorder = false;
         bool m_childHasEvent = false;
         bool m_isActive = false;
-        bool m_isHitTestEnabled = true;
-        bool m_notInteractible = false;
+        bool m_hasPointerEvents = true;
+        bool m_hasHitTestTransparent = false;
+        bool m_propagateStateToChildren = false;
+        bool m_isDisabled = false;
         bool m_borderAffectsLayout = true;
 
         Vector2 m_position;
@@ -153,6 +160,8 @@ namespace SDLCore::UI {
         UIStyleState m_transitionFrom;
         UIStyleState m_transitionTo;
 
+        UIState m_state = UIState::NORMAL;
+        UIState m_resolvedState = UIState::NORMAL;
         UIState m_lastState = UIState::NORMAL;
         uint64_t m_appliedStyleHash = 0;    // last style combination
         uint64_t m_appliedStyleNode = 0;    // max lastModified of applied styles
