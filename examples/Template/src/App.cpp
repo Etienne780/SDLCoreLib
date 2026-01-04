@@ -23,6 +23,10 @@ void App::OnStart() {
     playerObj.SetNames("name", "weapon");
     playerObj.AddDataRow("steve", weaponObj);
 
+    OTNObject test("players");
+    test.SetNames("name", "weapons");
+    test.AddDataRow("steve", std::vector{ weaponObj, weaponObj });
+
     int i;
 }
 

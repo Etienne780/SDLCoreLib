@@ -10,10 +10,10 @@
 /*
 * 
 * ToDo:
-* - Create OTN object with
+* - Create OTN object with X
 *	- Create OTN array/vector support
 *	- Create Manual type setting
-*   - Create OTN objects definitions for specific data types (Vector2, ...)
+*   - Create OTN objects definitions for specific data types (Vector2, ...) X
 *	- Create Manual type setting for custome types
 * 
 * - Create OTN Writer
@@ -29,14 +29,24 @@
 
 class OTNObject;
 using OTNObjectPtr = std::shared_ptr<OTNObject>;
+
+class OTNArray;
+using OTNArrayPtr = std::shared_ptr<OTNArray>;
+
 using OTNValueVariant = std::variant<
 	int,
 	float,
 	double,
 	bool,
 	std::string,
-	OTNObjectPtr
+	OTNObjectPtr,
+	OTNArrayPtr
 >;
+
+class OTNArray {
+public:
+	std::vector<OTNValueVariant> values;
+};
 
 template<typename>
 inline constexpr bool otn_always_false_v = false;
@@ -62,6 +72,17 @@ template<size_t N> struct is_otn_base_type<const char[N]> : std::true_type {};
 
 template<typename T>
 inline constexpr bool is_otn_base_type_v = is_otn_base_type<T>::value;
+
+template<typename T>
+struct is_otn_list : std::false_type {};
+
+template<typename T, typename Alloc>
+struct is_otn_list<std::vector<T, Alloc>> : std::true_type {};
+template<typename T, std::size_t N>
+struct is_otn_list<std::array<T, N>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_otn_list_v = is_otn_list<T>::value;
 
 class OTNObject {
 public:
@@ -259,14 +280,37 @@ template<typename T>
 class OTNDataType {
 public:
 	explicit OTNDataType(T value) {
-		if constexpr (is_otn_base_type_v<T>) {
+		using DT = std::decay_t<T>;
+
+		if constexpr (is_otn_base_type_v<DT>) {
 			m_value = value;
 		}
-		else if constexpr (std::is_same_v<std::decay_t<T>, const char*>) {
+		else if constexpr (is_otn_list_v<DT>) {
+			auto otnArray = std::make_shared<OTNArray>();
+			auto& array = otnArray->values;
+			array.reserve(value.size());
+
+			for (auto& elem : value) {
+				if constexpr (is_otn_object_v<std::decay_t<decltype(elem)>>) {
+					array.emplace_back(std::make_shared<OTNObject>(elem));
+				}
+				else {
+					OTNDataType elemData(elem);
+					if (!elemData.m_valid) {
+						SetInvalid(elemData.m_error);
+						return;
+					}
+					array.emplace_back(std::move(elemData.m_value));
+				}
+			}
+
+			m_value = otnArray;
+		}
+		else if constexpr (std::is_same_v<DT, const char*>) {
 			// Convert C-string to std::string
 			m_value = std::string(value);
 		}
-		else if constexpr (is_otn_object_v<T>) {
+		else if constexpr (is_otn_object_v<DT>) {
 			// Convert Object to shard ptr of object
 			m_value = std::make_shared<OTNObject>(std::move(value));
 		}
