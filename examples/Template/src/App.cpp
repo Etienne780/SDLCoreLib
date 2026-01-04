@@ -6,7 +6,7 @@ App::App()
 }
 
 template<>
-void ToOTNDataType<Vector2>(OTNObjectBuilder& obj, const Vector2& value) {
+void OTN::ToOTNDataType<Vector2>(OTN::OTNObjectBuilder& obj, const Vector2& value) {
     obj.SetObjectName("Vector2");
     obj.AddNames("x", "y");
     obj.AddData(value.x, value.y);
@@ -15,15 +15,15 @@ void ToOTNDataType<Vector2>(OTNObjectBuilder& obj, const Vector2& value) {
 void App::OnStart() {
     CreateWindow(&m_winID, "window", 800, 800);
 
-    OTNObject weaponObj("weapon");
+    OTN::OTNObject weaponObj("weapon");
     weaponObj.SetNames("name", "ammo", "size");
     weaponObj.AddDataRow("SMG", 12.0f, Vector2(2.0f, 22.0f));
 
-    OTNObject playerObj("player");
+    OTN::OTNObject playerObj("player");
     playerObj.SetNames("name", "weapon");
     playerObj.AddDataRow("steve", weaponObj);
 
-    OTNObject test("players");
+    OTN::OTNObject test("players");
     test.SetNames("name", "weapons");
     test.AddDataRow("steve", std::vector{ weaponObj, weaponObj });
 
