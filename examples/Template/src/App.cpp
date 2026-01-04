@@ -8,7 +8,7 @@ App::App()
 template<>
 void OTN::ToOTNDataType<Vector2>(OTN::OTNObjectBuilder& obj, const Vector2& value) {
     obj.SetObjectName("Vector2");
-    obj.AddNames("x", "y");
+    obj.AddNames("x", "y", "das");
     obj.AddData(value.x, value.y);
 }
 
@@ -26,6 +26,16 @@ void App::OnStart() {
     OTN::OTNObject test("players");
     test.SetNames("name", "weapons");
     test.AddDataRow("steve", std::vector{ weaponObj, weaponObj });
+
+    OTN::OTNWriter writer;
+
+    writer.AppendObject(weaponObj);
+    writer.AppendObject(playerObj);
+    writer.AppendObject(test);
+
+    if (!writer.Save("J:/test")) {
+        Log::Error(writer.GetError());
+    }
 
     int i;
 }

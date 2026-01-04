@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <unordered_map>
 #include "OTNFile.h"
 
 namespace OTN {
@@ -27,6 +28,18 @@ namespace OTN {
 		return m_error;
 	}
 
+	std::string OTNObject::GetName() const {
+		return m_name;
+	}
+
+	const std::vector<std::string>& OTNObject::GetColumnNames() const {
+		return m_names;
+	}
+
+	const std::vector<OTNObject::OTNRow>& OTNObject::GetDataRows() const {
+		return m_rows;
+	}
+
 	void OTNObject::AppendError(const std::string& error) {
 		m_valid = false;
 		m_error += error + "!\n";
@@ -45,6 +58,40 @@ namespace OTN {
 
 	void OTNObject::AddRowInternal(OTNRow&& row) {
 		m_rows.emplace_back(std::move(row));
+	}
+
+	bool OTNObject::DebugValidateNamesDistinct() {
+#ifdef NDEBUG
+		return true;
+#else
+		bool allUnique = true;
+		std::unordered_map<std::string, int> nameCounts;
+
+		for (const auto& name : m_names) {
+			++nameCounts[name];
+		}
+
+		std::vector<std::string> duplicates;
+		for (const auto& [name, count] : nameCounts) {
+			if (count > 1) {
+				duplicates.push_back(name);
+				allUnique = false;
+			}
+		}
+
+		if (!duplicates.empty()) {
+			std::string msg = "Duplicate names found: ";
+			for (size_t i = 0; i < duplicates.size(); ++i) {
+				msg += "'" + duplicates[i] + "'";
+				if (i + 1 < duplicates.size()) {
+					msg += ", ";
+				}
+			}
+			AppendError(msg);
+		}
+
+		return allUnique;
+#endif
 	}
 
 
@@ -176,8 +223,10 @@ namespace OTN {
 		return true;
 	}
 
-	std::string OTNWriter::GetError() const {
-		return m_error;
+	std::string OTNWriter::GetError() {
+		std::string err = m_error;
+		m_error.clear();
+		return err;
 	}
 
 	bool OTNWriter::ValidateFilePath(const OTNFilePath& path, OTNFilePath& out) {
@@ -222,20 +271,34 @@ namespace OTN {
 #ifdef NDEBUG
 		return true;
 #else
+		bool valid = true;
 		for (const auto& obj : m_objects) {
 			if (!obj.IsValid()) {
+				if (valid) {
+					AddError("Objects invalid");
+				}
+
 				std::string msg = obj.GetError();
-				// AddError();
-				return false;
+				// Remove trailing newline if present
+				if (!msg.empty() && msg.back() == '\n') {
+					msg.pop_back();
+				}
+
+				std::string objName = obj.GetName();
+				AddError("Object '" + objName + "' is invalid, Error: '" + msg + "'");
+				m_error += "\n";
+				valid = false;
 			}
 		}
 
-		return true;
+		return valid;
 #endif
 	}
 
-	void OTNWriter::AddError(const std::string& error) {
-		m_error += error + "!\n";
+	void OTNWriter::AddError(const std::string& error, bool linebreak) {
+		m_error += error;
+		if (linebreak)
+			m_error += "!\n";
 	}
 
 	#pragma endregion

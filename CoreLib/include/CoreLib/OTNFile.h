@@ -99,7 +99,9 @@ namespace OTN {
 	inline constexpr bool is_otn_list_v = is_otn_list<T>::value;
 	
 	class OTNObject {
+		friend class OTNObjectBuilder;
 	public:
+		using OTNRow = std::vector<OTNValueVariant>;
 		explicit OTNObject(const std::string& name);
 		~OTNObject() = default;
 	
@@ -120,6 +122,8 @@ namespace OTN {
 			m_names.clear();
 			m_names.reserve(ArgCount);
 			(m_names.emplace_back(std::forward<Args>(names)), ...);
+
+			DebugValidateNamesDistinct();
 			return *this;
 		}
 	
@@ -184,11 +188,11 @@ namespace OTN {
 		bool IsValid() const;
 		bool TryGetError(std::string& outError);
 		std::string GetError() const;
+		std::string GetName() const;
+		const std::vector<std::string>& GetColumnNames() const;
+		const std::vector<OTNRow>& GetDataRows() const;
 	
 	private:
-		friend class OTNObjectBuilder;
-		using OTNRow = std::vector<OTNValueVariant>;
-	
 		std::string m_name;
 		std::string m_error;
 		bool m_valid = true;
@@ -199,6 +203,8 @@ namespace OTN {
 		void AppendError(const std::string& error);
 		void SetNamesFromBuilder(std::vector<std::string>&& names);
 		void AddRowInternal(OTNRow&& row);
+
+		bool DebugValidateNamesDistinct();
 	};
 	
 	class OTNObjectBuilder {
@@ -218,7 +224,7 @@ namespace OTN {
 		}
 	
 		template<typename... Args>
-		OTNObjectBuilder& AddData(Args&&... args) {
+		OTNObjectBuilder& AddData(Args&&... args) {			
 			(AddSingleData(std::forward<Args>(args)) && ...);
 			return *this;
 		}
@@ -381,7 +387,7 @@ namespace OTN {
 		bool GetUseOptimizations() const;
 	
 		bool TryGetError(std::string& outError);
-		std::string GetError() const;
+		std::string GetError();
 	
 	private:
 		bool m_useDefName = false;// < replaces often used names with number
@@ -394,7 +400,7 @@ namespace OTN {
 		bool ValidateFilePath(const OTNFilePath& path, OTNFilePath& out);
 		bool DebugValidateObjects();
 
-		void AddError(const std::string& error);
+		void AddError(const std::string& error, bool linebreak = true);
 	};
 	
 	#pragma endregion
