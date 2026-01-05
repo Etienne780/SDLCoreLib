@@ -1,15 +1,47 @@
 #include <algorithm>
+#include <functional>
 #include <unordered_map>
 #include "OTNFile.h"
 
 namespace OTN {
 
-	#pragma region OTNObject
+	std::string OTNValueTypeToString(OTNValueType type) {
+		switch (type)
+		{
+		case OTN::OTNValueType::INT:		return "int";
+		case OTN::OTNValueType::FLOAT:		return "float";
+		case OTN::OTNValueType::DOUBLE:		return "double";
+		case OTN::OTNValueType::BOOL:		return "bool";
+		case OTN::OTNValueType::STRING:		return "string";
+		case OTN::OTNValueType::OBJECT:		return "object";
+		case OTN::OTNValueType::LIST:		return "list";
+		case OTN::OTNValueType::UNKNOWN:	
+		default:							return "UNKNOWN";
+		}
+	}
+
+#pragma region OTNObject
 
 
 	// ======== OTNObject ========
 	OTNObject::OTNObject(const std::string& name)
 		: m_name(name) {
+	}
+
+	OTNObject::OTNObject(const OTNObject& other)
+		: m_name(other.m_name),
+		m_names(other.m_names),
+		m_rows(other.m_rows),
+		m_error(other.m_error),
+		m_valid(other.m_valid) {}
+
+	OTNObject& OTNObject::operator=(const OTNObject& other) {
+		m_name = other.m_name;
+		m_names = other.m_names;
+		m_rows = other.m_rows;
+		m_error = other.m_error;
+		m_valid = other.m_valid;
+		return *this;
 	}
 
 	bool OTNObject::IsValid() const {
@@ -19,8 +51,7 @@ namespace OTN {
 	bool OTNObject::TryGetError(std::string& outError) {
 		if (m_error.empty())
 			return false;
-		outError = std::move(m_error);
-		m_error.clear();
+		outError = m_error;
 		return true;
 	}
 
@@ -91,6 +122,102 @@ namespace OTN {
 		}
 
 		return allUnique;
+#endif
+	}
+
+	bool OTNObject::DebugValidateDataTypes(size_t columnIndex) {
+#ifdef NDEBUG
+		return true;
+#else
+		if (m_rows.empty() || columnIndex >= m_rows[0].size())
+			return true;
+
+		size_t rowCount = m_rows.size();
+		size_t rowLength = m_rows[0].size();
+		bool valid = true;
+		std::string columnName = (m_names.size() > columnIndex) ? m_names[columnIndex] : "-";
+
+		auto getNestedTypeString = [](const OTNValue* val) -> std::string {
+			std::string result;
+			const OTNValue* current = val;
+			while (current->m_type == OTNValueType::LIST) {
+				result += "List of ";
+				auto& arr = std::get<OTNArrayPtr>(current->value);
+				if (arr->values.empty()) break;
+				current = &arr->values[0];
+			}
+			result += OTNValueTypeToString(current->m_type);
+			return result;
+		};
+
+		std::function<bool(const OTNValue&, const OTNValue&, size_t, const std::string&)> validateRecursive;
+		validateRecursive = [&](const OTNValue& ref, const OTNValue& val, size_t rowIdx, const std::string& path) -> bool {
+			if (ref.m_type != val.m_type) {
+				AppendError(
+					"Type mismatch at '" + path + "' (row " + std::to_string(rowIdx) +
+					"): expected '" + getNestedTypeString(&ref) +
+					"', but found '" + getNestedTypeString(&val) + "'"
+				);
+				return false;
+			}
+
+			if (ref.m_type == OTNValueType::OBJECT) {
+				auto& refObj = std::get<OTNObjectPtr>(ref.value);
+				auto& valObj = std::get<OTNObjectPtr>(val.value);
+				if (refObj->GetName() != valObj->GetName()) {
+					AppendError(
+						"Object name mismatch at '" + path + "' (row " + std::to_string(rowIdx) +
+						"): expected '" + refObj->GetName() + "', but found '" + valObj->GetName() + "'"
+					);
+					return false;
+				}
+			}
+
+			if (ref.m_type == OTNValueType::LIST) {
+				auto& refArr = std::get<OTNArrayPtr>(ref.value);
+				auto& valArr = std::get<OTNArrayPtr>(val.value);
+
+				if (refArr->values.size() != valArr->values.size()) {
+					AppendError(
+						"List size mismatch at '" + path + "' (row " + std::to_string(rowIdx) +
+						"): expected " + std::to_string(refArr->values.size()) +
+						", found " + std::to_string(valArr->values.size())
+					);
+					return false;
+				}
+
+				for (size_t i = 0; i < refArr->values.size(); i++) {
+					std::string newPath = path + "[" + std::to_string(i) + "]";
+					if (!validateRecursive(refArr->values[i], valArr->values[i], rowIdx, newPath))
+						return false;
+				}
+			}
+
+			return true;
+			};
+
+		const OTNValue& refValue = m_rows[0][columnIndex];
+
+		for (size_t i = 0; i < rowCount; i++) {
+			auto& row = m_rows[i];
+
+			if (columnIndex >= row.size()) {
+				AppendError(
+					"Row " + std::to_string(i) + " has fewer columns than expected (" +
+					std::to_string(row.size()) + " instead of " + std::to_string(rowLength) +
+					"). Type validation for column '" + columnName + "' skipped"
+				);
+				valid = false;
+				continue;
+			}
+
+			// Hauptaufruf mit Spaltenname als Pfad
+			if (!validateRecursive(refValue, row[columnIndex], i, columnName)) {
+				valid = false;
+			}
+		}
+
+		return valid;
 #endif
 	}
 
@@ -200,6 +327,10 @@ namespace OTN {
 			return false;
 		}
 
+		if (!WriteToFile(newPath)) {
+			return false;
+		}
+
 		return true;
 	}
 
@@ -218,14 +349,12 @@ namespace OTN {
 	bool OTNWriter::TryGetError(std::string& outError) {
 		if (m_error.empty())
 			return false;
-		outError = std::move(m_error);
-		m_error.clear();
+		outError = m_error;
 		return true;
 	}
 
 	std::string OTNWriter::GetError() {
 		std::string err = m_error;
-		m_error.clear();
 		return err;
 	}
 
@@ -293,6 +422,135 @@ namespace OTN {
 
 		return valid;
 #endif
+	}
+
+	bool OTNWriter::WriteToFile(const OTNFilePath& path) {
+		m_writerData.Reset();
+
+		auto& stream = m_writerData.stream;
+		stream.open(path, std::ios::binary);
+
+		if (!stream.is_open()) {
+			return false;
+		}
+
+		if (!CreateObject(m_writerData)) {
+			stream.close();
+			return false;
+		}
+
+		if (!WriteHeader()) {
+			stream.close();
+			return false;
+		}
+
+		if (!WriteBody()) {
+			stream.close();
+			return false;
+		}
+
+		stream.close();
+		return true;
+	}
+
+	void OTNWriter::CountValueType(const OTNValue& value, std::unordered_map<OTNValueType, uint32_t>& typeUsage) {
+		switch (value.m_type) {
+		case OTNValueType::LIST: {
+			OTNArrayPtr array = std::get<OTNArrayPtr>(value.value);
+			if (!array || array->values.empty()) {
+				// default to INT if empty
+				typeUsage[OTNValueType::INT]++;
+			}
+			else {
+				CountArrayType(*array, typeUsage);
+			}
+			break;
+		}
+		case OTNValueType::OBJECT: {
+			OTNObjectPtr obj = std::get<OTNObjectPtr>(value.value);
+			typeUsage[OTNValueType::OBJECT]++;
+			break;
+		}
+		default:
+			typeUsage[value.m_type]++;
+			break;
+		}
+	}
+
+	void OTNWriter::CountArrayType(const OTNArray& array, std::unordered_map<OTNValueType, uint32_t>& typeUsage) {
+		for (const auto& val : array.values) {
+			CountValueType(val, typeUsage);
+			break; // Only count type of first element for type usage purposes
+		}
+	}
+
+	void OTNWriter::CountObjectType(const OTNObject& obj, std::unordered_map<OTNValueType, uint32_t>& typeUsage) {
+		for (const auto& row : obj.GetDataRows()) {
+			for (const auto& val : row) {
+				CountValueType(val, typeUsage);
+			}
+			break;
+		}
+	}
+
+	bool OTNWriter::CreateObject(WriterData& data) {
+		if (data.created)
+			data.Reset();
+
+		for (const auto& obj : m_objects) {
+			CountObjectType(obj, data.typeUsage);
+		}
+
+		auto& objectList = data.objects;
+		objectList.reserve(m_objects.size());
+
+		for (auto& obj : m_objects) {
+			objectList.emplace_back(std::move(obj));
+		}
+
+		data.created = true;
+		m_objects.clear();
+		return true;
+	}
+
+	bool OTNWriter::WriteHeader() {
+		auto& stream = m_writerData.stream;
+
+		stream << "Vers:";
+		AddSpace(stream);
+		stream << std::to_string(OTN::VERSION) + GetLineCharEnd();
+		AddLineBreak(stream);
+
+		if (m_useDefName) {
+		
+		}
+
+		if (m_useDefType) {
+		
+		}
+
+		AddLineBreak(stream);
+		return true;
+	}
+	
+	bool OTNWriter::WriteBody() {
+		auto& stream = m_writerData.stream;
+
+		return true;
+	}
+
+	char OTNWriter::GetLineCharEnd() {
+		return ';';
+	}
+
+	void OTNWriter::AddSpace(std::ofstream& stream) {
+		if (!m_useOptimizations)
+			stream << ' ';
+	}
+
+	void OTNWriter::AddLineBreak(std::ofstream& m_stream) {
+		if (!m_useOptimizations)
+			m_stream << '\n';
 	}
 
 	void OTNWriter::AddError(const std::string& error, bool linebreak) {

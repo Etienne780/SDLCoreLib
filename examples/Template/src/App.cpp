@@ -18,6 +18,8 @@ void App::OnStart() {
     OTN::OTNObject weaponObj("weapon");
     weaponObj.SetNames("name", "ammo", "size");
     weaponObj.AddDataRow("SMG", 12.0f, Vector2(2.0f, 22.0f));
+    weaponObj.AddDataRow("SMG", 2.0f, Vector2(4.0f, 34.0f));
+    weaponObj.AddDataRow("SMG", 4.0f, Vector2(2.0f, 22.0f));
 
     OTN::OTNObject playerObj("player");
     playerObj.SetNames("name", "weapon");
@@ -30,10 +32,8 @@ void App::OnStart() {
     OTN::OTNWriter writer;
 
     writer.AppendObject(weaponObj);
-    writer.AppendObject(playerObj);
-    writer.AppendObject(test);
 
-    if (!writer.Save("J:/test")) {
+    if (!writer.Save("C:/Etienne/VisualStudio/file")) {
         Log::Error(writer.GetError());
     }
 

@@ -1,12 +1,13 @@
 ﻿#pragma once
 #include <vector>
-#include <strstream>
+#include <fstream>
 #include <string>
 #include <variant>
 #include <memory>
 #include <filesystem>
 #include <cstdint>
 #include <string_view>
+#include <unordered_map>
 
 #include <CoreLib/CoreMath.h>
 
@@ -39,6 +40,19 @@ namespace OTN {
 	* 
 	*/
 
+	enum class OTNValueType {
+		UNKNOWN = 0,
+		INT,
+		FLOAT,
+		DOUBLE,
+		BOOL,
+		STRING,
+		OBJECT,
+		LIST,
+	};
+
+	std::string OTNValueTypeToString(OTNValueType type);
+
 	#pragma region OTNObject
 
 	class OTNObject;
@@ -57,9 +71,69 @@ namespace OTN {
 		OTNArrayPtr
 	>;
 	
+	template<typename T>
+	struct OTNTypeOf {
+		static constexpr OTNValueType value = OTNValueType::UNKNOWN;
+	};
+
+	template<> struct OTNTypeOf<int> {
+		static constexpr OTNValueType value = OTNValueType::INT;
+	};
+
+	template<> struct OTNTypeOf<float> {
+		static constexpr OTNValueType value = OTNValueType::FLOAT;
+	};
+
+	template<> struct OTNTypeOf<double> {
+		static constexpr OTNValueType value = OTNValueType::DOUBLE;
+	};
+
+	template<> struct OTNTypeOf<bool> {
+		static constexpr OTNValueType value = OTNValueType::BOOL;
+	};
+
+	template<> struct OTNTypeOf<std::string> {
+		static constexpr OTNValueType value = OTNValueType::STRING;
+	};
+
+	template<> struct OTNTypeOf<OTNObjectPtr> {
+		static constexpr OTNValueType value = OTNValueType::OBJECT;
+	};
+
+	template<> struct OTNTypeOf<OTNArrayPtr> {
+		static constexpr OTNValueType value = OTNValueType::LIST;
+	};
+
+	template<typename T>
+	inline constexpr OTNValueType GetType() {
+		return OTNTypeOf<std::decay_t<T>>::value;
+	}
+
+	inline OTNValueType GetTypeFromVariant(const OTNValueVariant& variant) {
+		return std::visit(
+			[](const auto& value) constexpr -> OTNValueType {
+				using T = std::decay_t<decltype(value)>;
+				return GetType<T>();
+			},
+			variant
+		);
+	}
+
+	struct OTNValue {
+		OTNValueVariant value;
+		OTNValueType m_type = OTNValueType::UNKNOWN;
+
+		OTNValue() = default;
+
+		explicit OTNValue(OTNValueVariant v)
+			: value(std::move(v)),
+			m_type(GetTypeFromVariant(value)) {
+		}
+	};
+
 	class OTNArray {
 	public:
-		std::vector<OTNValueVariant> values;
+		std::vector<OTNValue> values;
 	};
 	
 	template<typename>
@@ -68,11 +142,7 @@ namespace OTN {
 	template<typename T>
 	static constexpr bool is_otn_variant_v =
 	std::is_same_v<std::decay_t<T>, OTNValueVariant>;
-	
-	template<typename T>
-	inline constexpr bool is_otn_object_v =
-	std::is_same_v<std::decay_t<T>, OTNObject>;
-	
+
 	template<typename T>
 	struct is_otn_base_type : std::false_type {};
 	
@@ -97,12 +167,16 @@ namespace OTN {
 	
 	template<typename T>
 	inline constexpr bool is_otn_list_v = is_otn_list<T>::value;
-	
+
 	class OTNObject {
 		friend class OTNObjectBuilder;
 	public:
-		using OTNRow = std::vector<OTNValueVariant>;
+		using OTNRow = std::vector<OTNValue>;
 		explicit OTNObject(const std::string& name);
+
+		OTNObject::OTNObject(const OTNObject& other);
+		OTNObject& OTNObject::operator=(const OTNObject& other);
+
 		~OTNObject() = default;
 	
 		template<typename ...Args>
@@ -157,21 +231,21 @@ namespace OTN {
 	
 			auto addValue = [&](auto&& value) {
 				using T = std::decay_t<decltype(value)>;
-	
+
 				if constexpr (is_otn_variant_v<T>) {
-					// Already a valid OTN value -> just store it
 					row.emplace_back(std::forward<decltype(value)>(value));
 				}
 				else {
 					OTNDataType<T> data(std::forward<decltype(value)>(value));
-	
+
 					if (!data.m_valid) {
 						rowValid = false;
 						AppendError(
 							"Invalid data in object '" + m_name + "':\n" + data.m_error
 						);
+						return;
 					}
-	
+
 					row.emplace_back(std::move(data.m_value));
 				}
 			};
@@ -181,7 +255,13 @@ namespace OTN {
 			if (rowValid) {
 				m_rows.emplace_back(std::move(row));
 			}
-	
+
+#ifndef NDEBUG
+			for (size_t i = 0; i < m_rows[0].size(); i++) {
+				DebugValidateDataTypes(i);
+			}
+#endif
+
 			return *this;
 		}
 	
@@ -204,7 +284,10 @@ namespace OTN {
 		void SetNamesFromBuilder(std::vector<std::string>&& names);
 		void AddRowInternal(OTNRow&& row);
 
+		// validates if each column name is distinct
 		bool DebugValidateNamesDistinct();
+		// validates if each data type of each row matchs the type of the first row at a specifc column
+		bool DebugValidateDataTypes(size_t columnIndex);
 	};
 	
 	class OTNObjectBuilder {
@@ -296,76 +379,70 @@ namespace OTN {
 	void ToOTNDataType(OTNObjectBuilder&, const T&) {
 		static_assert(otn_always_false_v<T>, "Unsupported type for ToOTNDataType");
 	}
-	
-	template<typename T>
+
+	template<typename U>
 	class OTNDataType {
 	public:
-		explicit OTNDataType(T value) {
-			using DT = std::decay_t<T>;
-	
-			if constexpr (is_otn_base_type_v<DT>) {
-				m_value = value;
-			}
-			else if constexpr (is_otn_list_v<DT>) {
+		// accept both lvalues and rvalues
+		explicit OTNDataType(const U& value) {
+			Construct(std::forward<const U&>(value));
+		}
+
+		explicit OTNDataType(U&& value) {
+			Construct(std::forward<U>(value));
+		}
+
+	private:
+		void Construct(const U& value) {
+			using DT = std::decay_t<U>;
+			if constexpr (is_otn_list_v<DT>) {
 				auto otnArray = std::make_shared<OTNArray>();
-				auto& array = otnArray->values;
-				array.reserve(value.size());
-	
-				for (auto& elem : value) {
-					if constexpr (is_otn_object_v<std::decay_t<decltype(elem)>>) {
-						array.emplace_back(std::make_shared<OTNObject>(elem));
+				otnArray->values.reserve(value.size());
+				for (auto&& elem : value) {
+					OTNDataType<std::decay_t<decltype(elem)>> elemData(elem);
+					if (!elemData.m_valid) {
+						SetInvalid(elemData.m_error);
+						return;
 					}
-					else {
-						OTNDataType elemData(elem);
-						if (!elemData.m_valid) {
-							SetInvalid(elemData.m_error);
-							return;
-						}
-						array.emplace_back(std::move(elemData.m_value));
-					}
+					otnArray->values.emplace_back(std::move(elemData.m_value));
 				}
-	
 				m_value = otnArray;
 			}
+			else if constexpr (std::is_same_v<DT, OTNObject>) {
+				m_value = std::make_shared<OTNObject>(value); // copy
+			}
 			else if constexpr (std::is_same_v<DT, const char*>) {
-				// Convert C-string to std::string
 				m_value = std::string(value);
 			}
-			else if constexpr (is_otn_object_v<DT>) {
-				// Convert Object to shard ptr of object
-				m_value = std::make_shared<OTNObject>(std::move(value));
+			else if constexpr (is_otn_base_type_v<DT>) {
+				m_value = value;
 			}
 			else {
 				OTNObjectBuilder builder;
-				ToOTNDataType<T>(builder, value);
-	
+				ToOTNDataType<DT>(builder, value);
 				if (!builder.IsValid()) {
 					SetInvalid(builder.GetError());
 					return;
 				}
-	
-				m_value = std::make_shared<OTNObject>(
-					std::move(builder).ToOTNObject()
-				);
+				m_value = std::make_shared<OTNObject>(std::move(builder).ToOTNObject());
 			}
 		}
-	
-		~OTNDataType() = default;
-	
-		OTNValueVariant m_value;
-		bool m_valid = true;
-		std::string m_error;
-	private:
+
 		void SetInvalid(const std::string& error) {
 			m_valid = false;
 			m_error += error + "!\n";
 		}
+
+	public:
+		OTNValueVariant m_value;
+		bool m_valid = true;
+		std::string m_error;
 	};
-	
+
 	#pragma endregion
 	
 	#pragma region OTNWriter
-	
+
 	class OTNWriter {
 	public:
 		using OTNFilePath = std::filesystem::path;
@@ -390,17 +467,89 @@ namespace OTN {
 		std::string GetError();
 	
 	private:
+		struct SerializedObject {
+			struct SerializedValue {
+				OTNValue value;
+				OTNValueType type;
+				std::string refObject;// < name of the objects that this is value is a ref to
+			};
+
+			std::string name;
+			std::vector<std::string> columnNames;
+			std::vector<OTNValueType> columnTypes;
+			std::vector<std::vector<SerializedValue>> rows;
+
+			SerializedObject(OTNObject&& object)
+				: name(object.GetName()),
+				columnNames(object.GetColumnNames())
+			{
+				// Convert rows
+				const auto& sourceRows = object.GetDataRows();
+				rows.reserve(sourceRows.size());
+				for (const auto& srcRow : sourceRows) {
+					std::vector<SerializedValue> newRow;
+					newRow.reserve(srcRow.size());
+					for (const auto& val : srcRow) {
+						SerializedValue sVal;
+						sVal.value = val;
+						sVal.type = val.m_type;
+
+						// optional: fill refObject if val is a reference
+						if (val.m_type == OTNValueType::OBJECT) {
+							auto objPtr = std::get<OTNObjectPtr>(val.value);
+							if (objPtr)
+								sVal.refObject = objPtr->GetName();
+						}
+
+						newRow.push_back(std::move(sVal));
+					}
+					rows.push_back(std::move(newRow));
+				}
+			}
+
+		};
+
+		struct WriterData {
+			bool created = false;
+			std::ofstream stream;
+
+			std::unordered_map<OTNValueType, uint32_t> typeUsage;// map contains which data types are used and how often
+			std::vector<SerializedObject> objects;
+
+			void Reset() {
+				if (stream.is_open())
+					stream.close();
+				created = false;
+				typeUsage.clear();
+				objects.clear();
+			}
+		};
+
 		bool m_useDefName = false;// < replaces often used names with number
 		bool m_useDefType = false;// < replaces often used type names with numbers
 		bool m_useOptimizations = false;// < (Removes spaces, linebreaks)
 	
 		std::vector<OTNObject> m_objects;
 		std::string m_error;
+
+		WriterData m_writerData;
 		
 		bool ValidateFilePath(const OTNFilePath& path, OTNFilePath& out);
 		bool DebugValidateObjects();
 
+		bool WriteToFile(const OTNFilePath& path);
+		bool CreateObject(WriterData& data);
+		bool WriteHeader();
+		bool WriteBody();
+
+		char GetLineCharEnd();
+		void AddSpace(std::ofstream& stream);
+		void AddLineBreak(std::ofstream& stream);
 		void AddError(const std::string& error, bool linebreak = true);
+
+		void CountValueType(const OTNValue& value, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
+		void CountArrayType(const OTNArray& array, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
+		void CountObjectType(const OTNObject& obj, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
 	};
 	
 	#pragma endregion
