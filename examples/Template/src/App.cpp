@@ -8,7 +8,7 @@ App::App()
 template<>
 void OTN::ToOTNDataType<Vector2>(OTN::OTNObjectBuilder& obj, const Vector2& value) {
     obj.SetObjectName("Vector2");
-    obj.AddNames("x", "y", "das");
+    obj.AddNames("x", "y");
     obj.AddData(value.x, value.y);
 }
 
@@ -33,7 +33,7 @@ void App::OnStart() {
 
     writer.AppendObject(weaponObj);
 
-    if (!writer.Save("C:/Etienne/VisualStudio/file")) {
+    if (!writer.Save("J:/file")) {
         Log::Error(writer.GetError());
     }
 

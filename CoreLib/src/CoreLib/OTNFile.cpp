@@ -5,6 +5,10 @@
 
 namespace OTN {
 
+	inline void HashCombine(size_t& seed, size_t value) {
+		seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+	}
+
 	std::string OTNValueTypeToString(OTNValueType type) {
 		switch (type)
 		{
@@ -15,7 +19,7 @@ namespace OTN {
 		case OTN::OTNValueType::STRING:		return "string";
 		case OTN::OTNValueType::OBJECT:		return "object";
 		case OTN::OTNValueType::LIST:		return "list";
-		case OTN::OTNValueType::UNKNOWN:	
+		case OTN::OTNValueType::UNKNOWN:
 		default:							return "UNKNOWN";
 		}
 	}
@@ -33,7 +37,8 @@ namespace OTN {
 		m_names(other.m_names),
 		m_rows(other.m_rows),
 		m_error(other.m_error),
-		m_valid(other.m_valid) {}
+		m_valid(other.m_valid) {
+	}
 
 	OTNObject& OTNObject::operator=(const OTNObject& other) {
 		m_name = other.m_name;
@@ -71,15 +76,17 @@ namespace OTN {
 		return m_rows;
 	}
 
-	void OTNObject::AppendError(const std::string& error) {
+	void OTNObject::SetInvalid(const std::string& error) {
 		m_valid = false;
-		m_error += error + "!\n";
+		if (!m_error.empty())
+			m_error += "\n";
+		m_error += error;
 	}
 
 	void OTNObject::SetNamesFromBuilder(std::vector<std::string>&& names) {
 		if (!m_rows.empty()) {
-			AppendError(
-				"SetNames must be called before AddData in object '" + m_name + "'"
+			SetInvalid(
+				"SetNames must be called before AddData in object '" + m_name + "'!"
 			);
 			return;
 		}
@@ -118,7 +125,7 @@ namespace OTN {
 					msg += ", ";
 				}
 			}
-			AppendError(msg);
+			SetInvalid(msg + "!");
 		}
 
 		return allUnique;
@@ -140,48 +147,48 @@ namespace OTN {
 		auto getNestedTypeString = [](const OTNValue* val) -> std::string {
 			std::string result;
 			const OTNValue* current = val;
-			while (current->m_type == OTNValueType::LIST) {
+			while (current->type == OTNValueType::LIST) {
 				result += "List of ";
 				auto& arr = std::get<OTNArrayPtr>(current->value);
 				if (arr->values.empty()) break;
 				current = &arr->values[0];
 			}
-			result += OTNValueTypeToString(current->m_type);
+			result += OTNValueTypeToString(current->type);
 			return result;
-		};
+			};
 
 		std::function<bool(const OTNValue&, const OTNValue&, size_t, const std::string&)> validateRecursive;
 		validateRecursive = [&](const OTNValue& ref, const OTNValue& val, size_t rowIdx, const std::string& path) -> bool {
-			if (ref.m_type != val.m_type) {
-				AppendError(
+			if (ref.type != val.type) {
+				SetInvalid(
 					"Type mismatch at '" + path + "' (row " + std::to_string(rowIdx) +
 					"): expected '" + getNestedTypeString(&ref) +
-					"', but found '" + getNestedTypeString(&val) + "'"
+					"', but found '" + getNestedTypeString(&val) + "'!"
 				);
 				return false;
 			}
 
-			if (ref.m_type == OTNValueType::OBJECT) {
+			if (ref.type == OTNValueType::OBJECT) {
 				auto& refObj = std::get<OTNObjectPtr>(ref.value);
 				auto& valObj = std::get<OTNObjectPtr>(val.value);
 				if (refObj->GetName() != valObj->GetName()) {
-					AppendError(
+					SetInvalid(
 						"Object name mismatch at '" + path + "' (row " + std::to_string(rowIdx) +
-						"): expected '" + refObj->GetName() + "', but found '" + valObj->GetName() + "'"
+						"): expected '" + refObj->GetName() + "', but found '" + valObj->GetName() + "'!"
 					);
 					return false;
 				}
 			}
 
-			if (ref.m_type == OTNValueType::LIST) {
+			if (ref.type == OTNValueType::LIST) {
 				auto& refArr = std::get<OTNArrayPtr>(ref.value);
 				auto& valArr = std::get<OTNArrayPtr>(val.value);
 
 				if (refArr->values.size() != valArr->values.size()) {
-					AppendError(
+					SetInvalid(
 						"List size mismatch at '" + path + "' (row " + std::to_string(rowIdx) +
 						"): expected " + std::to_string(refArr->values.size()) +
-						", found " + std::to_string(valArr->values.size())
+						", found " + std::to_string(valArr->values.size())  + "!"
 					);
 					return false;
 				}
@@ -202,10 +209,10 @@ namespace OTN {
 			auto& row = m_rows[i];
 
 			if (columnIndex >= row.size()) {
-				AppendError(
+				SetInvalid(
 					"Row " + std::to_string(i) + " has fewer columns than expected (" +
 					std::to_string(row.size()) + " instead of " + std::to_string(rowLength) +
-					"). Type validation for column '" + columnName + "' skipped"
+					"). Type validation for column '" + columnName + "' skipped!"
 				);
 				valid = false;
 				continue;
@@ -239,16 +246,16 @@ namespace OTN {
 		OTNObject obj{ m_objectName };
 
 		if (!m_valid) {
-			obj.AppendError(m_error);
+			obj.SetInvalid(m_error);
 			return obj;
 		}
 
 		if (IsDataOutOfSync()) {
-			obj.AppendError(
+			obj.SetInvalid(
 				"Object '" + m_objectName +
-				"' has mismatched data and names (" +
-				std::to_string(m_data.size()) + " != " +
-				std::to_string(m_dataNames.size()) + ")"
+				"' has mismatched data and names ( size" +
+				std::to_string(m_data.size()) + " != size " +
+				std::to_string(m_dataNames.size()) + ")!"
 			);
 			return obj;
 		}
@@ -269,16 +276,18 @@ namespace OTN {
 
 	void OTNObjectBuilder::SetInvalid(const std::string& error) {
 		m_valid = false;
-		m_error += error + "!\n";
+		if (!m_error.empty())
+			m_error += "\n";
+		m_error += error;
 	}
 
 	bool OTNObjectBuilder::AddName(std::string name) {
-	#ifndef NDEBUG
+#ifndef NDEBUG
 		if (!IsNameUnique(name)) {
-			SetInvalid("Name '" + name + "' is not unique in object '" + m_objectName + "'");
+			SetInvalid("Name '" + name + "' is not unique in object '" + m_objectName + "'!");
 			return false;
 		}
-	#endif
+#endif
 
 		m_dataNames.push_back(std::move(name));
 		return true;
@@ -292,9 +301,9 @@ namespace OTN {
 		return m_data.size() != m_dataNames.size();
 	}
 
-	#pragma endregion
+#pragma endregion
 
-	#pragma region OTNWriter
+#pragma region OTNWriter
 
 	OTNWriter& OTNWriter::UseDefName(bool value) {
 		m_useDefName = value;
@@ -319,7 +328,7 @@ namespace OTN {
 	bool OTNWriter::Save(const OTNFilePath& path) {
 		OTNFilePath newPath;
 		if (!ValidateFilePath(path, newPath)) {
-			AddError("File path was invalid");
+			AddError("File path was invalid!");
 			return false;
 		}
 
@@ -354,8 +363,113 @@ namespace OTN {
 	}
 
 	std::string OTNWriter::GetError() {
-		std::string err = m_error;
-		return err;
+		return m_error;
+	}
+
+	size_t OTNWriter::SerializedObject::AddOrGetRow(const Row& row) {
+		if (row.empty())
+			return static_cast<size_t>(-1);
+		
+		size_t hash = CreateRowHash(row);
+		size_t index = 0;
+
+		auto it = rowIndexByHash.find(hash);
+		if (it == rowIndexByHash.end()) {
+			index = rows.size();
+			rowIndexByHash[hash] = index;
+			rows.push_back(row);
+		}
+		else {
+			index = it->second;
+		}
+
+		return index;
+	}
+
+	size_t OTNWriter::SerializedObject::CreateRowHash(const Row& row) {
+		size_t hash = 0;
+
+		for (const auto& serValue : row) {
+			HashCombine(hash, HashValue(serValue));
+		}
+
+		return hash;
+	}
+
+	size_t OTNWriter::SerializedObject::HashValue(const SerializedValue& serValue) {
+		size_t hash = 0;
+
+		// Always hash the type first
+		HashCombine(hash, static_cast<size_t>(serValue.value.type));
+
+		switch (serValue.value.type) {
+		case OTNValueType::OBJECT: {
+			// Hash reference target, not object content
+			HashCombine(hash, std::hash<std::string>{}(serValue.refObject));
+			break;
+		}
+		default:
+			HashCombine(hash, HashValue(serValue.value));
+			break;
+		}
+
+		return hash;
+	}
+
+	size_t OTNWriter::SerializedObject::HashValue(const OTNValue& value) {
+		size_t hash = 0;
+
+		// Include value type
+		HashCombine(hash, static_cast<size_t>(value.type));
+
+		switch (value.type) {
+		case OTNValueType::INT:
+			HashCombine(hash, std::hash<int>{}(std::get<int>(value.value)));
+			break;
+
+		case OTNValueType::FLOAT:
+			HashCombine(hash, std::hash<float>{}(std::get<float>(value.value)));
+			break;
+
+		case OTNValueType::DOUBLE:
+			HashCombine(hash, std::hash<double>{}(std::get<double>(value.value)));
+			break;
+
+		case OTNValueType::BOOL:
+			HashCombine(hash, std::hash<bool>{}(std::get<bool>(value.value)));
+			break;
+
+		case OTNValueType::STRING:
+			HashCombine(hash, std::hash<std::string>{}(std::get<std::string>(value.value)));
+			break;
+
+		case OTNValueType::LIST: {
+			auto arrayPtr = std::get<OTNArrayPtr>(value.value);
+			if (!arrayPtr) {
+				HashCombine(hash, 0);
+				break;
+			}
+
+			// Include list size to distinguish {1,2} from {1,2,3}
+			HashCombine(hash, arrayPtr->values.size());
+
+			for (const auto& val : arrayPtr->values) {
+				HashCombine(hash, HashValue(val));
+			}
+			break;
+		}
+
+		case OTNValueType::OBJECT:
+			// Object content is not hashed here (handled via SerializedValue)
+			break;
+
+		case OTNValueType::UNKNOWN:
+		default:
+			HashCombine(hash, 0);
+			break;
+		}
+
+		return hash;
 	}
 
 	bool OTNWriter::ValidateFilePath(const OTNFilePath& path, OTNFilePath& out) {
@@ -365,14 +479,14 @@ namespace OTN {
 
 		// check file name
 		if (finalPath.filename().empty()) {
-			AddError("file path has no file name");
+			AddError("file path has no file name!");
 			return false;
 		}
 
 		// check if parent file path exists
 		fs::path parentDir = finalPath.parent_path();
 		if (!parentDir.empty() && !fs::exists(parentDir)) {
-			AddError("file path dose not exist");
+			AddError("file path dose not exist!");
 			return false;
 		}
 
@@ -382,7 +496,7 @@ namespace OTN {
 			std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
 			if (ext != FILE_EXTENSION) {
-				AddError("file extension '" + ext + "' is invalid, valid extensions are .OTN, .otn");
+				AddError("file extension '" + ext + "' is invalid, valid extensions are .OTN, .otn!");
 				return false;
 			}
 		}
@@ -404,7 +518,7 @@ namespace OTN {
 		for (const auto& obj : m_objects) {
 			if (!obj.IsValid()) {
 				if (valid) {
-					AddError("Objects invalid");
+					AddError("Objects invalid!");
 				}
 
 				std::string msg = obj.GetError();
@@ -414,7 +528,7 @@ namespace OTN {
 				}
 
 				std::string objName = obj.GetName();
-				AddError("Object '" + objName + "' is invalid, Error: '" + msg + "'");
+				AddError("Object '" + objName + "' is invalid, Error: '" + msg + "'!");
 				m_error += "\n";
 				valid = false;
 			}
@@ -454,7 +568,7 @@ namespace OTN {
 	}
 
 	void OTNWriter::CountValueType(const OTNValue& value, std::unordered_map<OTNValueType, uint32_t>& typeUsage) {
-		switch (value.m_type) {
+		switch (value.type) {
 		case OTNValueType::LIST: {
 			OTNArrayPtr array = std::get<OTNArrayPtr>(value.value);
 			if (!array || array->values.empty()) {
@@ -472,7 +586,7 @@ namespace OTN {
 			break;
 		}
 		default:
-			typeUsage[value.m_type]++;
+			typeUsage[value.type]++;
 			break;
 		}
 	}
@@ -493,24 +607,98 @@ namespace OTN {
 		}
 	}
 
+	OTNWriter::ColumnType OTNWriter::DeduceColumnType(const OTNValue& value) {
+		ColumnType result;
+		const OTNValue* current = &value;
+
+		while (current->type == OTNValueType::LIST) {
+			++result.listDepth;
+
+			const auto& arr = std::get<OTNArrayPtr>(current->value);
+			if (!arr || arr->values.empty())
+				break;
+
+			current = &arr->values.front();
+		}
+
+		result.baseType = current->type;
+
+		if (current->type == OTNValueType::OBJECT) {
+			const auto& obj = std::get<OTNObjectPtr>(current->value);
+			if (obj)
+				result.refObject = obj->GetName();
+		}
+
+		return result;
+	}
+
 	bool OTNWriter::CreateObject(WriterData& data) {
 		if (data.created)
 			data.Reset();
 
-		for (const auto& obj : m_objects) {
+		// Count used types (read-only)
+		for (const OTNObject& obj : m_objects) {
 			CountObjectType(obj, data.typeUsage);
 		}
 
-		auto& objectList = data.objects;
-		objectList.reserve(m_objects.size());
-
-		for (auto& obj : m_objects) {
-			objectList.emplace_back(std::move(obj));
+		// Convert objects
+		for (OTNObject& obj : m_objects) {
+			AddObject(data, obj);
 		}
 
 		data.created = true;
 		m_objects.clear();
 		return true;
+	}
+
+	size_t OTNWriter::AddObject(WriterData& data, OTNObject& object) {
+		auto& objectMap = data.objects;
+
+		// Create or get SerializedObject
+		auto [it, inserted] = objectMap.try_emplace(object.GetName());
+		SerializedObject& serObj = it->second;
+
+		if (inserted) {
+			serObj.columnNames = object.GetColumnNames();
+		}
+
+		// Convert rows
+		for (const OTNObject::OTNRow& row : object.GetDataRows()) {
+			SerializedObject::Row serRow;
+			serRow.reserve(row.size());
+
+			if (serObj.columnTypes.empty()) {
+				serObj.columnTypes.reserve(row.size());
+				for (const OTNValue& val : row) {
+					serObj.columnTypes.push_back(DeduceColumnType(val));
+				}
+			}
+
+			for (const OTNValue& val : row) {
+				SerializedObject::SerializedValue serVal;
+
+				if (val.type == OTNValueType::OBJECT) {
+					const OTNObjectPtr& objPtr = std::get<OTNObjectPtr>(val.value);
+					if (!objPtr)
+						continue;
+
+					// Ensure referenced object exists
+					size_t refIndex = AddObject(data, *objPtr);
+
+					serVal.value = OTNValue(static_cast<int>(refIndex));
+					serVal.refObject = objPtr->GetName();
+				}
+				else {
+					serVal.value = val;
+				}
+
+				serRow.emplace_back(std::move(serVal));
+			}
+
+			serObj.AddOrGetRow(serRow);
+		}
+
+		return objectMap[object.GetName()].rows.size() - 1;
 	}
 
 	bool OTNWriter::WriteHeader() {
@@ -554,9 +742,9 @@ namespace OTN {
 	}
 
 	void OTNWriter::AddError(const std::string& error, bool linebreak) {
+		if (!m_error.empty())
+			m_error += "\n";		
 		m_error += error;
-		if (linebreak)
-			m_error += "!\n";
 	}
 
 	#pragma endregion

@@ -121,13 +121,13 @@ namespace OTN {
 
 	struct OTNValue {
 		OTNValueVariant value;
-		OTNValueType m_type = OTNValueType::UNKNOWN;
+		OTNValueType type = OTNValueType::UNKNOWN;
 
 		OTNValue() = default;
 
 		explicit OTNValue(OTNValueVariant v)
 			: value(std::move(v)),
-			m_type(GetTypeFromVariant(value)) {
+			type(GetTypeFromVariant(value)) {
 		}
 	};
 
@@ -186,8 +186,8 @@ namespace OTN {
 	
 	#ifndef NDEBUG
 			if (!m_rows.empty()) {
-				AppendError(
-					"SetNames must be called before AddData in object '" + m_name + "'"
+				SetInvalid(
+					"SetNames must be called before AddData in object '" + m_name + "'!"
 				);
 				return *this;
 			}
@@ -207,18 +207,18 @@ namespace OTN {
 	
 	#ifndef NDEBUG
 			if (m_names.empty()) {
-				AppendError(
-					"AddDataRow called before SetNames in object '" + m_name + "'"
+				SetInvalid(
+					"AddDataRow called before SetNames in object '" + m_name + "'!"
 				);
 				return *this;
 			}
 	
 			if (ArgCount != m_names.size()) {
-				AppendError(
+				SetInvalid(
 					"AddDataRow argument count (" + std::to_string(ArgCount) +
 					") does not match name count (" +
 					std::to_string(m_names.size()) +
-					") in object '" + m_name + "'"
+					") in object '" + m_name + "'!"
 				);
 				return *this;
 			}
@@ -240,7 +240,7 @@ namespace OTN {
 
 					if (!data.m_valid) {
 						rowValid = false;
-						AppendError(
+						SetInvalid(
 							"Invalid data in object '" + m_name + "':\n" + data.m_error
 						);
 						return;
@@ -257,8 +257,10 @@ namespace OTN {
 			}
 
 #ifndef NDEBUG
-			for (size_t i = 0; i < m_rows[0].size(); i++) {
-				DebugValidateDataTypes(i);
+			if (!m_rows.empty()) {
+				for (size_t i = 0; i < m_rows[0].size(); i++) {
+					DebugValidateDataTypes(i);
+				}
 			}
 #endif
 
@@ -280,7 +282,7 @@ namespace OTN {
 		std::vector<std::string> m_names;
 		std::vector<OTNRow> m_rows;
 	
-		void AppendError(const std::string& error);
+		void SetInvalid(const std::string& error);
 		void SetNamesFromBuilder(std::vector<std::string>&& names);
 		void AddRowInternal(OTNRow&& row);
 
@@ -319,7 +321,7 @@ namespace OTN {
 					"Error adding Name and Data (AddNameData): data and names are not in sync (" +
 					std::to_string(m_data.size()) + " != " +
 					std::to_string(m_dataNames.size()) + ") in object '" +
-					m_objectName + "'"
+					m_objectName + "'!"
 				);
 				return *this;
 			}
@@ -361,11 +363,11 @@ namespace OTN {
 					SetInvalid(builder.GetError());
 					return false;
 				}
-	
+
 				m_data.emplace_back(
 					std::make_shared<OTNObject>(
 						std::move(builder).ToOTNObject()
-					)
+					);
 				);
 			}
 			return true;
@@ -424,13 +426,20 @@ namespace OTN {
 					SetInvalid(builder.GetError());
 					return;
 				}
-				m_value = std::make_shared<OTNObject>(std::move(builder).ToOTNObject());
+				OTNObjectPtr ptr = std::make_shared<OTNObject>(std::move(builder).ToOTNObject());
+
+				if (!ptr->IsValid())
+					SetInvalid(ptr->GetError());
+
+				m_value = ptr;
 			}
 		}
 
 		void SetInvalid(const std::string& error) {
 			m_valid = false;
-			m_error += error + "!\n";
+			if (!m_error.empty())
+				m_error += "\n";
+			m_error += error;
 		}
 
 	public:
@@ -467,46 +476,32 @@ namespace OTN {
 		std::string GetError();
 	
 	private:
+		struct ColumnType {
+			OTNValueType baseType = OTNValueType::UNKNOWN; // < int, object, string, ...
+			std::string refObject;                         // < only OBJECT / REF
+			uint32_t listDepth = 0;                        // < 0 = no List, 1 = [], 2 = [][] ...
+		};
+
 		struct SerializedObject {
 			struct SerializedValue {
 				OTNValue value;
-				OTNValueType type;
-				std::string refObject;// < name of the objects that this is value is a ref to
+				std::string refObject;
 			};
 
-			std::string name;
+			using Row = std::vector<SerializedValue>;
+
 			std::vector<std::string> columnNames;
-			std::vector<OTNValueType> columnTypes;
-			std::vector<std::vector<SerializedValue>> rows;
+			std::vector<ColumnType> columnTypes;
 
-			SerializedObject(OTNObject&& object)
-				: name(object.GetName()),
-				columnNames(object.GetColumnNames())
-			{
-				// Convert rows
-				const auto& sourceRows = object.GetDataRows();
-				rows.reserve(sourceRows.size());
-				for (const auto& srcRow : sourceRows) {
-					std::vector<SerializedValue> newRow;
-					newRow.reserve(srcRow.size());
-					for (const auto& val : srcRow) {
-						SerializedValue sVal;
-						sVal.value = val;
-						sVal.type = val.m_type;
+			std::vector<Row> rows;
+			std::unordered_map<std::size_t, std::size_t> rowIndexByHash;
 
-						// optional: fill refObject if val is a reference
-						if (val.m_type == OTNValueType::OBJECT) {
-							auto objPtr = std::get<OTNObjectPtr>(val.value);
-							if (objPtr)
-								sVal.refObject = objPtr->GetName();
-						}
-
-						newRow.push_back(std::move(sVal));
-					}
-					rows.push_back(std::move(newRow));
-				}
-			}
-
+			// Adds row if not already present, returns index
+			size_t AddOrGetRow(const Row& row);
+		private:
+			static size_t CreateRowHash(const Row& row);
+			static size_t HashValue(const SerializedValue& serValue);
+			static size_t HashValue(const OTNValue& value);
 		};
 
 		struct WriterData {
@@ -514,7 +509,7 @@ namespace OTN {
 			std::ofstream stream;
 
 			std::unordered_map<OTNValueType, uint32_t> typeUsage;// map contains which data types are used and how often
-			std::vector<SerializedObject> objects;
+			std::unordered_map<std::string, SerializedObject> objects;
 
 			void Reset() {
 				if (stream.is_open())
@@ -539,6 +534,7 @@ namespace OTN {
 
 		bool WriteToFile(const OTNFilePath& path);
 		bool CreateObject(WriterData& data);
+		size_t AddObject(WriterData& data, OTNObject& object);
 		bool WriteHeader();
 		bool WriteBody();
 
@@ -550,6 +546,7 @@ namespace OTN {
 		void CountValueType(const OTNValue& value, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
 		void CountArrayType(const OTNArray& array, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
 		void CountObjectType(const OTNObject& obj, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
+		static ColumnType DeduceColumnType(const OTNValue& value);
 	};
 	
 	#pragma endregion
