@@ -21,17 +21,33 @@ void App::OnStart() {
     weaponObj.AddDataRow("SMG", 2.0f, Vector2(4.0f, 34.0f));
     weaponObj.AddDataRow("SMG", 4.0f, Vector2(2.0f, 22.0f));
 
-    OTN::OTNObject playerObj("player");
-    playerObj.SetNames("name", "weapon");
-    playerObj.AddDataRow("steve", weaponObj);
+    OTN::OTNObject floatTest("float");
+    floatTest.SetNames("value");
+    floatTest.AddDataRow(22.0f);
+    floatTest.AddDataRow(24.0f);
+    floatTest.AddDataRow(26.0f);
 
-    OTN::OTNObject test("players");
-    test.SetNames("name", "weapons");
-    test.AddDataRow("steve", std::vector{ weaponObj, weaponObj });
+    OTN::OTNObject floatTest1("float1");
+    floatTest1.SetNames("value");
+    floatTest1.AddDataRow(22.0f);
+
+    OTN::OTNObject floatTest2("float2");
+    floatTest2.SetNames("value");
+    floatTest2.AddDataRow(22.0f);
+
+    OTN::OTNObject floatTest3("float3");
+    floatTest3.SetNames("value");
+    floatTest3.AddDataRow(22.0f);
 
     OTN::OTNWriter writer;
+    writer.UseDefName(true);
+    writer.UseDefType(true);
 
     writer.AppendObject(weaponObj);
+    writer.AppendObject(floatTest);
+    writer.AppendObject(floatTest1);
+    writer.AppendObject(floatTest2);
+    writer.AppendObject(floatTest3);
 
     if (!writer.Save("J:/file")) {
         Log::Error(writer.GetError());

@@ -9,19 +9,23 @@ namespace OTN {
 		seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
 	}
 
-	std::string OTNValueTypeToString(OTNValueType type) {
+	constexpr std::string_view OTNValueTypeToString(OTNValueType type) noexcept {
 		switch (type)
 		{
-		case OTN::OTNValueType::INT:		return "int";
-		case OTN::OTNValueType::FLOAT:		return "float";
-		case OTN::OTNValueType::DOUBLE:		return "double";
-		case OTN::OTNValueType::BOOL:		return "bool";
-		case OTN::OTNValueType::STRING:		return "string";
-		case OTN::OTNValueType::OBJECT:		return "object";
-		case OTN::OTNValueType::LIST:		return "list";
+		case OTN::OTNValueType::INT:     return "int";
+		case OTN::OTNValueType::FLOAT:   return "float";
+		case OTN::OTNValueType::DOUBLE:  return "double";
+		case OTN::OTNValueType::BOOL:    return "bool";
+		case OTN::OTNValueType::STRING:  return "string";
+		case OTN::OTNValueType::OBJECT:  return "object";
+		case OTN::OTNValueType::LIST:    return "list";
 		case OTN::OTNValueType::UNKNOWN:
-		default:							return "UNKNOWN";
+		default:                         return "UNKNOWN";
 		}
+	}
+
+	constexpr uint32_t OTNValueTypeCharLength(OTNValueType type) noexcept {
+		return static_cast<uint32_t>(OTNValueTypeToString(type).size());
 	}
 
 #pragma region OTNObject
@@ -333,10 +337,12 @@ namespace OTN {
 		}
 
 		if (!DebugValidateObjects()) {
+			AddError("[Debug] Validation of objects failed!");
 			return false;
 		}
 
 		if (!WriteToFile(newPath)) {
+			AddError("Write to file failed!");
 			return false;
 		}
 
@@ -548,7 +554,7 @@ namespace OTN {
 			return false;
 		}
 
-		if (!CreateObject(m_writerData)) {
+		if (!CreateWriteData(m_writerData)) {
 			stream.close();
 			return false;
 		}
@@ -632,7 +638,7 @@ namespace OTN {
 		return result;
 	}
 
-	bool OTNWriter::CreateObject(WriterData& data) {
+	bool OTNWriter::CreateWriteData(WriterData& data) {
 		if (data.created)
 			data.Reset();
 
@@ -648,6 +654,17 @@ namespace OTN {
 
 		data.created = true;
 		m_objects.clear();
+
+		if (m_useDefName) {
+			if (!CreateDefName())
+				return false;
+		}
+
+		if (m_useDefType) {
+			if (!CreateDefType())
+				return false;
+		}
+
 		return true;
 	}
 
@@ -701,6 +718,27 @@ namespace OTN {
 		return objectMap[object.GetName()].rows.size() - 1;
 	}
 
+	bool OTNWriter::CreateDefName() {
+		return true;
+	}
+
+	bool OTNWriter::CreateDefType() {
+		auto& defTypeMap = m_writerData.defType;
+		uint32_t indexCount = 0;
+		
+		for (const auto& [type, used] : m_writerData.typeUsage) {
+			if (type == OTNValueType::OBJECT || type == OTNValueType::LIST)
+				continue;
+
+			uint32_t length = OTNValueTypeCharLength(type);
+
+			if (used > length + 4)
+				defTypeMap[std::string(OTNValueTypeToString(type))] = indexCount++;
+		}
+
+		return true;
+	}
+
 	bool OTNWriter::WriteHeader() {
 		auto& stream = m_writerData.stream;
 
@@ -710,13 +748,49 @@ namespace OTN {
 		AddLineBreak(stream);
 
 		if (m_useDefName) {
-		
+			if (!WriteHeaderDefName())
+				return false;
 		}
 
 		if (m_useDefType) {
-		
+			if(!WriteHeaderDefType())
+				return false;
 		}
 
+		AddLineBreak(stream);
+		return true;
+	}
+
+	bool OTNWriter::WriteHeaderDefName() {
+		return true;
+	}
+
+	bool OTNWriter::WriteHeaderDefType() {
+		auto& defTypeMap = m_writerData.defType;
+		if (defTypeMap.empty())
+			return true;
+
+		auto& stream = m_writerData.stream;
+		stream << "DefType:";
+		AddSpace(stream);
+
+		bool first = true;
+		for (const auto& [name, id] : defTypeMap) {
+			if (!first) {
+				stream << ",";
+				AddSpace(stream);
+			}
+
+			stream << name;
+			AddSpace(stream);
+			stream << "=";
+			AddSpace(stream);
+			stream << std::to_string(id);
+
+			first = false;
+		}
+
+		stream << GetLineCharEnd();
 		AddLineBreak(stream);
 		return true;
 	}
