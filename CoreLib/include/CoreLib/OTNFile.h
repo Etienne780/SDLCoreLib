@@ -32,6 +32,7 @@ namespace OTN {
 	*   - Create OTN objects definitions for specific data types (Vector2, ...) X
 	*	- Create Manual type setting for custome types -------------- na
 	*	- Validate if name is allowed
+	*	- @index and @indexOffset to know where in the file specific data is located
 	* 
 	* - Create OTN Writer
 	*  - NEEDS to set correct version of the writer
