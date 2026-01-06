@@ -740,7 +740,7 @@ namespace OTN {
 	bool OTNWriter::WriteHeader() {
 		auto& stream = m_writerData.stream;
 
-		stream << "@Version:";
+		stream << "@version:";
 		AddSpace(stream);
 		stream << std::to_string(OTN::VERSION) + GetLineCharEnd();
 		AddLineBreak(stream);
@@ -765,7 +765,7 @@ namespace OTN {
 			return true;
 
 		auto& stream = m_writerData.stream;
-		stream << "@DefName:";
+		stream << "@defName:";
 		AddSpace(stream);
 
 		if (!WirteHeaderDefHelper(stream, defNameMap))
@@ -783,7 +783,7 @@ namespace OTN {
 			return true;
 
 		auto& stream = m_writerData.stream;
-		stream << "@DefType:";
+		stream << "@defType:";
 		AddSpace(stream);
 
 		if (!WirteHeaderDefHelper(stream, defTypeMap))
@@ -816,7 +816,7 @@ namespace OTN {
 	bool OTNWriter::WriteBody() {
 		auto& stream = m_writerData.stream;
 
-		stream << "@Object";
+		stream << "@object";
 		AddSpace(stream);
 		stream << "{";
 		AddLineBreak(stream);
