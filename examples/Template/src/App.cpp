@@ -25,6 +25,18 @@ void App::OnStart() {
     floatTest.SetNames("val1", "val2", "val3", "val4", "val5", "val6", "val7");
     floatTest.AddDataRow(22.0f, 324.0f, 3245.0f, 22.0f, 56.0f, 876.0f, 54.0f);
 
+    OTN::OTNObject player("player");
+    player.SetNames("name", "position");
+    player.AddDataRow("steve", 12.0f);
+
+    OTN::OTNObject enemy("enemy");
+    enemy.SetNames("name", "position");
+    enemy.AddDataRow("steve", 12.0f);
+
+    OTN::OTNObject object("enemy");
+    object.SetNames("name", "position");
+    object.AddDataRow("steve", 12.0f);
+
     OTN::OTNWriter writer;
     writer.UseDefName(true);
     writer.UseDefType(true);
@@ -32,6 +44,11 @@ void App::OnStart() {
 
     writer.AppendObject(weaponObj);
     writer.AppendObject(floatTest);
+    writer.AppendObject(player);
+    writer.AppendObject(enemy);
+    writer.AppendObject(object);
+
+
     if (!writer.Save("J:/file")) {
         Log::Error(writer.GetError());
     }

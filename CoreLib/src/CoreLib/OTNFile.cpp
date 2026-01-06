@@ -547,7 +547,7 @@ namespace OTN {
 	bool OTNWriter::WriteToFile(const OTNFilePath& path) {
 		m_writerData.Reset();
 
-		auto& stream = m_writerData.stream;
+		auto& stream = m_writerData.stream.stream;
 		stream.open(path, std::ios::binary);
 
 		if (!stream.is_open()) {
@@ -686,11 +686,42 @@ namespace OTN {
 	}
 
 	bool OTNWriter::CreateDefName() {
+		auto& defNameMap = m_writerData.defName;
+		defNameMap.clear();
+
+		// Count name usage
+		std::unordered_map<std::string, uint32_t> nameUsage;
+
+		for (const auto& [_, serObj] : m_writerData.objects) {
+			for (const std::string& colName : serObj.columnNames) {
+				++nameUsage[colName];
+			}
+		}
+
+		uint32_t indexCount = 0;
+
+		// skip if there are not enough names
+		if (nameUsage.size() < 2)
+			return true;
+
+		for (const auto& [name, used] : nameUsage) {
+			// Heuristic: only replace if it actually saves space
+			// Example rule: more than once and longer than 3 char
+			if (used > 1 && name.size() > 3) {
+				defNameMap.emplace(name, indexCount++);
+			}
+		}
+
+		// clear if not enough names meet the conditions
+		if (defNameMap.size() <= 1)
+			defNameMap.clear();
+
 		return true;
 	}
 
 	bool OTNWriter::CreateDefType() {
 		auto& defTypeMap = m_writerData.defType;
+		defTypeMap.clear();
 		uint32_t indexCount = 0;
 		
 		for (const auto& [type, used] : m_writerData.typeUsage) {
@@ -709,7 +740,7 @@ namespace OTN {
 	bool OTNWriter::WriteHeader() {
 		auto& stream = m_writerData.stream;
 
-		stream << "Version:";
+		stream << "@Version:";
 		AddSpace(stream);
 		stream << std::to_string(OTN::VERSION) + GetLineCharEnd();
 		AddLineBreak(stream);
@@ -729,6 +760,20 @@ namespace OTN {
 	}
 
 	bool OTNWriter::WriteHeaderDefName() {
+		auto& defNameMap = m_writerData.defName;
+		if (defNameMap.empty())
+			return true;
+
+		auto& stream = m_writerData.stream;
+		stream << "@DefName:";
+		AddSpace(stream);
+
+		if (!WirteHeaderDefHelper(stream, defNameMap))
+			return false;
+
+		stream << GetLineCharEnd();
+		AddLineBreak(stream);
+
 		return true;
 	}
 
@@ -738,13 +783,22 @@ namespace OTN {
 			return true;
 
 		auto& stream = m_writerData.stream;
-		stream << "DefType:";
+		stream << "@DefType:";
 		AddSpace(stream);
 
+		if (!WirteHeaderDefHelper(stream, defTypeMap))
+			return false;
+
+		stream << GetLineCharEnd();
+		AddLineBreak(stream);
+		return true;
+	}
+
+	bool OTNWriter::WirteHeaderDefHelper(IndentedStream& stream, const std::unordered_map<std::string, uint32_t>& map) {
 		bool first = true;
-		for (const auto& [name, id] : defTypeMap) {
+		for (const auto& [name, id] : map) {
 			if (!first) {
-				stream << ",";
+				stream << GetSeparatorChar();
 				AddSpace(stream);
 			}
 
@@ -756,30 +810,223 @@ namespace OTN {
 
 			first = false;
 		}
-
-		stream << GetLineCharEnd();
-		AddLineBreak(stream);
 		return true;
 	}
 	
 	bool OTNWriter::WriteBody() {
 		auto& stream = m_writerData.stream;
 
+		stream << "@Object";
+		AddSpace(stream);
+		stream << "{";
+		AddLineBreak(stream);
+
+		if(!m_useOptimizations)
+			stream.IncreaseIndent();
+
+		if (!WriteObject(stream, m_writerData.objects))
+			return false;
+		stream.DecreaseIndent();
+
+		stream << "}";
+		stream << GetLineCharEnd();
+
 		return true;
 	}
 
-	char OTNWriter::GetLineCharEnd() {
+	bool OTNWriter::WriteObject(IndentedStream& stream,
+		const std::unordered_map<std::string, SerializedObject>& objects) {
+		
+		std::function<void(const SerializedObject& obj)> writeNames;
+		writeNames = [&](const SerializedObject& obj) {
+			const auto& defNameMap = m_writerData.defName;
+			const auto& defTypeMap = m_writerData.defType;
+
+			bool firstName = true;
+			for (size_t i = 0; i < obj.columnNames.size(); i++) {
+				if (!firstName) {
+					stream << ",";
+					AddSpace(stream);
+				}
+				firstName = false;
+
+				ColumnType colType = obj.columnTypes[i];
+
+				if (colType.refObject.empty()) {
+					if (defTypeMap.empty()) {
+						stream << OTNValueTypeToString(colType.baseType);
+					}
+					else {
+						std::string typeName{ OTNValueTypeToString(colType.baseType) };
+						auto it = defTypeMap.find(typeName);
+						if (it != defTypeMap.end())
+							stream << it->second;
+						else
+							stream << typeName;
+					}
+				}
+				else {
+					stream << "Ref<";
+					stream << colType.refObject;
+					stream << ">";
+				}
+
+				// < 0 = no List, 1 = [], 2 = [][] ...
+				for (size_t j = colType.listDepth; j > 0; j--) {
+					stream << "[]";
+				}
+
+				stream << "/";
+
+
+				if (defNameMap.empty()) {
+					stream << obj.columnNames[i];
+				}
+				else {
+					std::string name = obj.columnNames[i];
+					auto it = defNameMap.find(name);
+					if (it != defNameMap.end())
+						stream << it->second;
+					else
+						stream << name;
+				}
+			}
+		};
+
+		bool firstObj = true;
+		for (const auto& [name, obj] : objects) {
+			if (!firstObj) {
+				AddLineBreak(stream);
+			}
+			firstObj = false;
+			stream << name;
+			stream << "[";
+			stream << obj.rows.size();
+			stream << "]";
+			AddSpace(stream);
+			stream << "{";
+			AddLineBreak(stream);
+
+			AddIndent(stream);
+			if (obj.columnNames.size() != obj.columnTypes.size()) {
+				AddError("Could not body. Section @Object, size of names(" + 
+					std::to_string(obj.columnNames.size()) 
+					+ ") and types(" + 
+					std::to_string(obj.columnTypes.size()) 
+					+ ") dose not match in object '" + name + "'!");
+				return false;
+			}
+			writeNames(obj);
+			AddLineBreak(stream);
+			stream << "}";
+			AddLineBreak(stream);
+
+			for (const auto& row : obj.rows) {
+				bool first = true;
+				for (const auto& serValue : row) {
+					if (!first) {
+						stream << ",";
+						AddSpace(stream);
+					}
+					first = false;
+
+					WriteData(stream, serValue.value);
+				}
+				stream << GetLineCharEnd();
+				AddLineBreak(stream);
+			}
+		}
+
+		return true;
+	}
+
+	template<typename T>
+	void OTNWriter::WriteData(IndentedStream& stream, const T& data) {
+		if constexpr (std::is_same_v<T, OTNValue>) {
+			switch (data.type) {
+			case OTNValueType::INT:
+				WriteData(stream, std::get<int>(data.value));
+				break;
+			case OTNValueType::FLOAT:
+				WriteData(stream, std::get<float>(data.value));
+				break;
+			case OTNValueType::DOUBLE:
+				WriteData(stream, std::get<double>(data.value));
+				break;
+			case OTNValueType::BOOL:
+				WriteData(stream, std::get<bool>(data.value));
+				break;
+			case OTNValueType::STRING:
+				stream << '"';
+				stream << std::get<std::string>(data.value);
+				stream << '"';
+				break;
+			case OTNValueType::LIST: {
+				auto array = std::get<OTNArrayPtr>(data.value);
+				stream << "{";
+				if (array) {
+					bool first = true;
+					for (const auto& val : array->values) {
+						if (!first) {
+							stream << ","; 
+							AddSpace(stream);
+						}
+						first = false;
+						WriteData(stream, val);
+					}
+				}
+				stream << "}";
+				break;
+			}
+			case OTNValueType::OBJECT:
+			case OTNValueType::UNKNOWN:
+			default:
+				AddError("WriteData: unsupported OTNValueType");
+				break;
+			}
+		}
+		else if constexpr (std::is_same_v<T, int>) {
+			stream << data;
+		}
+		else if constexpr (std::is_same_v<T, float>) {
+			stream << data;
+		}
+		else if constexpr (std::is_same_v<T, double>) {
+			stream << data;
+		}
+		else if constexpr (std::is_same_v<T, bool>) {
+			stream << (data ? "true" : "false");
+		}
+		else {
+			static_assert(otn_always_false_v<T>, "Unsupported type for WriteData");
+		}
+	}
+
+	constexpr char OTNWriter::GetLineCharEnd() noexcept {
 		return ';';
 	}
 
-	void OTNWriter::AddSpace(std::ofstream& stream) {
+	constexpr char OTNWriter::GetSeparatorChar() noexcept {
+		return ',';
+	}
+
+	void OTNWriter::AddSpace(IndentedStream& stream) {
 		if (!m_useOptimizations)
 			stream << ' ';
 	}
 
-	void OTNWriter::AddLineBreak(std::ofstream& m_stream) {
+	void OTNWriter::AddIndent(IndentedStream& stream, uint32_t level) {
+		if (m_useOptimizations)
+			return;
+
+		for (; level > 0; --level)
+			stream << '\t';
+	}
+
+	void OTNWriter::AddLineBreak(IndentedStream& m_stream) {
 		if (!m_useOptimizations)
 			m_stream << '\n';
+		m_stream.NewLine();
 	}
 
 	void OTNWriter::AddError(const std::string& error, bool linebreak) {

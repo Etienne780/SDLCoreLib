@@ -54,7 +54,7 @@ namespace OTN {
 
 	constexpr std::string_view OTNValueTypeToString(OTNValueType type) noexcept;
 	constexpr uint32_t OTNValueTypeCharLength(OTNValueType type) noexcept;
-
+	
 	#pragma region OTNObject
 
 	class OTNObject;
@@ -495,6 +495,7 @@ namespace OTN {
 			std::vector<std::string> columnNames;
 			std::vector<ColumnType> columnTypes;
 
+			// uses map to add only unique rows and vector for stable indices
 			std::vector<Row> rows;
 			std::unordered_map<std::size_t, std::size_t> rowIndexByHash;
 
@@ -506,9 +507,35 @@ namespace OTN {
 			static size_t HashValue(const OTNValue& value);
 		};
 
+		class IndentedStream {
+		public:
+			std::ofstream stream;
+			uint32_t indentLevel = 0;
+			std::string indentStr = "\t";
+			bool newLine = true; // true, wenn wir am Zeilenanfang stehen
+
+			IndentedStream() = default;
+
+			void NewLine() { newLine = true; }
+			void IncreaseIndent() { ++indentLevel; }
+			void DecreaseIndent() { if (indentLevel > 0) --indentLevel; }
+
+
+			template<typename T>
+			IndentedStream& operator<<(const T& value) {
+				if (newLine) {
+					for (uint32_t i = 0; i < indentLevel; ++i)
+						stream << indentStr;
+					newLine = false;
+				}
+				stream << value;
+				return *this;
+			}
+		};
+
 		struct WriterData {
 			bool created = false;
-			std::ofstream stream;
+			IndentedStream stream;
 
 			std::unordered_map<OTNValueType, uint32_t> typeUsage;// < map contains which data types are used and how often
 			std::unordered_map<std::string, SerializedObject> objects;
@@ -517,8 +544,8 @@ namespace OTN {
 			std::unordered_map<std::string, uint32_t> defType;// < used for optimaziations: Replaceses comman used type names with numbers
 
 			void Reset() {
-				if (stream.is_open())
-					stream.close();
+				if (stream.stream.is_open())
+					stream.stream.close();
 				created = false;
 				typeUsage.clear();
 				objects.clear();
@@ -546,11 +573,18 @@ namespace OTN {
 		bool WriteHeader();
 		bool WriteHeaderDefName();
 		bool WriteHeaderDefType();
+		bool WirteHeaderDefHelper(IndentedStream& stream, const std::unordered_map<std::string, uint32_t>& map);
 		bool WriteBody();
+		bool WriteObject(IndentedStream& stream, const std::unordered_map<std::string, SerializedObject>& objects);
+		
+		template<typename T>
+		void WriteData(IndentedStream& stream, const T& data);
 
-		char GetLineCharEnd();
-		void AddSpace(std::ofstream& stream);
-		void AddLineBreak(std::ofstream& stream);
+		static constexpr char GetLineCharEnd() noexcept;
+		static constexpr char GetSeparatorChar() noexcept;
+		void AddSpace(IndentedStream& stream);
+		void AddIndent(IndentedStream& stream, uint32_t level = 1);
+		void AddLineBreak(IndentedStream& stream);
 		void AddError(const std::string& error, bool linebreak = true);
 
 		void CountObjectType(const SerializedObject& obj, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
