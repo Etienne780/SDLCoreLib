@@ -31,6 +31,7 @@ namespace OTN {
 	*	- Create Manual type  ---------- na
 	*   - Create OTN objects definitions for specific data types (Vector2, ...) X
 	*	- Create Manual type setting for custome types -------------- na
+	*	- Validate if name is allowed
 	* 
 	* - Create OTN Writer
 	*  - NEEDS to set correct version of the writer
@@ -552,9 +553,7 @@ namespace OTN {
 		void AddLineBreak(std::ofstream& stream);
 		void AddError(const std::string& error, bool linebreak = true);
 
-		void CountValueType(const OTNValue& value, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
-		void CountArrayType(const OTNArray& array, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
-		void CountObjectType(const OTNObject& obj, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
+		void CountObjectType(const SerializedObject& obj, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
 		static ColumnType DeduceColumnType(const OTNValue& value);
 	};
 	

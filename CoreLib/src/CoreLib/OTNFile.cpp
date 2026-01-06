@@ -573,43 +573,10 @@ namespace OTN {
 		return true;
 	}
 
-	void OTNWriter::CountValueType(const OTNValue& value, std::unordered_map<OTNValueType, uint32_t>& typeUsage) {
-		switch (value.type) {
-		case OTNValueType::LIST: {
-			OTNArrayPtr array = std::get<OTNArrayPtr>(value.value);
-			if (!array || array->values.empty()) {
-				// default to INT if empty
-				typeUsage[OTNValueType::INT]++;
-			}
-			else {
-				CountArrayType(*array, typeUsage);
-			}
-			break;
-		}
-		case OTNValueType::OBJECT: {
-			OTNObjectPtr obj = std::get<OTNObjectPtr>(value.value);
-			typeUsage[OTNValueType::OBJECT]++;
-			break;
-		}
-		default:
-			typeUsage[value.type]++;
-			break;
-		}
-	}
-
-	void OTNWriter::CountArrayType(const OTNArray& array, std::unordered_map<OTNValueType, uint32_t>& typeUsage) {
-		for (const auto& val : array.values) {
-			CountValueType(val, typeUsage);
-			break; // Only count type of first element for type usage purposes
-		}
-	}
-
-	void OTNWriter::CountObjectType(const OTNObject& obj, std::unordered_map<OTNValueType, uint32_t>& typeUsage) {
-		for (const auto& row : obj.GetDataRows()) {
-			for (const auto& val : row) {
-				CountValueType(val, typeUsage);
-			}
-			break;
+	void OTNWriter::CountObjectType(const SerializedObject& obj, std::unordered_map<OTNValueType, uint32_t>& typeUsage) {		
+		for (const auto& types : obj.columnTypes) {
+			if(types.refObject.empty())
+				typeUsage[types.baseType]++;
 		}
 	}
 
@@ -642,14 +609,14 @@ namespace OTN {
 		if (data.created)
 			data.Reset();
 
-		// Count used types (read-only)
-		for (const OTNObject& obj : m_objects) {
-			CountObjectType(obj, data.typeUsage);
-		}
-
 		// Convert objects
 		for (OTNObject& obj : m_objects) {
 			AddObject(data, obj);
+		}
+
+		// Count used types (read-only)
+		for (const auto& [name, obj] : data.objects) {
+			CountObjectType(obj, data.typeUsage);
 		}
 
 		data.created = true;
@@ -742,7 +709,7 @@ namespace OTN {
 	bool OTNWriter::WriteHeader() {
 		auto& stream = m_writerData.stream;
 
-		stream << "Vers:";
+		stream << "Version:";
 		AddSpace(stream);
 		stream << std::to_string(OTN::VERSION) + GetLineCharEnd();
 		AddLineBreak(stream);
