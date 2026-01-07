@@ -370,7 +370,7 @@ namespace OTN {
 				m_data.emplace_back(
 					std::make_shared<OTNObject>(
 						std::move(builder).ToOTNObject()
-					);
+					)
 				);
 			}
 			return true;

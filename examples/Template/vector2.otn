@@ -1,0 +1,15 @@
+@version: 1;
+
+@object {
+	weapon[2] {
+		string/name, Ref<Vector2>/pos
+	}
+	"SMG", 0;
+	"AR", 1;
+	
+	Vector2[2] {
+		float/x, float/y
+	}
+	1, 2;
+	3, 4;
+};
