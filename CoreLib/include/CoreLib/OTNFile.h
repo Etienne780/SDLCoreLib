@@ -487,12 +487,7 @@ namespace OTN {
 		};
 
 		struct SerializedObject {
-			struct SerializedValue {
-				OTNValue value;
-				std::string refObject;
-			};
-
-			using Row = std::vector<SerializedValue>;
+			using Row = std::vector<OTNValue>;
 
 			std::vector<std::string> columnNames;
 			std::vector<ColumnType> columnTypes;
@@ -504,9 +499,9 @@ namespace OTN {
 			// Adds row if not already present, returns index
 			size_t AddOrGetRow(const Row& row);
 		private:
-			static size_t CreateRowHash(const Row& row);
-			static size_t HashValue(const SerializedValue& serValue);
-			static size_t HashValue(const OTNValue& value);
+			static size_t CreateRowHash(const std::vector<ColumnType>& columnTypes, const Row& row);
+			// static size_t HashValue(const SerializedValue& serValue);
+			static size_t HashValue(const ColumnType& colType, const OTNValue& value);
 		};
 
 		class IndentedStream {

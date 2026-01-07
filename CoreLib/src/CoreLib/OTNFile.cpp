@@ -399,7 +399,7 @@ namespace OTN {
 		if (row.empty())
 			return static_cast<size_t>(-1);
 		
-		size_t hash = CreateRowHash(row);
+		size_t hash = CreateRowHash(columnTypes, row);
 		size_t index = 0;
 
 		auto it = rowIndexByHash.find(hash);
@@ -415,37 +415,21 @@ namespace OTN {
 		return index;
 	}
 
-	size_t OTNWriter::SerializedObject::CreateRowHash(const Row& row) {
+	size_t OTNWriter::SerializedObject::CreateRowHash(const std::vector<ColumnType>& columnTypes, const Row& row) {
 		size_t hash = 0;
+		
+		if (columnTypes.size() != row.size()) {
+			throw std::runtime_error("CreateRowHash: columnTypes and row size mismatch");
+		}
 
-		for (const auto& serValue : row) {
-			HashCombine(hash, HashValue(serValue));
+		for (size_t i = 0; i < row.size(); i++) {
+			HashCombine(hash, HashValue(columnTypes[i], row[i]));
 		}
 
 		return hash;
 	}
 
-	size_t OTNWriter::SerializedObject::HashValue(const SerializedValue& serValue) {
-		size_t hash = 0;
-
-		// Always hash the type first
-		HashCombine(hash, static_cast<size_t>(serValue.value.type));
-
-		switch (serValue.value.type) {
-		case OTNValueType::OBJECT: {
-			// Hash reference target, not object content
-			HashCombine(hash, std::hash<std::string>{}(serValue.refObject));
-			break;
-		}
-		default:
-			HashCombine(hash, HashValue(serValue.value));
-			break;
-		}
-
-		return hash;
-	}
-
-	size_t OTNWriter::SerializedObject::HashValue(const OTNValue& value) {
+	size_t OTNWriter::SerializedObject::HashValue(const ColumnType& colType, const OTNValue& value) {
 		size_t hash = 0;
 
 		// Include value type
@@ -481,20 +465,18 @@ namespace OTN {
 
 			// Include list size to distinguish {1,2} from {1,2,3}
 			HashCombine(hash, arrayPtr->values.size());
+			HashCombine(hash, static_cast<size_t>(colType.listDepth));
 
 			for (const auto& val : arrayPtr->values) {
-				HashCombine(hash, HashValue(val));
+				HashCombine(hash, HashValue(colType, val));
 			}
 			break;
 		}
 
 		case OTNValueType::OBJECT:
-			// Object content is not hashed here (handled via SerializedValue)
-			break;
-
 		case OTNValueType::UNKNOWN:
 		default:
-			HashCombine(hash, 0);
+			std::runtime_error("HashValue: type for hashing was invalid");
 			break;
 		}
 
@@ -620,8 +602,10 @@ namespace OTN {
 
 		if (current->type == OTNValueType::OBJECT) {
 			const auto& obj = std::get<OTNObjectPtr>(current->value);
-			if (obj)
+			if (obj) {
 				result.refObject = obj->GetName();
+				result.baseType = OTNValueType::INT;// mark this type as int for indices
+			}
 		}
 
 		return result;
@@ -668,6 +652,49 @@ namespace OTN {
 			serObj.columnNames = object.GetColumnNames();
 		}
 
+		/*
+		struct SerializedValue {
+			OTNValue value;
+			std::string refObject;
+		};
+		*/
+
+		std::function<void(const ColumnType& colType, OTNValue&, const OTNValue&)> convertToSerValue;
+		convertToSerValue = [&](const ColumnType& colType, OTNValue& outVal, const OTNValue& val) {
+			if (val.type == OTNValueType::LIST) {
+				// resolve objects
+				if (!colType.refObject.empty()) {
+					const OTNArrayPtr& arrayPtr = std::get<OTNArrayPtr>(val.value);
+					OTNArrayPtr newArray = std::make_shared<OTNArray>();
+					if (!arrayPtr || !newArray)
+						return;
+
+					newArray->values.reserve(arrayPtr->values.size());
+					for (const auto& v : arrayPtr->values) {
+						OTNValue newValue;
+						convertToSerValue(colType, newValue, v);
+						newArray->values.emplace_back(std::move(newValue));
+					}
+					outVal = OTNValue(newArray);
+				}
+				else {
+					outVal = val;
+				}
+			}
+			else if (val.type == OTNValueType::OBJECT) {
+				const OTNObjectPtr& objPtr = std::get<OTNObjectPtr>(val.value);
+				if (!objPtr)
+					return;
+
+				// Ensure referenced object exists
+				size_t refIndex = AddObject(data, *objPtr);
+				outVal = OTNValue(static_cast<int>(refIndex));
+			}
+			else {
+				outVal = val;
+			}
+		};
+
 		// Convert rows
 		for (const OTNObject::OTNRow& row : object.GetDataRows()) {
 			SerializedObject::Row serRow;
@@ -680,25 +707,16 @@ namespace OTN {
 				}
 			}
 
+			if (row.size() != serObj.columnTypes.size()) {
+				throw std::runtime_error("AddObject: SerializedObject::Row and SerializedObject::ColumnType size mismatch");
+			}
+
+			size_t columnTypeIndex = 0;
 			for (const OTNValue& val : row) {
-				SerializedObject::SerializedValue serVal;
-
-				if (val.type == OTNValueType::OBJECT) {
-					const OTNObjectPtr& objPtr = std::get<OTNObjectPtr>(val.value);
-					if (!objPtr)
-						continue;
-
-					// Ensure referenced object exists
-					size_t refIndex = AddObject(data, *objPtr);
-
-					serVal.value = OTNValue(static_cast<int>(refIndex));
-					serVal.refObject = objPtr->GetName();
-				}
-				else {
-					serVal.value = val;
-				}
-
-				serRow.emplace_back(std::move(serVal));
+				OTNValue outVal;
+				convertToSerValue(serObj.columnTypes[columnTypeIndex], outVal, val);
+				serRow.emplace_back(std::move(outVal));
+				columnTypeIndex++;
 			}
 
 			serObj.AddOrGetRow(serRow);
@@ -952,7 +970,7 @@ namespace OTN {
 					}
 					first = false;
 
-					WriteData(stream, serValue.value);
+					WriteData(stream, serValue);
 				}
 				stream << GetLineCharEnd();
 				AddLineBreak(stream);
