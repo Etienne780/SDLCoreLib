@@ -188,24 +188,24 @@ namespace OTN {
 				auto& refArr = std::get<OTNArrayPtr>(ref.value);
 				auto& valArr = std::get<OTNArrayPtr>(val.value);
 
-				if (refArr->values.size() != valArr->values.size()) {
-					SetInvalid(
-						"List size mismatch at '" + path + "' (row " + std::to_string(rowIdx) +
-						"): expected " + std::to_string(refArr->values.size()) +
-						", found " + std::to_string(valArr->values.size())  + "!"
-					);
-					return false;
-				}
+				if (!refArr || !valArr)
+					return true; // nothing to validate
 
-				for (size_t i = 0; i < refArr->values.size(); i++) {
+				// Reference list must define at least one element to describe the type
+				if (refArr->values.empty())
+					return true; // dynamic / untyped list
+
+				const OTNValue& refElement = refArr->values.front();
+
+				for (size_t i = 0; i < valArr->values.size(); ++i) {
 					std::string newPath = path + "[" + std::to_string(i) + "]";
-					if (!validateRecursive(refArr->values[i], valArr->values[i], rowIdx, newPath))
+					if (!validateRecursive(refElement, valArr->values[i], rowIdx, newPath))
 						return false;
 				}
 			}
 
 			return true;
-			};
+		};
 
 		const OTNValue& refValue = m_rows[0][columnIndex];
 
@@ -357,6 +357,11 @@ namespace OTN {
 
 		if (!WriteToFile(newPath)) {
 			AddError("Write to file failed!");
+			return false;
+		}
+
+		if (!IsValid()) {
+			AddError("Writer object is invalid!");
 			return false;
 		}
 
