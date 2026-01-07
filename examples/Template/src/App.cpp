@@ -1,5 +1,8 @@
 ﻿#include "App.h"
+#include <CoreLib/Random.h>
 #include <CoreLib/OTNFile.h>
+
+#include <SDLCoreLib/Profiler.h>
 
 App::App()
     : Application("NAME", SDLCore::Version(1, 0)) {
@@ -83,105 +86,136 @@ void OTN::ToOTNDataType<Entity>(OTN::OTNObjectBuilder& obj, const Entity& e) {
     obj.AddData(e.name, e.transform, e.stats);
 }
 
-void Test_Extreme_OTN_File() {
+void Test_Very_Large_OTN_File() {
+    constexpr int WEAPON_COUNT = 100;
+    constexpr int INVENTORY_COUNT = 500;
+    constexpr int ENTITY_COUNT = 10'000;
+    constexpr int SCENE_COUNT = 50;
+
+    Random::SetSeed(1337);
+
+
+    SDLCore::Debug::Profiler::Begin("Weapons");
     // ---------- Weapons ----------
     OTN::OTNObject weapons("Weapons");
     weapons.SetNames("name", "damage", "range");
 
-    weapons.AddDataRow("Sword", 25, 1.5f);
-    weapons.AddDataRow("Bow", 15, 15.0f);
-    weapons.AddDataRow("Staff", 10, 12.0f);
+    for (int i = 0; i < WEAPON_COUNT; ++i) {
+        weapons.AddDataRow(
+            "Weapon_" + std::to_string(i),
+            Random::GetRangeNumber<int>(5, 100),
+            Random::GetRangeNumber<float>(1.0f, 50.0f)
+        );
+    }
 
+    SDLCore::Debug::Profiler::End("Weapons");
+
+    SDLCore::Debug::Profiler::Begin("Inventory");
     // ---------- Inventory ----------
     OTN::OTNObject inventory("Inventory");
     inventory.SetNames("entries");
 
-    inventory.AddDataRow(std::vector<InventoryEntry>{
-        {0, 1}, // Sword
-        { 1, 20 } // Bow
-    });
+    for (int i = 0; i < INVENTORY_COUNT; ++i) {
+        int entryCount = Random::GetRangeNumber<int>(1, 10);
 
-    inventory.AddDataRow(std::vector<InventoryEntry>{
-        {0, 1}, // Sword
-        { 1, 20 } // Bow
-    });
+        std::vector<InventoryEntry> entries;
+        entries.reserve(entryCount);
 
-    inventory.AddDataRow(std::vector<InventoryEntry>{
-        {2, 1} // Staff
-    });
+        for (int e = 0; e < entryCount; ++e) {
+            entries.push_back({
+                Random::GetRangeNumber<int>(0, WEAPON_COUNT - 1),
+                Random::GetRangeNumber<int>(1, 50)
+                });
+        }
 
+        inventory.AddDataRow(entries);
+    }
+    SDLCore::Debug::Profiler::End("Inventory");
+
+    SDLCore::Debug::Profiler::Begin("Entities");
     // ---------- Entities ----------
     OTN::OTNObject entities("Entities");
     entities.SetNames("name", "transform", "stats", "inventory");
 
-    Transform baseTransform{
-        Vector3{ 0,0,0 },
-        Vector3{ 0,0,0 },
-        Vector3{ 1,1,1 }
-    };
+    for (int i = 0; i < ENTITY_COUNT; ++i) {
+        Transform transform{
+            Vector3{
+                Random::GetRangeNumber<float>(-1000.f, 1000.f),
+                Random::GetRangeNumber<float>(-1000.f, 1000.f),
+                Random::GetRangeNumber<float>(-1000.f, 1000.f)
+            },
+            Vector3{
+                0.0f,
+                Random::GetRangeNumber<float>(0.f, 360.f),
+                0.0f
+            },
+            Vector3{ 1.0f, 1.0f, 1.0f }
+        };
 
-    Stats playerStats{ 100, 50, 4.5f };
-    Stats enemyStats{ 80, 0, 3.0f };
+        Stats stats{
+            Random::GetRangeNumber<int>(50, 500),
+            Random::GetRangeNumber<int>(0, 200),
+            Random::GetRangeNumber<float>(1.0f, 10.0f)
+        };
 
-    entities.AddDataRow(
-        "Player",
-        baseTransform,
-        playerStats,
-        0 // Inventory index
-    );
+        entities.AddDataRow(
+            "Entity_" + std::to_string(i),
+            transform,
+            stats,
+            Random::GetRangeNumber<int>(0, INVENTORY_COUNT - 1)
+        );
+    }
+    SDLCore::Debug::Profiler::End("Entities");
 
-    entities.AddDataRow(
-        "EnemyA",
-        Transform{
-            Vector3{ 10,0,5 },
-            Vector3{ 0,180,0 },
-            Vector3{ 1,1,1 }
-        },
-        enemyStats,
-        1
-    );
-
-    entities.AddDataRow(
-        "EnemyB",
-        Transform{
-            Vector3{ 10,0,5 },
-            Vector3{ 0,180,0 },
-            Vector3{ 1,1,1 }
-        },
-        enemyStats,
-        1
-    );
-
-    // ---------- Scene ----------
+    SDLCore::Debug::Profiler::Begin("Scenes");
+    // ---------- Scenes ----------
     OTN::OTNObject scenes("Scenes");
     scenes.SetNames("name", "entities");
 
-    scenes.AddDataRow(
-        "Dungeon",
-        std::vector<int>{0, 1, 2}
-    );
+    for (int s = 0; s < SCENE_COUNT; ++s) {
+        int entityPerScene = ENTITY_COUNT / SCENE_COUNT;
 
+        std::vector<int> sceneEntities;
+        sceneEntities.reserve(entityPerScene);
+
+        int base = s * entityPerScene;
+        for (int i = 0; i < entityPerScene; ++i) {
+            sceneEntities.push_back(base + i);
+        }
+
+        scenes.AddDataRow(
+            "Scene_" + std::to_string(s),
+            sceneEntities
+        );
+    }
+
+    SDLCore::Debug::Profiler::End("Scenes");
+
+    SDLCore::Debug::Profiler::Begin("Writer");
     // ---------- Writer ----------
     OTN::OTNWriter writer;
     writer.UseDefName(true);
     writer.UseDefType(true);
     writer.UseOptimizations(false);
-    writer.UseDeduplicateRows(false);
+    writer.UseDeduplicateRows(true);
 
     writer.AppendObject(weapons);
     writer.AppendObject(inventory);
     writer.AppendObject(entities);
     writer.AppendObject(scenes);
 
-    if (!writer.Save("J:/extreme_complex_test.otn")) {
+    if (!writer.Save("J:/very_large_test.otn")) {
         Log::Error(writer.GetError());
     }
+    SDLCore::Debug::Profiler::End("Writer");
+
+    SDLCore::Debug::Profiler::PrintAndReset();
 }
 
 void App::OnStart() {
     CreateWindow(&m_winID, "window", 800, 800);
 
-    Test_Extreme_OTN_File();
+    Test_Very_Large_OTN_File();
 
     int i;
 }
