@@ -325,11 +325,25 @@ namespace OTN {
 	}
 
 	OTNWriter& OTNWriter::AppendObject(const OTNObject& object) {
+#ifndef NDEBUG
+		for (const auto& obj : m_objects) {
+			if (obj.GetName() == object.GetName()) {
+				AddError("Could not append object '" + object.GetName() + "', an object with the name already exists!");
+				return *this;
+			}
+		}
+#endif 
+
 		m_objects.push_back(object);
 		return *this;
 	}
 
 	bool OTNWriter::Save(const OTNFilePath& path) {
+		if (!IsValid()) {
+			AddError("Writer object is invalid!");
+			return false;
+		}
+		
 		OTNFilePath newPath;
 		if (!ValidateFilePath(path, newPath)) {
 			AddError("File path was invalid!");
@@ -361,8 +375,12 @@ namespace OTN {
 		return m_useOptimizations;
 	}
 
+	bool OTNWriter::IsValid() const {
+		return m_valid;
+	}
+
 	bool OTNWriter::TryGetError(std::string& outError) {
-		if (m_error.empty())
+		if (m_valid)
 			return false;
 		outError = m_error;
 		return true;
@@ -508,7 +526,6 @@ namespace OTN {
 		}
 		else {
 			// add extension
-			finalPath += ".";
 			finalPath += OTN::FILE_EXTENSION;
 		}
 
@@ -1033,6 +1050,7 @@ namespace OTN {
 		if (!m_error.empty())
 			m_error += "\n";		
 		m_error += error;
+		m_valid = false;
 	}
 
 	#pragma endregion

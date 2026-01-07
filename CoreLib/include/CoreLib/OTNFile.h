@@ -21,7 +21,7 @@ namespace OTN {
 	inline constexpr uint8_t VERSION = 1;
 
 	// File extension for OTN files
-	inline constexpr std::string_view FILE_EXTENSION = "otn";
+	inline constexpr std::string_view FILE_EXTENSION = ".otn";
 
 	/*
 	* 
@@ -474,7 +474,8 @@ namespace OTN {
 		bool GetUseDefName() const;
 		bool GetUseDefType() const;
 		bool GetUseOptimizations() const;
-	
+		
+		bool IsValid() const;
 		bool TryGetError(std::string& outError);
 		std::string GetError();
 	
@@ -559,6 +560,7 @@ namespace OTN {
 	
 		std::vector<OTNObject> m_objects;
 		std::string m_error;
+		bool m_valid = true;
 
 		WriterData m_writerData;
 		
