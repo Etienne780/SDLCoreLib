@@ -324,6 +324,11 @@ namespace OTN {
 		return *this;
 	}
 
+	OTNWriter& OTNWriter::UseDeduplicateRows(bool value) {
+		m_useDeduplicateRows = value;
+		return *this;
+	}
+
 	OTNWriter& OTNWriter::AppendObject(const OTNObject& object) {
 #ifndef NDEBUG
 		for (const auto& obj : m_objects) {
@@ -380,6 +385,10 @@ namespace OTN {
 		return m_useOptimizations;
 	}
 
+	bool OTNWriter::GetDeduplicateRows() const {
+		return m_useDeduplicateRows;
+	}
+
 	bool OTNWriter::IsValid() const {
 		return m_valid;
 	}
@@ -395,23 +404,26 @@ namespace OTN {
 		return m_error;
 	}
 
-	size_t OTNWriter::SerializedObject::AddOrGetRow(const Row& row) {
+	size_t OTNWriter::SerializedObject::AddOrGetRow(const Row& row, bool deduplicateRows) {
 		if (row.empty())
 			return static_cast<size_t>(-1);
-		
+
+		if (!deduplicateRows) {
+			size_t index = rows.size();
+			rows.push_back(row);
+			return index;
+		}
+
 		size_t hash = CreateRowHash(columnTypes, row);
-		size_t index = 0;
 
 		auto it = rowIndexByHash.find(hash);
-		if (it == rowIndexByHash.end()) {
-			index = rows.size();
-			rowIndexByHash[hash] = index;
-			rows.push_back(row);
-		}
-		else {
-			index = it->second;
+		if (it != rowIndexByHash.end()) {
+			return it->second;
 		}
 
+		size_t index = rows.size();
+		rowIndexByHash[hash] = index;
+		rows.push_back(row);
 		return index;
 	}
 
@@ -717,7 +729,7 @@ namespace OTN {
 				columnTypeIndex++;
 			}
 
-			lastIndex = serObj.AddOrGetRow(serRow);
+			lastIndex = serObj.AddOrGetRow(serRow, m_useDeduplicateRows);
 		}
 
 		return lastIndex;

@@ -31,6 +31,7 @@ namespace OTN {
 	*	- Create Manual type  ---------- na
 	*   - Create OTN objects definitions for specific data types (Vector2, ...) X
 	*	- Create Manual type setting for custome types -------------- na
+	*	- How to prevent and allow deletion of same data sets
 	*	- Validate if name is allowed
 	*	- @index and @indexOffset to know where in the file specific data is located
 	* 
@@ -465,6 +466,7 @@ namespace OTN {
 		OTNWriter& UseDefName(bool value);
 		OTNWriter& UseDefType(bool value);
 		OTNWriter& UseOptimizations(bool value);
+		OTNWriter& UseDeduplicateRows(bool value);
 	
 		OTNWriter& AppendObject(const OTNObject& object);
 	
@@ -474,6 +476,7 @@ namespace OTN {
 		bool GetUseDefName() const;
 		bool GetUseDefType() const;
 		bool GetUseOptimizations() const;
+		bool GetDeduplicateRows() const;
 		
 		bool IsValid() const;
 		bool TryGetError(std::string& outError);
@@ -497,7 +500,7 @@ namespace OTN {
 			std::unordered_map<std::size_t, std::size_t> rowIndexByHash;
 
 			// Adds row if not already present, returns index
-			size_t AddOrGetRow(const Row& row);
+			size_t AddOrGetRow(const Row& row, bool deduplicateRows);
 		private:
 			static size_t CreateRowHash(const std::vector<ColumnType>& columnTypes, const Row& row);
 			// static size_t HashValue(const SerializedValue& serValue);
@@ -552,7 +555,8 @@ namespace OTN {
 		bool m_useDefName = false;// < replaces often used names with number
 		bool m_useDefType = false;// < replaces often used type names with numbers
 		bool m_useOptimizations = false;// < (Removes spaces, linebreaks)
-	
+		bool m_useDeduplicateRows = false;
+
 		std::vector<OTNObject> m_objects;
 		std::string m_error;
 		bool m_valid = true;
