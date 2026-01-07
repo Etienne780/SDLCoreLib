@@ -433,9 +433,9 @@ namespace OTN {
 		size_t hash = 0;
 
 		// Include value type
-		HashCombine(hash, static_cast<size_t>(value.type));
-
-		switch (value.type) {
+		OTNValueType type = (value.type == OTNValueType::LIST) ? OTNValueType::LIST : colType.baseType;
+		HashCombine(hash, static_cast<size_t>(type));
+		switch (type) {
 		case OTNValueType::INT:
 			HashCombine(hash, std::hash<int>{}(std::get<int>(value.value)));
 			break;
@@ -473,7 +473,13 @@ namespace OTN {
 			break;
 		}
 
-		case OTNValueType::OBJECT:
+		case OTNValueType::OBJECT: {
+			if (value.type != OTNValueType::INT) {
+				std::runtime_error("HashValue: Object type was not 'int'");
+			}
+			HashCombine(hash, std::hash<int>{}(std::get<int>(value.value)));
+			break;
+		}
 		case OTNValueType::UNKNOWN:
 		default:
 			std::runtime_error("HashValue: type for hashing was invalid");
@@ -602,10 +608,8 @@ namespace OTN {
 
 		if (current->type == OTNValueType::OBJECT) {
 			const auto& obj = std::get<OTNObjectPtr>(current->value);
-			if (obj) {
+			if (obj)
 				result.refObject = obj->GetName();
-				result.baseType = OTNValueType::INT;// mark this type as int for indices
-			}
 		}
 
 		return result;
@@ -652,13 +656,6 @@ namespace OTN {
 			serObj.columnNames = object.GetColumnNames();
 		}
 
-		/*
-		struct SerializedValue {
-			OTNValue value;
-			std::string refObject;
-		};
-		*/
-
 		std::function<void(const ColumnType& colType, OTNValue&, const OTNValue&)> convertToSerValue;
 		convertToSerValue = [&](const ColumnType& colType, OTNValue& outVal, const OTNValue& val) {
 			if (val.type == OTNValueType::LIST) {
@@ -695,6 +692,7 @@ namespace OTN {
 			}
 		};
 
+		size_t lastIndex = 0;
 		// Convert rows
 		for (const OTNObject::OTNRow& row : object.GetDataRows()) {
 			SerializedObject::Row serRow;
@@ -719,10 +717,10 @@ namespace OTN {
 				columnTypeIndex++;
 			}
 
-			serObj.AddOrGetRow(serRow);
+			lastIndex = serObj.AddOrGetRow(serRow);
 		}
 
-		return objectMap[object.GetName()].rows.size() - 1;
+		return lastIndex;
 	}
 
 	bool OTNWriter::CreateDefName() {
