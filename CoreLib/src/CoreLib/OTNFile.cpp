@@ -448,7 +448,7 @@ namespace OTN {
 		size_t hash = 0;
 		
 		if (columnTypes.size() != row.size()) {
-			assert(false && "CreateRowHash: columnTypes and row size mismatch");
+			assert("CreateRowHash: columnTypes and row size mismatch");
 		}
 
 		for (size_t i = 0; i < row.size(); i++) {
@@ -503,12 +503,18 @@ namespace OTN {
 		}
 
 		case OTNValueType::OBJECT: {
-			assert(false && "HashValue: Object type must not occur here");
+			if (value.type != OTNValueType::INT) {
+				HashCombine(hash, 0);
+				assert("HashValue: type for Object was invalid, should be an int");
+				break;
+			}
+			
+			HashCombine(hash, std::hash<int>{}(std::get<int>(value.value)));
 			break;
 		}
 		case OTNValueType::UNKNOWN:
 		default:
-			assert(false && "HashValue: type for hashing was invalid");
+			assert("HashValue: type for hashing was invalid");
 			break;
 		}
 
@@ -732,7 +738,7 @@ namespace OTN {
 			}
 
 			if (row.size() != serObj.columnTypes.size()) {
-				assert(false && "AddObject: SerializedObject::Row and SerializedObject::ColumnType size mismatch");
+				assert("AddObject: SerializedObject::Row and SerializedObject::ColumnType size mismatch");
 			}
 
 			size_t columnTypeIndex = 0;
