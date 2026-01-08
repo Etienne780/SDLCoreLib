@@ -136,51 +136,70 @@ namespace OTN {
 #endif
 	}
 
-	bool OTNObject::DebugValidateDataTypes(size_t columnIndex) {
+	bool OTNObject::DebugValidateDataTypes(size_t rowIndex) {
 #ifdef NDEBUG
 		return true;
 #else
-		if (m_rows.empty() || columnIndex >= m_rows[0].size())
+		if (m_rows.empty() || rowIndex == 0 || rowIndex >= m_rows.size())
 			return true;
 
-		size_t rowCount = m_rows.size();
-		size_t rowLength = m_rows[0].size();
 		bool valid = true;
-		std::string columnName = (m_names.size() > columnIndex) ? m_names[columnIndex] : "-";
 
-		auto getNestedTypeString = [](const OTNValue* val) -> std::string {
+		const OTNRow& refRow = m_rows[0];
+		const OTNRow& testRow = m_rows[rowIndex];
+
+		size_t columnCount = std::min(refRow.size(), testRow.size());
+
+		auto getNestedTypeString = [](const OTNValue& val) -> std::string {
 			std::string result;
-			const OTNValue* current = val;
+			const OTNValue* current = &val;
+
 			while (current->type == OTNValueType::LIST) {
 				result += "List of ";
 				auto& arr = std::get<OTNArrayPtr>(current->value);
-				if (arr->values.empty()) break;
-				current = &arr->values[0];
+				if (!arr || arr->values.empty())
+					break;
+				current = &arr->values.front();
 			}
+
 			result += OTNValueTypeToString(current->type);
 			return result;
-			};
+		};
 
-		std::function<bool(const OTNValue&, const OTNValue&, size_t, const std::string&)> validateRecursive;
-		validateRecursive = [&](const OTNValue& ref, const OTNValue& val, size_t rowIdx, const std::string& path) -> bool {
+		auto validateRecursive =
+			[&](auto&& self,
+				const OTNValue& ref,
+				const OTNValue& val,
+				size_t columnIndex,
+				const std::string& path) -> void
+		{
 			if (ref.type != val.type) {
 				SetInvalid(
-					"Type mismatch at '" + path + "' (row " + std::to_string(rowIdx) +
-					"): expected '" + getNestedTypeString(&ref) +
-					"', but found '" + getNestedTypeString(&val) + "'!"
+					"Type mismatch at column '" +
+					(columnIndex < m_names.size() ? m_names[columnIndex] : "-") +
+					"' (row " + std::to_string(rowIndex) +
+					", path '" + path +
+					"'): expected '" + getNestedTypeString(ref) +
+					"', but found '" + getNestedTypeString(val) + "'!"
 				);
-				return false;
+				valid = false;
+				return;
 			}
 
 			if (ref.type == OTNValueType::OBJECT) {
 				auto& refObj = std::get<OTNObjectPtr>(ref.value);
 				auto& valObj = std::get<OTNObjectPtr>(val.value);
-				if (refObj->GetName() != valObj->GetName()) {
+
+				if (refObj && valObj && refObj->GetName() != valObj->GetName()) {
 					SetInvalid(
-						"Object name mismatch at '" + path + "' (row " + std::to_string(rowIdx) +
-						"): expected '" + refObj->GetName() + "', but found '" + valObj->GetName() + "'!"
+						"Object name mismatch at column '" +
+						(columnIndex < m_names.size() ? m_names[columnIndex] : "-") +
+						"' (row " + std::to_string(rowIndex) +
+						", path '" + path +
+						"'): expected object '" + refObj->GetName() +
+						"', but found '" + valObj->GetName() + "'!"
 					);
-					return false;
+					valid = false;
 				}
 			}
 
@@ -188,44 +207,41 @@ namespace OTN {
 				auto& refArr = std::get<OTNArrayPtr>(ref.value);
 				auto& valArr = std::get<OTNArrayPtr>(val.value);
 
-				if (!refArr || !valArr)
-					return true; // nothing to validate
-
-				// Reference list must define at least one element to describe the type
-				if (refArr->values.empty())
-					return true; // dynamic / untyped list
+				if (!refArr || !valArr || refArr->values.empty())
+					return; // dynamic or empty reference list
 
 				const OTNValue& refElement = refArr->values.front();
 
 				for (size_t i = 0; i < valArr->values.size(); ++i) {
-					std::string newPath = path + "[" + std::to_string(i) + "]";
-					if (!validateRecursive(refElement, valArr->values[i], rowIdx, newPath))
-						return false;
+					self(
+						self,
+						refElement,
+						valArr->values[i],
+						columnIndex,
+						path + "[" + std::to_string(i) + "]"
+					);
 				}
 			}
-
-			return true;
 		};
 
-		const OTNValue& refValue = m_rows[0][columnIndex];
+		for (size_t col = 0; col < columnCount; ++col) {
+			validateRecursive(
+				validateRecursive,
+				refRow[col],
+				testRow[col],
+				col,
+				m_names[col]
+			);
+		}
 
-		for (size_t i = 0; i < rowCount; i++) {
-			auto& row = m_rows[i];
-
-			if (columnIndex >= row.size()) {
-				SetInvalid(
-					"Row " + std::to_string(i) + " has fewer columns than expected (" +
-					std::to_string(row.size()) + " instead of " + std::to_string(rowLength) +
-					"). Type validation for column '" + columnName + "' skipped!"
-				);
-				valid = false;
-				continue;
-			}
-
-			// Hauptaufruf mit Spaltenname als Pfad
-			if (!validateRecursive(refValue, row[columnIndex], i, columnName)) {
-				valid = false;
-			}
+		if (testRow.size() != refRow.size()) {
+			SetInvalid(
+				"Row " + std::to_string(rowIndex) +
+				" has different column count (" +
+				std::to_string(testRow.size()) +
+				" instead of " + std::to_string(refRow.size()) + ")!"
+			);
+			valid = false;
 		}
 
 		return valid;

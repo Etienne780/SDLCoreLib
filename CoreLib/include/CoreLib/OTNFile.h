@@ -262,9 +262,7 @@ namespace OTN {
 
 #ifndef NDEBUG
 			if (!m_rows.empty()) {
-				for (size_t i = 0; i < m_rows[0].size(); i++) {
-					DebugValidateDataTypes(i);
-				}
+				DebugValidateDataTypes(m_rows.size() - 1);
 			}
 #endif
 
@@ -293,7 +291,7 @@ namespace OTN {
 		// validates if each column name is distinct
 		bool DebugValidateNamesDistinct();
 		// validates if each data type of each row matchs the type of the first row at a specifc column
-		bool DebugValidateDataTypes(size_t columnIndex);
+		bool DebugValidateDataTypes(size_t rowIndex);
 	};
 	
 	class OTNObjectBuilder {
