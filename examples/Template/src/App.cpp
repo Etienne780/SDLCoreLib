@@ -87,10 +87,10 @@ void OTN::ToOTNDataType<Entity>(OTN::OTNObjectBuilder& obj, const Entity& e) {
 }
 
 void Test_Very_Large_OTN_File() {
-    constexpr int WEAPON_COUNT = 100;
-    constexpr int INVENTORY_COUNT = 500;
-    constexpr int ENTITY_COUNT = 10'000;
-    constexpr int SCENE_COUNT = 50;
+    constexpr int WEAPON_COUNT = 10'000;
+    constexpr int INVENTORY_COUNT = 100'000;
+    constexpr int ENTITY_COUNT = 100'000;
+    constexpr int SCENE_COUNT = 5'000;
 
     Random::SetSeed(1337);
 
@@ -197,7 +197,7 @@ void Test_Very_Large_OTN_File() {
     writer.UseDefName(true);
     writer.UseDefType(true);
     writer.UseOptimizations(false);
-    writer.UseDeduplicateRows(true);
+    writer.UseDeduplicateRows(false);
 
     writer.AppendObject(weapons);
     writer.AppendObject(inventory);
