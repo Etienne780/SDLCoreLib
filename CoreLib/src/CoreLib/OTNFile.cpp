@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <functional>
 #include <unordered_map>
+#include <cassert>
 #include "OTNFile.h"
 
 namespace OTN {
@@ -447,7 +448,7 @@ namespace OTN {
 		size_t hash = 0;
 		
 		if (columnTypes.size() != row.size()) {
-			throw std::runtime_error("CreateRowHash: columnTypes and row size mismatch");
+			assert(false && "CreateRowHash: columnTypes and row size mismatch");
 		}
 
 		for (size_t i = 0; i < row.size(); i++) {
@@ -502,15 +503,12 @@ namespace OTN {
 		}
 
 		case OTNValueType::OBJECT: {
-			if (value.type != OTNValueType::INT) {
-				std::runtime_error("HashValue: Object type was not 'int'");
-			}
-			HashCombine(hash, std::hash<int>{}(std::get<int>(value.value)));
+			assert(false && "HashValue: Object type must not occur here");
 			break;
 		}
 		case OTNValueType::UNKNOWN:
 		default:
-			std::runtime_error("HashValue: type for hashing was invalid");
+			assert(false && "HashValue: type for hashing was invalid");
 			break;
 		}
 
@@ -734,7 +732,7 @@ namespace OTN {
 			}
 
 			if (row.size() != serObj.columnTypes.size()) {
-				throw std::runtime_error("AddObject: SerializedObject::Row and SerializedObject::ColumnType size mismatch");
+				assert(false && "AddObject: SerializedObject::Row and SerializedObject::ColumnType size mismatch");
 			}
 
 			size_t columnTypeIndex = 0;
