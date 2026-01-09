@@ -10,6 +10,14 @@ namespace OTN {
 		seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
 	}
 
+	constexpr char GetLineCharEnd() noexcept {
+		return ';';
+	}
+		
+	constexpr char GetSeparatorChar() noexcept {
+		return ',';
+	}
+
 	constexpr std::string_view OTNValueTypeToString(OTNValueType type) noexcept {
 		switch (type)
 		{
@@ -1072,14 +1080,6 @@ namespace OTN {
 		}
 	}
 
-	constexpr char OTNWriter::GetLineCharEnd() noexcept {
-		return ';';
-	}
-
-	constexpr char OTNWriter::GetSeparatorChar() noexcept {
-		return ',';
-	}
-
 	void OTNWriter::AddSpace(IndentedStream& stream) const {
 		if (!m_useOptimizations)
 			stream << ' ';
@@ -1111,7 +1111,7 @@ namespace OTN {
 	#pragma region OTNReader
 
 	// ======== OTNReader ========
-	bool OTNReader::Load(const OTNFilePath& path) {
+	bool OTNReader::LoadFile(const OTNFilePath& path) {
 		if (!IsValid()) {
 			AddError("Reader object is invalid!");
 			return false;
@@ -1124,6 +1124,25 @@ namespace OTN {
 			AddError("File path was invalid!");
 			return false;
 		}
+
+		m_readerData.Reset();
+
+		if (!OpenFileStream(path, m_readerData)) {
+			AddError("Could not open file stream!");
+			return false;
+		}
+
+		if (!ReadVersion(path, m_readerData)) {
+			AddError("Version could not be read!");
+			return false;
+		}
+
+		if (!ReadData(path, m_readerData)) {
+			AddError("Data could not be read!");
+			return false;
+		}
+
+		return true;
 	}
 
 	bool OTNReader::IsValid() const {
@@ -1138,6 +1157,50 @@ namespace OTN {
 		if (IsValid())
 			return false;
 		outError = m_error;
+		return true;
+	}
+
+	#pragma region ReaderV_Num
+
+	bool OTNReader::OTNReaderV1::ReadHeader() {
+		return true;
+	}
+
+	bool OTNReader::OTNReaderV1::ReadBody() {
+		return true;
+	}
+
+	#pragma endregion
+
+	bool OTNReader::OpenFileStream(const OTNFilePath& path, ReaderData& data) {
+		auto& stream = m_readerData.stream;
+		stream.open(path, std::ios::in);
+		return stream.is_open();
+	}
+
+	bool OTNReader::ReadVersion(const OTNFilePath& path, ReaderData& data) {
+		return true;
+	}
+
+	bool OTNReader::ReadData(const OTNFilePath& path, ReaderData& data) {
+		switch (data.version) {
+		case 1: {
+			OTNReaderV1 reader(data);
+			if (!reader.ReadHeader()) {
+				AddError("Failed to read header (v1)");
+				return false;
+			}
+			if (!reader.ReadBody()) {
+				AddError("Failed to read body (v1)");
+				return false;
+			}
+			break;
+		}
+		default:
+			AddError("Unsupported OTN version: " + std::to_string(data.version));
+			return false;
+		}
+
 		return true;
 	}
 

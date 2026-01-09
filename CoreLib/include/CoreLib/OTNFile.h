@@ -56,6 +56,8 @@ namespace OTN {
 		LIST,
 	};
 
+	constexpr char GetLineCharEnd() noexcept;
+	constexpr char GetSeparatorChar() noexcept;
 	constexpr std::string_view OTNValueTypeToString(OTNValueType type) noexcept;
 	constexpr uint32_t OTNValueTypeCharLength(OTNValueType type) noexcept;
 	
@@ -579,8 +581,6 @@ namespace OTN {
 		template<typename T>
 		void WriteData(IndentedStream& stream, const T& data);
 
-		static constexpr char GetLineCharEnd() noexcept;
-		static constexpr char GetSeparatorChar() noexcept;
 		void AddSpace(IndentedStream& stream) const;
 		void AddIndent(IndentedStream& stream, uint32_t level = 1) const;
 		void AddLineBreak(IndentedStream& stream) const;
@@ -600,16 +600,98 @@ namespace OTN {
 		explicit OTNReader() = default;
 		~OTNReader() = default;
 	
-		bool Load(const OTNFilePath& path);
+		bool LoadFile(const OTNFilePath& path);
 	
 		bool IsValid() const;
 		std::string GetError() const;
 		bool TryGetError(std::string& outError) const;
 
 	private:
+		class ReaderData {
+		public:
+			ReaderData() = default;
+			~ReaderData() = default;
+
+			std::ifstream stream;
+
+			uint8_t version = 0;
+			std::unordered_map<std::string, OTNObject> objects;
+
+			void Reset() {
+				if (stream.is_open())
+					stream.close();
+				
+				version = 0;
+				objects.clear();
+			}
+		};
+
+		#pragma region ReaderV_Num
+
+		class OTNReaderV1 {
+		public:
+			explicit OTNReaderV1(OTNReader::ReaderData& data)
+				: m_data(data) {}
+
+			bool ReadHeader();
+			bool ReadBody();
+
+		private:
+			OTNReader::ReaderData& m_data;
+		};
+
+		#pragma endregion
+
 		std::string m_error;
 		bool m_valid = true;
-	
+		ReaderData m_readerData;
+
+		bool OpenFileStream(const OTNFilePath& path, ReaderData& data);
+		bool ReadVersion(const OTNFilePath& path, ReaderData& data);
+		bool ReadData(const OTNFilePath& path, ReaderData& data);
+
+		// Apply an action to every statement in the stream
+		template<typename ActionFunc>
+		bool ForEachStatement(std::ifstream& stream, ActionFunc action) {
+			std::string line;
+			while (std::getline(stream, line, GetLineCharEnd())) {
+				Trim(line);
+				if (line.empty())
+					continue;
+
+				if (!action(line)) {
+					AddError("Invalid statement: " + line);
+					return false;
+				}
+			}
+			return true;
+		}
+
+		// Apply an action to a range of statements (start to end, by count)
+		template<typename ActionFunc>
+		bool ForEachStatementRange(std::ifstream& stream, size_t start, size_t end, ActionFunc action) {
+			std::string line;
+			size_t index = 0;
+
+			while (std::getline(stream, line, GetLineCharEnd())) {
+				if (index++ < start)
+					continue;
+				if (index > end)
+					break;
+
+				Trim(line);
+				if (line.empty())
+					continue;
+
+				if (!action(line)) {
+					AddError("Invalid statement: " + line);
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		void AddError(const std::string& error, bool linebreak = true);
 	};
 	
