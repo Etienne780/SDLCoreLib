@@ -404,7 +404,9 @@ namespace OTN {
 		}
 		
 		OTNFilePath newPath;
-		if (!ValidateFilePath(path, newPath)) {
+		std::string_view error;
+		if (!ValidateFilePath(path, newPath, error)) {
+			AddError(std::string(error));
 			AddError("File path was invalid!");
 			return false;
 		}
@@ -1110,12 +1112,30 @@ namespace OTN {
 
 	#pragma region OTNReader
 
-	explicit OTNReader::OTNReader(const OTNFilePath& path) 
-		: m_path(path) {
+	bool OTNReader::Load(const OTNFilePath& path) {
+		if (!IsValid()) {
+			AddError("Reader object is invalid!");
+			return false;
+		}
+
+		OTNFilePath newPath;
+		std::string_view error;
+		if (!ValidateFilePath(path, newPath, error)) {
+			AddError(std::string(error));
+			AddError("File path was invalid!");
+			return false;
+		}
 	}
 
-	bool OTNReader::Load() {
-		
+	bool OTNReader::IsValid() const {
+		return m_valid;
+	}
+
+	void OTNReader::AddError(const std::string& error, bool linebreak) {
+		if (!m_error.empty())
+			m_error += "\n";
+		m_error += error;
+		m_valid = false;
 	}
 
 	#pragma endregion

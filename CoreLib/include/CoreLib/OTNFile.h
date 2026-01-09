@@ -595,17 +595,22 @@ namespace OTN {
 	
 	#pragma region OTNReader
 
-class OTNReader {
-public:
-	explicit OTNReader(const OTNFilePath& path);
-	~OTNReader() = default;
+	class OTNReader {
+	public:
+		explicit OTNReader() = default;
+		~OTNReader() = default;
+	
+		bool Load(const OTNFilePath& path);
+	
+		bool IsValid() const;
 
-	bool Load();
-
-private:
-	OTNFilePath m_path;
-};
-
-#pragma endregion
+	private:
+		std::string m_error;
+		bool m_valid = true;
+	
+		void AddError(const std::string& error, bool linebreak = true);
+	};
+	
+	#pragma endregion
 	
 }
