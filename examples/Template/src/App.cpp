@@ -86,7 +86,7 @@ void OTN::ToOTNDataType<Entity>(OTN::OTNObjectBuilder& obj, const Entity& e) {
     obj.AddData(e.name, e.transform, e.stats);
 }
 
-void Test_Very_Large_OTN_File() {
+static void Test_Very_Large_OTN_File() {
     constexpr int WEAPON_COUNT = 10'000;
     constexpr int INVENTORY_COUNT = 100'000;
     constexpr int ENTITY_COUNT = 100'000;
@@ -204,7 +204,7 @@ void Test_Very_Large_OTN_File() {
     writer.AppendObject(entities);
     writer.AppendObject(scenes);
 
-    if (!writer.Save("J:/very_large_test.otn")) {
+    if (!writer.Save("C:/Etienne/VisualStudio/very_large_test.otn")) {
         Log::Error(writer.GetError());
     }
     SDLCore::Debug::Profiler::End("Writer");
@@ -216,8 +216,6 @@ void App::OnStart() {
     CreateWindow(&m_winID, "window", 800, 800);
 
     Test_Very_Large_OTN_File();
-
-    int i;
 }
 
 void App::OnUpdate() {
@@ -248,11 +246,6 @@ void App::OnUpdate() {
             DeleteWindow(m_winID);
     }
 }
-
-struct car {
-    std::string name = "";
-    int numberOfWheels = 0;
-};
 
 void App::OnQuit() {
 }
