@@ -603,6 +603,8 @@ namespace OTN {
 		bool Load(const OTNFilePath& path);
 	
 		bool IsValid() const;
+		std::string GetError() const;
+		bool TryGetError(std::string& outError) const;
 
 	private:
 		std::string m_error;

@@ -68,7 +68,6 @@ namespace OTN {
 
 	#pragma region OTNObject
 
-
 	// ======== OTNObject ========
 	OTNObject::OTNObject(const std::string& name)
 		: m_name(name) {
@@ -361,8 +360,9 @@ namespace OTN {
 
 #pragma endregion
 
-#pragma region OTNWriter
+	#pragma region OTNWriter
 
+	// ======== OTNWriter ========
 	OTNWriter& OTNWriter::UseDefName(bool value) {
 		m_useDefName = value;
 		return *this;
@@ -777,8 +777,6 @@ namespace OTN {
 			return true;
 
 		for (const auto& [name, used] : nameUsage) {
-			// Heuristic: only replace if it actually saves space
-			// Example rule: more than once and longer than 3 char
 			if (used > 1 && name.size() > 3) {
 				defNameMap.emplace(name, indexCount++);
 			}
@@ -1112,6 +1110,7 @@ namespace OTN {
 
 	#pragma region OTNReader
 
+	// ======== OTNReader ========
 	bool OTNReader::Load(const OTNFilePath& path) {
 		if (!IsValid()) {
 			AddError("Reader object is invalid!");
@@ -1129,6 +1128,17 @@ namespace OTN {
 
 	bool OTNReader::IsValid() const {
 		return m_valid;
+	}
+
+	std::string OTNReader::GetError() const {
+		return m_error;
+	}
+
+	bool OTNReader::TryGetError(std::string& outError) const {
+		if (IsValid())
+			return false;
+		outError = m_error;
+		return true;
 	}
 
 	void OTNReader::AddError(const std::string& error, bool linebreak) {
