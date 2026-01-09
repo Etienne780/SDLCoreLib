@@ -29,7 +29,7 @@ namespace OTN {
 		return static_cast<uint32_t>(OTNValueTypeToString(type).size());
 	}
 
-	static bool ValidateFilePath(const OTNFilePath& path, OTNFilePath& out, std::string_view& errorOut) {
+	static bool ValidateFilePath(const OTNFilePath& path, OTNFilePath& out, std::string& errorOut) {
 		namespace fs = std::filesystem;
 
 		fs::path finalPath = path;
@@ -404,9 +404,9 @@ namespace OTN {
 		}
 		
 		OTNFilePath newPath;
-		std::string_view error;
+		std::string error;
 		if (!ValidateFilePath(path, newPath, error)) {
-			AddError(std::string(error));
+			AddError(error);
 			AddError("File path was invalid!");
 			return false;
 		}
@@ -1119,9 +1119,9 @@ namespace OTN {
 		}
 
 		OTNFilePath newPath;
-		std::string_view error;
+		std::string error;
 		if (!ValidateFilePath(path, newPath, error)) {
-			AddError(std::string(error));
+			AddError(error);
 			AddError("File path was invalid!");
 			return false;
 		}
