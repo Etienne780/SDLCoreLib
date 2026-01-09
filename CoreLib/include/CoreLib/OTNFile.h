@@ -23,6 +23,8 @@ namespace OTN {
 	// File extension for OTN files
 	inline constexpr std::string_view FILE_EXTENSION = ".otn";
 
+	using OTNFilePath = std::filesystem::path;
+
 	/*
 	* 
 	* ToDo:
@@ -456,8 +458,6 @@ namespace OTN {
 
 	class OTNWriter {
 	public:
-		using OTNFilePath = std::filesystem::path;
-	
 		explicit OTNWriter() = default;
 		~OTNWriter() = default;
 	
@@ -477,7 +477,7 @@ namespace OTN {
 		bool GetDeduplicateRows() const;
 		
 		bool IsValid() const;
-		bool TryGetError(std::string& outError);
+		bool TryGetError(std::string& outError) const;
 		std::string GetError();
 	
 	private:
@@ -561,7 +561,6 @@ namespace OTN {
 
 		WriterData m_writerData;
 		
-		bool ValidateFilePath(const OTNFilePath& path, OTNFilePath& out);
 		bool DebugValidateObjects();
 
 		bool WriteToFile(const OTNFilePath& path);
@@ -582,9 +581,9 @@ namespace OTN {
 
 		static constexpr char GetLineCharEnd() noexcept;
 		static constexpr char GetSeparatorChar() noexcept;
-		void AddSpace(IndentedStream& stream);
-		void AddIndent(IndentedStream& stream, uint32_t level = 1);
-		void AddLineBreak(IndentedStream& stream);
+		void AddSpace(IndentedStream& stream) const;
+		void AddIndent(IndentedStream& stream, uint32_t level = 1) const;
+		void AddLineBreak(IndentedStream& stream) const;
 		void AddError(const std::string& error, bool linebreak = true);
 
 		void CountObjectType(const SerializedObject& obj, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
@@ -598,11 +597,13 @@ namespace OTN {
 
 class OTNReader {
 public:
-	explicit OTNReader() = default;
+	explicit OTNReader(const OTNFilePath& path);
 	~OTNReader() = default;
 
-private:
+	bool Load();
 
+private:
+	OTNFilePath m_path;
 };
 
 #pragma endregion

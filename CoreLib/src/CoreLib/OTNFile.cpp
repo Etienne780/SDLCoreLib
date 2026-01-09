@@ -6,7 +6,7 @@
 
 namespace OTN {
 
-	inline void HashCombine(size_t& seed, size_t value) {
+	static inline void HashCombine(size_t& seed, size_t value) {
 		seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
 	}
 
@@ -29,7 +29,44 @@ namespace OTN {
 		return static_cast<uint32_t>(OTNValueTypeToString(type).size());
 	}
 
-#pragma region OTNObject
+	static bool ValidateFilePath(const OTNFilePath& path, OTNFilePath& out, std::string_view& errorOut) {
+		namespace fs = std::filesystem;
+
+		fs::path finalPath = path;
+
+		// check file name
+		if (finalPath.filename().empty()) {
+			errorOut = "file path has no file name!";
+			return false;
+		}
+
+		// check if parent file path exists
+		fs::path parentDir = finalPath.parent_path();
+		if (!parentDir.empty() && !fs::exists(parentDir)) {
+			errorOut = "file path dose not exist!";
+			return false;
+		}
+
+		// file extension check
+		if (finalPath.has_extension()) {
+			std::string ext = finalPath.extension().string();
+			std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+			if (ext != FILE_EXTENSION) {
+				errorOut = "file extension '" + ext + "' is invalid, valid extensions are .OTN, .otn!";
+				return false;
+			}
+		}
+		else {
+			// add extension
+			finalPath += OTN::FILE_EXTENSION;
+		}
+
+		out = finalPath;
+		return true;
+	}
+
+	#pragma region OTNObject
 
 
 	// ======== OTNObject ========
@@ -410,7 +447,7 @@ namespace OTN {
 		return m_valid;
 	}
 
-	bool OTNWriter::TryGetError(std::string& outError) {
+	bool OTNWriter::TryGetError(std::string& outError) const {
 		if (m_valid)
 			return false;
 		outError = m_error;
@@ -486,7 +523,7 @@ namespace OTN {
 			break;
 
 		case OTNValueType::LIST: {
-			auto arrayPtr = std::get<OTNArrayPtr>(value.value);
+			auto& arrayPtr = std::get<OTNArrayPtr>(value.value);
 			if (!arrayPtr) {
 				HashCombine(hash, 0);
 				break;
@@ -519,43 +556,6 @@ namespace OTN {
 		}
 
 		return hash;
-	}
-
-	bool OTNWriter::ValidateFilePath(const OTNFilePath& path, OTNFilePath& out) {
-		namespace fs = std::filesystem;
-
-		fs::path finalPath = path;
-
-		// check file name
-		if (finalPath.filename().empty()) {
-			AddError("file path has no file name!");
-			return false;
-		}
-
-		// check if parent file path exists
-		fs::path parentDir = finalPath.parent_path();
-		if (!parentDir.empty() && !fs::exists(parentDir)) {
-			AddError("file path dose not exist!");
-			return false;
-		}
-
-		// file extension check
-		if (finalPath.has_extension()) {
-			std::string ext = finalPath.extension().string();
-			std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-
-			if (ext != FILE_EXTENSION) {
-				AddError("file extension '" + ext + "' is invalid, valid extensions are .OTN, .otn!");
-				return false;
-			}
-		}
-		else {
-			// add extension
-			finalPath += OTN::FILE_EXTENSION;
-		}
-
-		out = finalPath;
-		return true;
 	}
 
 	bool OTNWriter::DebugValidateObjects() {
@@ -1080,12 +1080,12 @@ namespace OTN {
 		return ',';
 	}
 
-	void OTNWriter::AddSpace(IndentedStream& stream) {
+	void OTNWriter::AddSpace(IndentedStream& stream) const {
 		if (!m_useOptimizations)
 			stream << ' ';
 	}
 
-	void OTNWriter::AddIndent(IndentedStream& stream, uint32_t level) {
+	void OTNWriter::AddIndent(IndentedStream& stream, uint32_t level) const {
 		if (m_useOptimizations)
 			return;
 
@@ -1093,10 +1093,10 @@ namespace OTN {
 			stream << '\t';
 	}
 
-	void OTNWriter::AddLineBreak(IndentedStream& m_stream) {
+	void OTNWriter::AddLineBreak(IndentedStream& stream) const {
 		if (!m_useOptimizations)
-			m_stream << '\n';
-		m_stream.NewLine();
+			stream << '\n';
+		stream.NewLine();
 	}
 
 	void OTNWriter::AddError(const std::string& error, bool linebreak) {
@@ -1110,7 +1110,13 @@ namespace OTN {
 
 	#pragma region OTNReader
 
+	explicit OTNReader::OTNReader(const OTNFilePath& path) 
+		: m_path(path) {
+	}
 
+	bool OTNReader::Load() {
+		
+	}
 
 	#pragma endregion
 
