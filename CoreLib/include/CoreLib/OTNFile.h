@@ -695,48 +695,8 @@ namespace OTN {
 
 		template<typename Reader>
 		bool ReadFullData(Reader& reader);
-
-		// Apply an action to every statement in the stream
-		template<typename ActionFunc>
-		bool ForEachStatement(std::ifstream& stream, ActionFunc&& action) {
-			std::string line;
-			while (std::getline(stream, line, GetStatementTerminator())) {
-				Trim(line);
-				if (line.empty())
-					continue;
-
-				if (!std::forward<ActionFunc>(action)(line)) {
-					AddError("Invalid statement: " + line);
-					return false;
-				}
-			}
-			return true;
-		}
-
-		// Apply an action to a range of statements (start to end, by count)
-		template<typename ActionFunc>
-		bool ForEachStatementRange(std::ifstream& stream, size_t start, size_t end, ActionFunc&& action) {
-			std::string line;
-			size_t index = 0;
-
-			while (std::getline(stream, line, GetStatementTerminator())) {
-				if (index++ < start)
-					continue;
-				if (index > end)
-					break;
-
-				Trim(line);
-				if (line.empty())
-					continue;
-
-				if (!std::forward<ActionFunc>(action)(line)) {
-					AddError("Invalid statement: " + line);
-					return false;
-				}
-			}
-
-			return true;
-		}
+		void SanitizeLine(std::string& line);
+		void GetNextSanitizedLine(std::ifstream& stream, std::string& lineOut);
 
 		void AddError(const std::string& error, bool linebreak = true);
 	};

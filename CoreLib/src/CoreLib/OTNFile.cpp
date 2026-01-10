@@ -1191,6 +1191,18 @@ namespace OTN {
 	}
 
 	bool OTNReader::ReadVersion(const OTNFilePath& path, ReaderData& data) {
+		auto& stream = m_readerData.stream;
+
+		std::string line;
+		std::string line2;
+		GetNextSanitizedLine(stream, line);
+		GetNextSanitizedLine(stream, line2);
+
+		if (line.empty())
+			return false;
+
+
+		
 		return true;
 	}
 
@@ -1223,6 +1235,18 @@ namespace OTN {
 	}
 
 	template bool OTNReader::ReadFullData<OTNReader::OTNReaderV1>(OTNReader::OTNReaderV1& reader);
+
+	void OTNReader::SanitizeLine(std::string& line) {
+		static constexpr std::string_view remove = " \t\n\r";
+		line.erase(std::remove_if(line.begin(), line.end(), [](char c) {
+			return remove.find(c) != std::string_view::npos;
+		}), line.end());
+	}
+
+	void OTNReader::GetNextSanitizedLine(std::ifstream& stream, std::string& lineOut) {
+		std::getline(stream, lineOut, Syntax::STATEMENT_TERMINATOR);
+		SanitizeLine(lineOut);
+	}
 
 	void OTNReader::AddError(const std::string& error, bool linebreak) {
 		if (!m_error.empty())
