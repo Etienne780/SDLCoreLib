@@ -21,29 +21,30 @@ namespace OTN {
 
 	namespace Syntax {
 
-		inline constexpr char STATEMENT_TERMINATOR = ';';
-		inline constexpr char DIRECTIVE_CHAR = '@';
-		inline constexpr char ASSIGNMENT_CHAR = '=';
-		inline constexpr char SEPARATOR_CHAR = ',';
-		inline constexpr char TYPE_SEPARATOR_CHAR = '/';
-		inline constexpr char BLOCK_BEGIN_CHAR = '{';
-		inline constexpr char BLOCK_END_CHAR = '}';
-		inline constexpr char LIST_BEGIN_CHAR = '[';
-		inline constexpr char LIST_END_CHAR = ']';
+		inline constexpr char STATEMENT_TERMINATOR	= ';';
+		inline constexpr char KEYWORD_PREFIX_CHAR	= '@';
+		inline constexpr char KEYWORD_ASSIGN_CHAR	= ':';
+		inline constexpr char ASSIGNMENT_CHAR		= '=';
+		inline constexpr char SEPARATOR_CHAR		= ',';
+		inline constexpr char TYPE_SEPARATOR_CHAR	= '/';
+		inline constexpr char BLOCK_BEGIN_CHAR		= '{';
+		inline constexpr char BLOCK_END_CHAR		= '}';
+		inline constexpr char LIST_BEGIN_CHAR		= '[';
+		inline constexpr char LIST_END_CHAR			= ']';
 
 	}
 
 	namespace Keyword {
 
-		inline constexpr std::string_view VERSION_KW = "version";
-		inline constexpr std::string_view DEF_NAME_KW = "defName";
-		inline constexpr std::string_view DEF_TYPE_KW = "defType";
+		inline constexpr std::string_view VERSION_KW	= "version";
+		inline constexpr std::string_view DEF_NAME_KW	= "defName";
+		inline constexpr std::string_view DEF_TYPE_KW	= "defType";
 
-		inline constexpr std::string_view OBJECT_KW = "object";
-		inline constexpr std::string_view REF_KW = "Ref";
+		inline constexpr std::string_view OBJECT_KW		= "object";
+		inline constexpr std::string_view REF_KW		= "Ref";
 
-		inline constexpr std::string_view TRUE_KW = "true";
-		inline constexpr std::string_view FALSE_KW = "false";
+		inline constexpr std::string_view TRUE_KW		= "true";
+		inline constexpr std::string_view FALSE_KW		= "false";
 
 	}
 
@@ -607,7 +608,7 @@ namespace OTN {
 
 		template<typename Func>
 		void WriteDirective(IndentedStream& stream, std::string_view keyword, Func&& func) {
-			stream << Syntax::DIRECTIVE_CHAR << keyword << ":";
+			stream << Syntax::KEYWORD_PREFIX_CHAR << keyword << Syntax::KEYWORD_ASSIGN_CHAR;
 			AddSpace(stream);
 			std::forward<Func>(func)();
 			stream << Syntax::STATEMENT_TERMINATOR;
