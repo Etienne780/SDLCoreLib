@@ -824,7 +824,9 @@ namespace OTN {
 	bool OTNWriter::WriteHeader() {
 		auto& stream = m_writerData.stream;
 
-		WriteDirective(stream, Keyword::VERSION_KW, OTN::VERSION);
+		WriteDirective(stream, Keyword::VERSION_KW, [&]() { 
+			stream << static_cast<unsigned>(OTN::VERSION);
+		});
 		AddLineBreak(stream);
 
 		if (m_useDefName) {
@@ -848,7 +850,9 @@ namespace OTN {
 
 		auto& stream = m_writerData.stream;
 
-		WriteDirective(stream, Keyword::DEF_NAME_KW, WriteHeaderDefHelper(stream, defNameMap));
+		WriteDirective(stream, Keyword::DEF_NAME_KW, [&]() { 
+			WriteHeaderDefHelper(stream, defNameMap); 
+		});
 		AddLineBreak(stream);
 
 		return true;
@@ -860,13 +864,15 @@ namespace OTN {
 			return true;
 
 		auto& stream = m_writerData.stream;
-		WriteDirective(stream, Keyword::DEF_TYPE_KW, WriteHeaderDefHelper(stream, defTypeMap));
+		WriteDirective(stream, Keyword::DEF_TYPE_KW, [&]() { 
+			WriteHeaderDefHelper(stream, defTypeMap); 
+		});
 		AddLineBreak(stream);
 
 		return true;
 	}
 
-	bool OTNWriter::WriteHeaderDefHelper(IndentedStream& stream, const std::unordered_map<std::string, uint32_t>& map) {
+	void OTNWriter::WriteHeaderDefHelper(IndentedStream& stream, const std::unordered_map<std::string, uint32_t>& map) {
 		bool first = true;
 		for (const auto& [name, id] : map) {
 			if (!first) {
@@ -881,30 +887,24 @@ namespace OTN {
 			AddSpace(stream);
 			stream << id;
 		}
-
-		return true;
 	}
 	
 	bool OTNWriter::WriteBody() {
 		auto& stream = m_writerData.stream;
 
-		stream 
-			<< Syntax::DIRECTIVE_CHAR 
-			<< Keyword::OBJECT_KW;
-		AddSpace(stream);
-		stream << Syntax::BLOCK_BEGIN_CHAR;
-		AddLineBreak(stream);
+		WriteDirective(stream, Keyword::OBJECT_KW, [&]() {
+			stream << Syntax::BLOCK_BEGIN_CHAR;
+			AddLineBreak(stream);
+			if (!m_useOptimizations)
+				stream.IncreaseIndent();
 
-		if(!m_useOptimizations)
-			stream.IncreaseIndent();
+			if (!WriteObject(stream, m_writerData.objects))
+				return false;
+			stream.DecreaseIndent();
 
-		if (!WriteObject(stream, m_writerData.objects))
-			return false;
-		stream.DecreaseIndent();
-
-		stream 
-			<< Syntax::BLOCK_END_CHAR 
-			<< Syntax::STATEMENT_TERMINATOR;
+			stream
+				<< Syntax::BLOCK_END_CHAR;
+		});
 
 		return true;
 	}

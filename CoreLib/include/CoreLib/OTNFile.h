@@ -605,20 +605,15 @@ namespace OTN {
 		bool WriteHeaderDefName();
 		bool WriteHeaderDefType();
 
-		template<typename T>
-		void WriteDirective(IndentedStream& stream, std::string_view keyword, T&& value) {
-			stream
-				<< Syntax::DIRECTIVE_CHAR
-				<< keyword;
+		template<typename Func>
+		void WriteDirective(IndentedStream& stream, std::string_view keyword, Func&& func) {
+			stream << Syntax::DIRECTIVE_CHAR << keyword << ":";
 			AddSpace(stream);
-			stream << Syntax::ASSIGNMENT_CHAR;
-			AddSpace(stream);
-			stream
-				<< std::forward<T>(value)
-				<< Syntax::STATEMENT_TERMINATOR;
+			std::forward<Func>(func)();
+			stream << Syntax::STATEMENT_TERMINATOR;
 		}
 
-		bool WriteHeaderDefHelper(IndentedStream& stream, const std::unordered_map<std::string, uint32_t>& map);
+		void WriteHeaderDefHelper(IndentedStream& stream, const std::unordered_map<std::string, uint32_t>& map);
 		bool WriteBody();
 		bool WriteObject(IndentedStream& stream, const std::unordered_map<std::string, SerializedObject>& objects);
 		
@@ -700,14 +695,14 @@ namespace OTN {
 
 		// Apply an action to every statement in the stream
 		template<typename ActionFunc>
-		bool ForEachStatement(std::ifstream& stream, ActionFunc action) {
+		bool ForEachStatement(std::ifstream& stream, ActionFunc&& action) {
 			std::string line;
 			while (std::getline(stream, line, GetStatementTerminator())) {
 				Trim(line);
 				if (line.empty())
 					continue;
 
-				if (!action(line)) {
+				if (!std::forward<ActionFunc>(action)(line)) {
 					AddError("Invalid statement: " + line);
 					return false;
 				}
@@ -717,7 +712,7 @@ namespace OTN {
 
 		// Apply an action to a range of statements (start to end, by count)
 		template<typename ActionFunc>
-		bool ForEachStatementRange(std::ifstream& stream, size_t start, size_t end, ActionFunc action) {
+		bool ForEachStatementRange(std::ifstream& stream, size_t start, size_t end, ActionFunc&& action) {
 			std::string line;
 			size_t index = 0;
 
@@ -731,7 +726,7 @@ namespace OTN {
 				if (line.empty())
 					continue;
 
-				if (!action(line)) {
+				if (!std::forward<ActionFunc>(action)(line)) {
 					AddError("Invalid statement: " + line);
 					return false;
 				}
