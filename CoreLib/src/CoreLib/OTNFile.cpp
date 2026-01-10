@@ -892,6 +892,7 @@ namespace OTN {
 	bool OTNWriter::WriteBody() {
 		auto& stream = m_writerData.stream;
 
+		bool valid = true;
 		WriteDirective(stream, Keyword::OBJECT_KW, [&]() {
 			stream << Syntax::BLOCK_BEGIN_CHAR;
 			AddLineBreak(stream);
@@ -899,14 +900,14 @@ namespace OTN {
 				stream.IncreaseIndent();
 
 			if (!WriteObject(stream, m_writerData.objects))
-				return false;
+				valid = false;
 			stream.DecreaseIndent();
 
 			stream
 				<< Syntax::BLOCK_END_CHAR;
 		});
 
-		return true;
+		return valid;
 	}
 
 	bool OTNWriter::WriteObject(IndentedStream& stream,
