@@ -213,6 +213,19 @@ static void Test_Very_Large_OTN_File() {
         Log::Error(writer.GetError());
     }
     SDLCore::Debug::Profiler::End("Writer");
+    
+    
+    {
+        SDLCore::Debug::ProfilerScope p("Read");
+        OTN::OTNReader reader;
+
+        if (reader.ReadFile("J:/test.otn")) {
+            
+        }
+        else {
+            Log::Error(reader.GetError());
+        }
+    }
 
     SDLCore::Debug::Profiler::PrintAndReset();
 }
