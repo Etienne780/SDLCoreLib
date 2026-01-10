@@ -11,10 +11,6 @@
 
 #include <CoreLib/CoreMath.h>
 
-namespace std::filesystem {
-	class path;
-}
-
 namespace OTN {
 
 	// Version of the OTN format
@@ -22,6 +18,34 @@ namespace OTN {
 
 	// File extension for OTN files
 	inline constexpr std::string_view FILE_EXTENSION = ".otn";
+
+	namespace Syntax {
+
+		inline constexpr char STATEMENT_TERMINATOR = ';';
+		inline constexpr char DIRECTIVE_CHAR = '@';
+		inline constexpr char ASSIGNMENT_CHAR = '=';
+		inline constexpr char SEPARATOR_CHAR = ',';
+		inline constexpr char TYPE_SEPARATOR_CHAR = '/';
+		inline constexpr char BLOCK_BEGIN_CHAR = '{';
+		inline constexpr char BLOCK_END_CHAR = '}';
+		inline constexpr char LIST_BEGIN_CHAR = '[';
+		inline constexpr char LIST_END_CHAR = ']';
+
+	}
+
+	namespace Keyword {
+
+		inline constexpr std::string_view VERSION_KW = "version";
+		inline constexpr std::string_view DEF_NAME_KW = "defName";
+		inline constexpr std::string_view DEF_TYPE_KW = "defType";
+
+		inline constexpr std::string_view OBJECT_KW = "object";
+		inline constexpr std::string_view REF_KW = "Ref";
+
+		inline constexpr std::string_view TRUE_KW = "true";
+		inline constexpr std::string_view FALSE_KW = "false";
+
+	}
 
 	using OTNFilePath = std::filesystem::path;
 
@@ -56,8 +80,6 @@ namespace OTN {
 		LIST,
 	};
 
-	constexpr char GetLineCharEnd() noexcept;
-	constexpr char GetSeparatorChar() noexcept;
 	constexpr std::string_view OTNValueTypeToString(OTNValueType type) noexcept;
 	constexpr uint32_t OTNValueTypeCharLength(OTNValueType type) noexcept;
 	
@@ -200,10 +222,16 @@ namespace OTN {
 				return *this;
 			}
 	#endif
+			auto addName = [&](const std::string& n) {
+				if (IsNameValid(n))
+					m_names.emplace_back(n);
+			};
+
 			constexpr size_t ArgCount = sizeof...(Args);
 			m_names.clear();
 			m_names.reserve(ArgCount);
-			(m_names.emplace_back(std::forward<Args>(names)), ...);
+
+			(addName(std::forward<Args>(names)), ...);
 
 			DebugValidateNamesDistinct();
 			return *this;
@@ -291,6 +319,8 @@ namespace OTN {
 		void SetInvalid(const std::string& error);
 		void SetNamesFromBuilder(std::vector<std::string>&& names);
 		void AddRowInternal(OTNRow&& row);
+
+		bool IsNameValid(const std::string& name);
 
 		// validates if each column name is distinct
 		bool DebugValidateNamesDistinct();
@@ -574,7 +604,21 @@ namespace OTN {
 		bool WriteHeader();
 		bool WriteHeaderDefName();
 		bool WriteHeaderDefType();
-		bool WirteHeaderDefHelper(IndentedStream& stream, const std::unordered_map<std::string, uint32_t>& map);
+
+		template<typename T>
+		void WriteDirective(IndentedStream& stream, std::string_view keyword, T&& value) {
+			stream
+				<< Syntax::DIRECTIVE_CHAR
+				<< keyword;
+			AddSpace(stream);
+			stream << Syntax::ASSIGNMENT_CHAR;
+			AddSpace(stream);
+			stream
+				<< std::forward<T>(value)
+				<< Syntax::STATEMENT_TERMINATOR;
+		}
+
+		bool WriteHeaderDefHelper(IndentedStream& stream, const std::unordered_map<std::string, uint32_t>& map);
 		bool WriteBody();
 		bool WriteObject(IndentedStream& stream, const std::unordered_map<std::string, SerializedObject>& objects);
 		
@@ -584,6 +628,10 @@ namespace OTN {
 		void AddSpace(IndentedStream& stream) const;
 		void AddIndent(IndentedStream& stream, uint32_t level = 1) const;
 		void AddLineBreak(IndentedStream& stream) const;
+
+		void AddSpace(std::string& str) const;
+		void AddIndent(std::string& str, uint32_t level = 1) const;
+
 		void AddError(const std::string& error, bool linebreak = true);
 
 		void CountObjectType(const SerializedObject& obj, std::unordered_map<OTNValueType, uint32_t>& typeUsage);
@@ -654,7 +702,7 @@ namespace OTN {
 		template<typename ActionFunc>
 		bool ForEachStatement(std::ifstream& stream, ActionFunc action) {
 			std::string line;
-			while (std::getline(stream, line, GetLineCharEnd())) {
+			while (std::getline(stream, line, GetStatementTerminator())) {
 				Trim(line);
 				if (line.empty())
 					continue;
@@ -673,7 +721,7 @@ namespace OTN {
 			std::string line;
 			size_t index = 0;
 
-			while (std::getline(stream, line, GetLineCharEnd())) {
+			while (std::getline(stream, line, GetStatementTerminator())) {
 				if (index++ < start)
 					continue;
 				if (index > end)

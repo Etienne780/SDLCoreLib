@@ -10,14 +10,6 @@ namespace OTN {
 		seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
 	}
 
-	constexpr char GetLineCharEnd() noexcept {
-		return ';';
-	}
-		
-	constexpr char GetSeparatorChar() noexcept {
-		return ',';
-	}
-
 	constexpr std::string_view OTNValueTypeToString(OTNValueType type) noexcept {
 		switch (type)
 		{
@@ -35,6 +27,20 @@ namespace OTN {
 
 	constexpr uint32_t OTNValueTypeCharLength(OTNValueType type) noexcept {
 		return static_cast<uint32_t>(OTNValueTypeToString(type).size());
+	}
+
+	std::string CreateRefName(const std::string& objectName) {
+		std::string result;
+		result.reserve(
+			Keyword::REF_KW.size() + 2 + objectName.size()
+		);
+
+		result.append(Keyword::REF_KW);
+		result.push_back('<');
+		result.append(objectName);
+		result.push_back('>');
+
+		return result;
 	}
 
 	static bool ValidateFilePath(const OTNFilePath& path, OTNFilePath& out, std::string& errorOut) {
@@ -145,6 +151,10 @@ namespace OTN {
 
 	void OTNObject::AddRowInternal(OTNRow&& row) {
 		m_rows.emplace_back(std::move(row));
+	}
+
+	bool OTNObject::IsNameValid(const std::string& name) {
+		return true;
 	}
 
 	bool OTNObject::DebugValidateNamesDistinct() {
@@ -415,7 +425,7 @@ namespace OTN {
 		std::string error;
 		if (!ValidateFilePath(path, newPath, error)) {
 			AddError(error);
-			AddError("File path was invalid!");
+			AddError("File path '" + path.string() + "' was invalid!");
 			return false;
 		}
 
@@ -818,9 +828,7 @@ namespace OTN {
 	bool OTNWriter::WriteHeader() {
 		auto& stream = m_writerData.stream;
 
-		stream << "@version:";
-		AddSpace(stream);
-		stream << std::to_string(OTN::VERSION) + GetLineCharEnd();
+		WriteDirective(stream, Keyword::VERSION_KW, OTN::VERSION);
 		AddLineBreak(stream);
 
 		if (m_useDefName) {
@@ -843,13 +851,8 @@ namespace OTN {
 			return true;
 
 		auto& stream = m_writerData.stream;
-		stream << "@defName:";
-		AddSpace(stream);
 
-		if (!WirteHeaderDefHelper(stream, defNameMap))
-			return false;
-
-		stream << GetLineCharEnd();
+		WriteDirective(stream, Keyword::DEF_NAME_KW, WriteHeaderDefHelper(stream, defNameMap));
 		AddLineBreak(stream);
 
 		return true;
@@ -861,42 +864,39 @@ namespace OTN {
 			return true;
 
 		auto& stream = m_writerData.stream;
-		stream << "@defType:";
-		AddSpace(stream);
-
-		if (!WirteHeaderDefHelper(stream, defTypeMap))
-			return false;
-
-		stream << GetLineCharEnd();
+		WriteDirective(stream, Keyword::DEF_TYPE_KW, WriteHeaderDefHelper(stream, defTypeMap));
 		AddLineBreak(stream);
+
 		return true;
 	}
 
-	bool OTNWriter::WirteHeaderDefHelper(IndentedStream& stream, const std::unordered_map<std::string, uint32_t>& map) {
+	bool OTNWriter::WriteHeaderDefHelper(IndentedStream& stream, const std::unordered_map<std::string, uint32_t>& map) {
 		bool first = true;
 		for (const auto& [name, id] : map) {
 			if (!first) {
-				stream << GetSeparatorChar();
+				stream << Syntax::SEPARATOR_CHAR;
 				AddSpace(stream);
 			}
+			first = false;
 
 			stream << name;
 			AddSpace(stream);
-			stream << "=";
+			stream << Syntax::ASSIGNMENT_CHAR;
 			AddSpace(stream);
-			stream << std::to_string(id);
-
-			first = false;
+			stream << id;
 		}
+
 		return true;
 	}
 	
 	bool OTNWriter::WriteBody() {
 		auto& stream = m_writerData.stream;
 
-		stream << "@object";
+		stream 
+			<< Syntax::DIRECTIVE_CHAR 
+			<< Keyword::OBJECT_KW;
 		AddSpace(stream);
-		stream << "{";
+		stream << Syntax::BLOCK_BEGIN_CHAR;
 		AddLineBreak(stream);
 
 		if(!m_useOptimizations)
@@ -906,8 +906,9 @@ namespace OTN {
 			return false;
 		stream.DecreaseIndent();
 
-		stream << "}";
-		stream << GetLineCharEnd();
+		stream 
+			<< Syntax::BLOCK_END_CHAR 
+			<< Syntax::STATEMENT_TERMINATOR;
 
 		return true;
 	}
@@ -923,7 +924,7 @@ namespace OTN {
 			bool firstName = true;
 			for (size_t i = 0; i < obj.columnNames.size(); i++) {
 				if (!firstName) {
-					stream << ",";
+					stream << Syntax::SEPARATOR_CHAR;
 					AddSpace(stream);
 				}
 				firstName = false;
@@ -944,9 +945,7 @@ namespace OTN {
 					}
 				}
 				else {
-					stream << "Ref<";
-					stream << colType.refObject;
-					stream << ">";
+					stream << CreateRefName(colType.refObject);
 				}
 
 				// < 0 = no List, 1 = [], 2 = [][] ...
@@ -954,7 +953,7 @@ namespace OTN {
 					stream << "[]";
 				}
 
-				stream << "/";
+				stream << Syntax::TYPE_SEPARATOR_CHAR;
 
 
 				if (defNameMap.empty()) {
@@ -982,7 +981,7 @@ namespace OTN {
 			stream << obj.rows.size();
 			stream << "]";
 			AddSpace(stream);
-			stream << "{";
+			stream << Syntax::BLOCK_BEGIN_CHAR;
 			AddLineBreak(stream);
 
 			AddIndent(stream);
@@ -996,21 +995,23 @@ namespace OTN {
 			}
 			writeNames(obj);
 			AddLineBreak(stream);
-			stream << "}";
+			stream 
+				<< Syntax::BLOCK_END_CHAR 
+				<< Syntax::STATEMENT_TERMINATOR;
 			AddLineBreak(stream);
 
 			for (const auto& row : obj.rows) {
 				bool first = true;
 				for (const auto& serValue : row) {
 					if (!first) {
-						stream << ",";
+						stream << Syntax::SEPARATOR_CHAR;
 						AddSpace(stream);
 					}
 					first = false;
 
 					WriteData(stream, serValue);
 				}
-				stream << GetLineCharEnd();
+				stream << Syntax::STATEMENT_TERMINATOR;
 				AddLineBreak(stream);
 			}
 		}
@@ -1041,25 +1042,26 @@ namespace OTN {
 				break;
 			case OTNValueType::LIST: {
 				auto array = std::get<OTNArrayPtr>(data.value);
-				stream << "{";
+				stream << Syntax::LIST_BEGIN_CHAR;
 				if (array) {
 					bool first = true;
 					for (const auto& val : array->values) {
 						if (!first) {
-							stream << ","; 
+							stream << Syntax::SEPARATOR_CHAR; 
 							AddSpace(stream);
 						}
 						first = false;
 						WriteData(stream, val);
 					}
 				}
-				stream << "}";
+				stream << Syntax::LIST_END_CHAR;
 				break;
 			}
 			case OTNValueType::OBJECT:
 			case OTNValueType::UNKNOWN:
 			default:
 				AddError("WriteData: unsupported OTNValueType");
+				assert("WriteData: unsupported OTNValueType");
 				break;
 			}
 		}
@@ -1073,7 +1075,7 @@ namespace OTN {
 			stream << data;
 		}
 		else if constexpr (std::is_same_v<T, bool>) {
-			stream << (data ? "true" : "false");
+			stream << (data ? Keyword::TRUE_KW : Keyword::FALSE_KW);
 		}
 		else {
 			static_assert(otn_always_false_v<T>, "Unsupported type for WriteData");
@@ -1097,6 +1099,19 @@ namespace OTN {
 		if (!m_useOptimizations)
 			stream << '\n';
 		stream.NewLine();
+	}
+
+	void OTNWriter::AddSpace(std::string& str) const {
+		if (!m_useOptimizations)
+			str.push_back(' ');
+	}
+
+	void OTNWriter::AddIndent(std::string& str, uint32_t level) const {
+		if (m_useOptimizations)
+			return;
+
+		for (; level > 0; --level)
+			str.push_back('\t');
 	}
 
 	void OTNWriter::AddError(const std::string& error, bool linebreak) {

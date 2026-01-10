@@ -88,9 +88,9 @@ void OTN::ToOTNDataType<Entity>(OTN::OTNObjectBuilder& obj, const Entity& e) {
 
 static void Test_Very_Large_OTN_File() {
     constexpr int WEAPON_COUNT = 10'000;
-    constexpr int INVENTORY_COUNT = 100'000;
-    constexpr int ENTITY_COUNT = 100'000;
-    constexpr int SCENE_COUNT = 5'000;
+    constexpr int INVENTORY_COUNT = 1'000;
+    constexpr int ENTITY_COUNT = 1'000;
+    constexpr int SCENE_COUNT = 100;
 
     Random::SetSeed(1337);
 
@@ -113,7 +113,7 @@ static void Test_Very_Large_OTN_File() {
     SDLCore::Debug::Profiler::Begin("Inventory");
     // ---------- Inventory ----------
     OTN::OTNObject inventory("Inventory");
-    inventory.SetNames("entries");
+    inventory.SetNames("name", "entries");
 
     for (int i = 0; i < INVENTORY_COUNT; ++i) {
         int entryCount = Random::GetRangeNumber<int>(1, 10);
@@ -125,10 +125,10 @@ static void Test_Very_Large_OTN_File() {
             entries.push_back({
                 Random::GetRangeNumber<int>(0, WEAPON_COUNT - 1),
                 Random::GetRangeNumber<int>(1, 50)
-                });
+            });
         }
 
-        inventory.AddDataRow(entries);
+        inventory.AddDataRow("inv_" + std::to_string(i), entries);
     }
     SDLCore::Debug::Profiler::End("Inventory");
 
@@ -204,7 +204,7 @@ static void Test_Very_Large_OTN_File() {
     writer.AppendObject(entities);
     writer.AppendObject(scenes);
 
-    if (!writer.Save("C:/Etienne/VisualStudio/very_large_test.otn")) {
+    if (!writer.Save("J:/test.otn")) {
         Log::Error(writer.GetError());
     }
     SDLCore::Debug::Profiler::End("Writer");
