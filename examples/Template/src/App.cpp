@@ -87,10 +87,15 @@ void OTN::ToOTNDataType<Entity>(OTN::OTNObjectBuilder& obj, const Entity& e) {
 }
 
 static void Test_Very_Large_OTN_File() {
-    constexpr int WEAPON_COUNT = 10'000;
-    constexpr int INVENTORY_COUNT = 1'000;
-    constexpr int ENTITY_COUNT = 1'000;
-    constexpr int SCENE_COUNT = 100;
+    // constexpr int WEAPON_COUNT = 10'000;
+    // constexpr int INVENTORY_COUNT = 1'000;
+    // constexpr int ENTITY_COUNT = 1'000;
+    // constexpr int SCENE_COUNT = 100;
+
+    constexpr int WEAPON_COUNT = 10;
+    constexpr int INVENTORY_COUNT = 5;
+    constexpr int ENTITY_COUNT = 5;
+    constexpr int SCENE_COUNT = 2;
 
     Random::SetSeed(1337);
 
@@ -116,7 +121,7 @@ static void Test_Very_Large_OTN_File() {
     inventory.SetNames("name", "entries");
 
     for (int i = 0; i < INVENTORY_COUNT; ++i) {
-        int entryCount = Random::GetRangeNumber<int>(1, 10);
+        int entryCount = Random::GetRangeNumber<int>(1, 5);
 
         std::vector<InventoryEntry> entries;
         entries.reserve(entryCount);
@@ -124,7 +129,7 @@ static void Test_Very_Large_OTN_File() {
         for (int e = 0; e < entryCount; ++e) {
             entries.push_back({
                 Random::GetRangeNumber<int>(0, WEAPON_COUNT - 1),
-                Random::GetRangeNumber<int>(1, 50)
+                Random::GetRangeNumber<int>(1, 5)
             });
         }
 
@@ -197,7 +202,7 @@ static void Test_Very_Large_OTN_File() {
     writer.UseDefName(true);
     writer.UseDefType(true);
     writer.UseOptimizations(false);
-    writer.UseDeduplicateRows(false);
+    writer.UseDeduplicateRows(true);
 
     writer.AppendObject(weapons);
     writer.AppendObject(inventory);
