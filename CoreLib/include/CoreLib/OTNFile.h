@@ -570,8 +570,8 @@ namespace OTN {
 			std::unordered_map<OTNValueType, uint32_t> typeUsage;// < map contains which data types are used and how often
 			std::unordered_map<std::string, SerializedObject> objects;
 
-			std::unordered_map<std::string, uint32_t> defName;// < used for optimaziations: Replaceses comman used names of Objects like position with numbers
 			std::unordered_map<std::string, uint32_t> defType;// < used for optimaziations: Replaceses comman used type names with numbers
+			std::unordered_map<std::string, uint32_t> defName;// < used for optimaziations: Replaceses comman used names of Objects like position with numbers
 
 			void Reset() {
 				if (stream.stream.is_open())
@@ -598,12 +598,12 @@ namespace OTN {
 		bool WriteToFile(const OTNFilePath& path);
 		bool CreateWriteData(WriterData& data);
 		size_t AddObject(WriterData& data, OTNObject& object);
-		bool CreateDefName();
 		bool CreateDefType();
+		bool CreateDefName();
 
 		bool WriteHeader();
-		bool WriteHeaderDefName();
 		bool WriteHeaderDefType();
+		bool WriteHeaderDefName();
 
 		template<typename Func>
 		void WriteDirective(IndentedStream& stream, std::string_view keyword, Func&& func) {

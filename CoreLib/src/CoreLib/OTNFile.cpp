@@ -775,6 +775,24 @@ namespace OTN {
 		return lastIndex;
 	}
 
+	bool OTNWriter::CreateDefType() {
+		auto& defTypeMap = m_writerData.defType;
+		defTypeMap.clear();
+		uint32_t indexCount = 0;
+
+		for (const auto& [type, used] : m_writerData.typeUsage) {
+			if (type == OTNValueType::OBJECT || type == OTNValueType::LIST)
+				continue;
+
+			uint32_t length = OTNValueTypeCharLength(type);
+
+			if (used > 1 && length * used > 9)
+				defTypeMap[std::string(OTNValueTypeToString(type))] = indexCount++;
+		}
+
+		return true;
+	}
+
 	bool OTNWriter::CreateDefName() {
 		auto& defNameMap = m_writerData.defName;
 		defNameMap.clear();
@@ -803,24 +821,6 @@ namespace OTN {
 		return true;
 	}
 
-	bool OTNWriter::CreateDefType() {
-		auto& defTypeMap = m_writerData.defType;
-		defTypeMap.clear();
-		uint32_t indexCount = 0;
-		
-		for (const auto& [type, used] : m_writerData.typeUsage) {
-			if (type == OTNValueType::OBJECT || type == OTNValueType::LIST)
-				continue;
-
-			uint32_t length = OTNValueTypeCharLength(type);
-
-			if (used > 1 && length * used > 9)
-				defTypeMap[std::string(OTNValueTypeToString(type))] = indexCount++;
-		}
-
-		return true;
-	}
-
 	bool OTNWriter::WriteHeader() {
 		auto& stream = m_writerData.stream;
 
@@ -829,17 +829,31 @@ namespace OTN {
 		});
 		AddLineBreak(stream);
 
+		if (m_useDefType) {
+			if (!WriteHeaderDefType())
+				return false;
+		}
+
 		if (m_useDefName) {
 			if (!WriteHeaderDefName())
 				return false;
 		}
 
-		if (m_useDefType) {
-			if(!WriteHeaderDefType())
-				return false;
-		}
-
 		AddLineBreak(stream);
+		return true;
+	}
+
+	bool OTNWriter::WriteHeaderDefType() {
+		auto& defTypeMap = m_writerData.defType;
+		if (defTypeMap.empty())
+			return true;
+
+		auto& stream = m_writerData.stream;
+		WriteDirective(stream, Keyword::DEF_TYPE_KW, [&]() {
+			WriteHeaderDefHelper(stream, defTypeMap);
+			});
+		AddLineBreak(stream);
+
 		return true;
 	}
 
@@ -852,20 +866,6 @@ namespace OTN {
 
 		WriteDirective(stream, Keyword::DEF_NAME_KW, [&]() { 
 			WriteHeaderDefHelper(stream, defNameMap); 
-		});
-		AddLineBreak(stream);
-
-		return true;
-	}
-
-	bool OTNWriter::WriteHeaderDefType() {
-		auto& defTypeMap = m_writerData.defType;
-		if (defTypeMap.empty())
-			return true;
-
-		auto& stream = m_writerData.stream;
-		WriteDirective(stream, Keyword::DEF_TYPE_KW, [&]() { 
-			WriteHeaderDefHelper(stream, defTypeMap); 
 		});
 		AddLineBreak(stream);
 
