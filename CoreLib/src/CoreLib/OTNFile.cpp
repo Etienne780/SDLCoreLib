@@ -795,14 +795,10 @@ namespace OTN {
 			return true;
 
 		for (const auto& [name, used] : nameUsage) {
-			if (used > 1 && name.size() > 3) {
+			if (used > 1 && name.size() * used > 9) {
 				defNameMap.emplace(name, indexCount++);
 			}
 		}
-
-		// clear if not enough names meet the conditions
-		if (defNameMap.size() <= 1)
-			defNameMap.clear();
 
 		return true;
 	}
@@ -818,7 +814,7 @@ namespace OTN {
 
 			uint32_t length = OTNValueTypeCharLength(type);
 
-			if (used > length + 4)
+			if (used > 1 && length * used > 9)
 				defTypeMap[std::string(OTNValueTypeToString(type))] = indexCount++;
 		}
 
