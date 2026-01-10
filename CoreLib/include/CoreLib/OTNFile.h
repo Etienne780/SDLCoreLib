@@ -643,7 +643,7 @@ namespace OTN {
 		explicit OTNReader() = default;
 		~OTNReader() = default;
 	
-		bool LoadFile(const OTNFilePath& path);
+		bool ReadFile(const OTNFilePath& path);
 	
 		bool IsValid() const;
 		std::string GetError() const;
@@ -692,6 +692,9 @@ namespace OTN {
 		bool OpenFileStream(const OTNFilePath& path, ReaderData& data);
 		bool ReadVersion(const OTNFilePath& path, ReaderData& data);
 		bool ReadData(const OTNFilePath& path, ReaderData& data);
+
+		template<typename Reader>
+		bool ReadFullData(Reader& reader);
 
 		// Apply an action to every statement in the stream
 		template<typename ActionFunc>

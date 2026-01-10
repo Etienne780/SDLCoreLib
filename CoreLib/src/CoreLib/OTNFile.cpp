@@ -376,7 +376,7 @@ namespace OTN {
 		return m_data.size() != m_dataNames.size();
 	}
 
-#pragma endregion
+	#pragma endregion
 
 	#pragma region OTNWriter
 
@@ -1123,7 +1123,7 @@ namespace OTN {
 	#pragma region OTNReader
 
 	// ======== OTNReader ========
-	bool OTNReader::LoadFile(const OTNFilePath& path) {
+	bool OTNReader::ReadFile(const OTNFilePath& path) {
 		if (!IsValid()) {
 			AddError("Reader object is invalid!");
 			return false;
@@ -1198,12 +1198,8 @@ namespace OTN {
 		switch (data.version) {
 		case 1: {
 			OTNReaderV1 reader(data);
-			if (!reader.ReadHeader()) {
-				AddError("Failed to read header (v1)");
-				return false;
-			}
-			if (!reader.ReadBody()) {
-				AddError("Failed to read body (v1)");
+			if (!ReadFullData<OTNReaderV1>(reader)) {
+				AddError("Failed to read file");
 				return false;
 			}
 			break;
@@ -1215,6 +1211,18 @@ namespace OTN {
 
 		return true;
 	}
+
+	template<typename Reader>
+	bool OTNReader::ReadFullData(Reader& reader) {
+		if (!reader.ReadHeader())
+			return false;
+
+		if (!reader.ReadBody())
+			return false;
+		return true;
+	}
+
+	template bool OTNReader::ReadFullData<OTNReader::OTNReaderV1>(OTNReader::OTNReaderV1& reader);
 
 	void OTNReader::AddError(const std::string& error, bool linebreak) {
 		if (!m_error.empty())
