@@ -1,10 +1,12 @@
 #include "Profiler.h"
 #include "SDLCoreTime.h"
 #include <iostream>
+#include <algorithm>
 
 namespace SDLCore::Debug {
 
     void Profiler::Begin(const char* name) {
+        RegisterOrderIfNeeded(name);
         s_active[name] = std::chrono::high_resolution_clock::now();
     }
 
@@ -26,6 +28,8 @@ namespace SDLCore::Debug {
     }
 
     void Profiler::Record(const char* name, double ms) {
+        RegisterOrderIfNeeded(name);
+
         ProfileStats& stats = s_stats[name];
         stats.callCount++;
         stats.totalMs += ms;
@@ -37,7 +41,21 @@ namespace SDLCore::Debug {
         std::cout << "==== Profiler Report ====\n";
         std::cout << "FrameRate: " << Time::GetFrameRate() << " FPS\n\n";
 
-        for (const auto& [name, stats] : s_stats) {
+        // Collect entries into a vector for sorting
+        std::vector<std::pair<const char*, ProfileStats>> entries;
+        entries.reserve(s_stats.size());
+
+        for (const auto& it : s_stats) {
+            entries.push_back(it);
+        }
+
+        // Sort by insertion order
+        std::sort(entries.begin(), entries.end(),
+            [](const auto& a, const auto& b) {
+                return s_order[a.first] < s_order[b.first];
+            });
+
+        for (const auto& [name, stats] : entries) {
             double avg = stats.totalMs / static_cast<double>(stats.callCount);
 
             std::cout
@@ -52,9 +70,16 @@ namespace SDLCore::Debug {
         Reset();
     }
 
+
     void Profiler::Reset() {
         s_stats.clear();
         s_active.clear();
+    }
+
+    void Profiler::RegisterOrderIfNeeded(const char* name) {
+        if (s_order.find(name) == s_order.end()) {
+            s_order[name] = s_nextOrder++;
+        }
     }
 
     ProfilerScope::ProfilerScope(const char* name)

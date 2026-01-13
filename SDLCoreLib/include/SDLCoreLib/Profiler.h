@@ -33,6 +33,11 @@ namespace SDLCore::Debug {
     private:
         static inline std::unordered_map<const char*, ProfileStats> s_stats;
         static inline std::unordered_map<const char*, std::chrono::high_resolution_clock::time_point> s_active;
+
+        static inline std::unordered_map<const char*, uint32_t> s_order;
+        static inline uint32_t s_nextOrder = 0;
+
+        static void RegisterOrderIfNeeded(const char* name);
     };
 
     // RAII-based scope profiler
