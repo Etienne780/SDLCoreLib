@@ -74,6 +74,8 @@ namespace SDLCore::Debug {
     void Profiler::Reset() {
         s_stats.clear();
         s_active.clear();
+        s_order.clear();
+        s_nextOrder = 0;
     }
 
     void Profiler::RegisterOrderIfNeeded(const char* name) {
