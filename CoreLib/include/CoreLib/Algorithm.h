@@ -14,6 +14,7 @@ namespace Algorithm {
 		/**
 		* @brief Gets an element by a specific ID from a sorted list using binary search
 		* @tparam T The type of elements stored in the list
+		* @tparam getIDFn Callable that returns the ID for a given element reference
 		* @param list Reference to a sorted vector containing elements of type T
 		* @param getID Function that returns the ID of a given element
 		* @param searchID The ID to search for
@@ -54,7 +55,7 @@ namespace Algorithm {
 		/**
 		* @brief Gets an element by a specific ID from a sorted list of pointers using binary search
 		* @tparam T The type of elements pointed to by the vector
-		* @tparam getIDFn Callable that returns the ID for a given element pointer
+		* @tparam getIDFn Callable that returns the ID for a given element reference
 		* @param list Reference to a sorted vector of pointers
 		* @param getID Function returning the ID of a given element pointer
 		* @param searchID The ID to search for
@@ -91,6 +92,7 @@ namespace Algorithm {
 		/**
 		* @brief Gets an element by a specific ID from a sorted list of unique_ptr using binary search
 		* @tparam T The type of the managed elements
+		* @tparam getIDFn Callable that returns the ID for a given element reference
 		* @param list Reference to a sorted vector of unique_ptr<T>
 		* @param getID Function that returns the ID of a given element
 		* @param searchID The ID to search for
@@ -131,6 +133,7 @@ namespace Algorithm {
 		/**
 		* @brief Gets an element by a specific ID from a sorted list of shared_ptr using binary search
 		* @tparam T The type of the managed elements
+		* @tparam getIDFn Callable that returns the ID for a given element reference
 		* @param list Reference to a sorted vector of shared_ptr<T>
 		* @param getID Function that returns the ID of a given element
 		* @param searchID The ID to search for
@@ -327,6 +330,7 @@ namespace Algorithm {
 		/**
 		* @brief Gets an element that satisfies a condition from a list using linear search
 		* @tparam T The type of elements stored in the list
+		* @tparam CondFn Callable type that determines whether an element matches the search condition
 		* @param list Reference to a vector containing elements of type T
 		* @param condition Function that returns true for the element to find
 		* @return Pointer to the found element, or nullptr if not found
@@ -360,6 +364,7 @@ namespace Algorithm {
 		/**
 		* @brief Gets an element that satisfies a condition from a list of unique_ptr using linear search
 		* @tparam T The type of the managed elements
+		* @tparam CondFn Callable type that determines whether an element matches the search condition
 		* @param list Reference to a vector of unique_ptr<T>
 		* @param condition Function that returns true for the element to find
 		* @return Pointer to the found element (non-owning), or nullptr if not found
@@ -376,6 +381,7 @@ namespace Algorithm {
 		/**
 		* @brief Gets an element that satisfies a condition from a list of shared_ptr using linear search
 		* @tparam T The type of the managed elements
+		* @tparam CondFn Callable type that determines whether an element matches the search condition
 		* @param list Reference to a vector of shared_ptr<T>
 		* @param condition Function that returns true for the element to find
 		* @return Shared pointer to the found element, or nullptr if not found
