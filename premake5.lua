@@ -3,7 +3,8 @@ workspace "Project"
 
     configurations { 
         "Debug", 
-        "Release" 
+        "Release",
+        "Distribution"
     }
 
     startproject "Demo"
@@ -27,6 +28,34 @@ function SetTargetAndObjDirs(projectName)
     filter "kind:StaticLib"
         targetdir(root .. "/build/lib/" .. projectName .. "/%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}")
     filter {}
+end
+
+--------------------------------------------------------
+-- Helper for common configuration settings
+--------------------------------------------------------
+function ApplyCommonConfigs()
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        runtime "Debug"
+        symbols "On"
+        buildoptions { "/MTd" }
+        kind "ConsoleApp"
+
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+        runtime "Release"
+        optimize "Full"
+        buildoptions { "/MT" }
+        kind "ConsoleApp"
+
+    filter "configurations:Distribution"
+        defines { "NDEBUG" }
+        runtime "Release"
+        optimize "Full"
+        buildoptions { "/MT" }
+        kind "WindowedApp"
+
+    filter {} -- reset filter
 end
 
 ------------------------------------

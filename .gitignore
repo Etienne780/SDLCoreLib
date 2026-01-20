@@ -10,6 +10,8 @@
 *.exp
 
 # Build artifacts
+build/
+.build/
 ./.build/
 **/[Bb]in/
 **/[Oo]bj/
