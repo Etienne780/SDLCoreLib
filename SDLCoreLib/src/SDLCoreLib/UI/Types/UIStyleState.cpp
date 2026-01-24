@@ -1,4 +1,4 @@
-#include <cmath>
+﻿#include <cmath>
 
 #include "UI/Types/UIPropertyRegistry.h"
 #include "UI/Types/UIStyleState.h"
@@ -43,28 +43,61 @@ namespace SDLCore::UI {
 		return result;
 	}
 
-	bool UIStyleState::SetValue(UIPropertyID id, PropertyValue value, bool important) {
-		auto it = m_properties.find(id);
-		if (it == m_properties.end()) {
-#ifndef NDEBUG
-			Log::Error("SDLCore::UI::UIStyleState: Could not set value, property '{}' not found", id);
-#endif
+	bool UIStyleState::IsValueSet(UIPropertyID id) const {
+		const PropertyValue* propVal = TryGetPropValue(id);
+		if (!propVal)
 			return false;
-		}
-		auto& prop = it->second;
+		return propVal->GetIsSet();
+	}
+
+	bool UIStyleState::IsDifferent(UIPropertyID id,
+		const PropertyValue& value,
+		bool important) const
+	{
+		const PropertyValue* propVal = TryGetPropValue(id);
+		if (!propVal)
+			return true;
+
+		if (!propVal->IsSameType(value.GetType()))
+			return true;
+
+		if (propVal->GetIsImportant() != important)
+			return true;
+
+		return propVal->GetVariant() != value.GetVariant();
+	}
+
+	bool UIStyleState::SetValue(UIPropertyID id, const PropertyValue& value, bool important) {
+		PropertyValue* propVal = TryGetPropValue(id);
+		if (!propVal)
+			return false;
 
 		// checks if there the same type or similer like float and numberID
-		if (!prop.IsSameType(value.GetType())) {
+		if (!propVal->IsSameType(value.GetType())) {
 #ifndef NDEBUG
 			Log::Error("SDLCore::UI::UIStyleState: Could not set value, value needs to be of a similer type as the property, '{}' != '{}'", 
-				prop.GetType(), value.GetType());
+				propVal->GetType(), value.GetType());
 #endif
 			return false;
 		}
 
-		prop.SetValue(value.GetType(), value.GetVariant());
-		prop.SetIsImportant(important);
+		propVal->SetValue(value.GetType(), value.GetVariant());
+		propVal->SetIsImportant(important);
 		return true;
+	}
+
+	void UIStyleState::ResetValue(UIPropertyID id) {
+		PropertyValue* propValue = TryGetPropValue(id);
+		if (!propValue)
+			return;
+
+		UIProperty* prop =  UIPropertyRegistry::TryGetProperty(id);
+		if (!prop)
+			return;
+
+
+		propValue->SetValue(prop->GetType(), prop->GetDefaultValue());
+		propValue->Reset();
 	}
 
 	void UIStyleState::Merge(const UIStyleState& other) {
@@ -83,6 +116,28 @@ namespace SDLCore::UI {
 
 	const std::unordered_map<UIPropertyID, PropertyValue>& UIStyleState::GetAllPropertiesMap() const {
 		return m_properties;
+	}
+
+	const PropertyValue* UIStyleState::TryGetPropValue(UIPropertyID id) const {
+		auto it = m_properties.find(id);
+		if (it == m_properties.end()) {
+#ifndef NDEBUG
+			Log::Error("SDLCore::UI::UIStyleState: Could not set value, property '{}' not found", id);
+#endif
+			return nullptr;
+		}
+		return &(it->second);
+	}
+
+	PropertyValue* UIStyleState::TryGetPropValue(UIPropertyID id) {
+		auto it = m_properties.find(id);
+		if (it == m_properties.end()) {
+#ifndef NDEBUG
+			Log::Error("SDLCore::UI::UIStyleState: Could not set value, property '{}' not found", id);
+#endif
+			return nullptr;
+		}
+		return &(it->second);
 	}
 
 }

@@ -55,6 +55,9 @@ namespace SDLCore::UI {
 		// time = 0-1
 		bool Interpolate(const PropertyValue& start, const PropertyValue& end, float time, UIEasing easing);
 
+		// resets important and interen is set state
+		void Reset();
+
 		bool IsSameType(Type type) const;
 
 		Type GetType() const;

@@ -101,6 +101,11 @@ namespace SDLCore::UI {
 		return InterpolateInternal(start, end, time);
 	}
 
+	void PropertyValue::Reset() {
+		m_isImportant = false;
+		m_isSet = false;
+	}
+
 	bool PropertyValue::IsSameType(Type other) const {
 		return GetTypeClass(m_valueType) == GetTypeClass(other);
 	}
