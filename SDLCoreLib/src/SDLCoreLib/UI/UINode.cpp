@@ -39,6 +39,20 @@ namespace SDLCore::UI {
 		ApplyStyle(ctx);
 	}
 
+	UINode& UINode::SetOverride(UIPropertyID id, const PropertyValue& v, bool important) {
+		if (m_overrideState.IsDifferent(id, v, important)) {
+			if (m_overrideState.SetValue(id, v, important))
+				m_overrideStyleChanged = true;
+		}
+
+		return *this;
+	}
+
+	UINode& UINode::ClearOverride(UIPropertyID id) {
+		m_overrideState.ResetValue(id);
+		return *this;
+	}
+
 	void UINode::ResetState() {
 		m_state = UIState::NORMAL;
 	}
@@ -100,6 +114,10 @@ namespace SDLCore::UI {
 
 	uint64_t UINode::GetAppliedStyleNode() const {
 		return m_appliedStyleNode;
+	}
+
+	bool UINode::GetOverrideStyleChanged() const {
+		return m_overrideStyleChanged;
 	}
 
 	bool UINode::IsActive() const {
@@ -261,16 +279,16 @@ namespace SDLCore::UI {
 		if (!ctx)
 			return;
 
+		m_overrideStyleChanged = false;
 		m_lastState = m_state;
-		const UIStyleState& styleState = m_renderedStyleState;
 
 		int layoutDir = 0;
 		int alignHorizontal = 0;
 		int alignVertical = 0;
 
-		styleState.TryGetValue<int>(Properties::layoutDirection, layoutDir, 0);
-		styleState.TryGetValue<int>(Properties::alignHorizontal, alignHorizontal, 0);
-		styleState.TryGetValue<int>(Properties::alignVertical, alignVertical, 0);
+		GetResolvedValue<int>(Properties::layoutDirection, layoutDir, 0);
+		GetResolvedValue<int>(Properties::alignHorizontal, alignHorizontal, 0);
+		GetResolvedValue<int>(Properties::alignVertical, alignVertical, 0);
 
 		m_layoutDir = static_cast<UILayoutDirection>(layoutDir);
 		m_horizontalAligment = static_cast<UIAlignment>(alignHorizontal);
@@ -279,46 +297,51 @@ namespace SDLCore::UI {
 		float width = 0.0f;
 		float height = 0.0f;
 
-		styleState.TryGetValue<float>(Properties::width, width, 0.0f);
-		styleState.TryGetValue<float>(Properties::height, height, 0.0f);
+		GetResolvedValue<float>(Properties::width, width, 0.0f);
+		GetResolvedValue<float>(Properties::height, height, 0.0f);
 
-		int sizeUnitW = 0;// 0 = PX
+		int sizeUnitW = 0; // PX
 		int sizeUnitH = 0;
-		styleState.TryGetValue<int>(Properties::widthUnit, sizeUnitW, 0);
-		styleState.TryGetValue<int>(Properties::heightUnit, sizeUnitH, 0);
 
-		styleState.TryGetValue<Vector4>(Properties::padding, m_padding, Vector4(0.0f));
-		styleState.TryGetValue<Vector4>(Properties::margin, m_margin, Vector4(0.0f));
+		GetResolvedValue<int>(Properties::widthUnit, sizeUnitW, 0);
+		GetResolvedValue<int>(Properties::heightUnit, sizeUnitH, 0);
 
-		styleState.TryGetValue<float>(Properties::borderWidth, m_borderWidth, 0.0f);
+		GetResolvedValue<Vector4>(Properties::padding, m_padding, Vector4(0.0f));
+		GetResolvedValue<Vector4>(Properties::margin, m_margin, Vector4(0.0f));
+
+		GetResolvedValue<float>(Properties::borderWidth, m_borderWidth, 0.0f);
 
 		int transitionTimeUnit = 1;
-		styleState.TryGetValue<int>(Properties::durationUnit, transitionTimeUnit, 1);
+		GetResolvedValue<int>(Properties::durationUnit, transitionTimeUnit, 1);
 
 		float transitionDuration = 0.0f;
-		styleState.TryGetValue<float>(Properties::duration, transitionDuration, 0.0f);
+		GetResolvedValue<float>(Properties::duration, transitionDuration, 0.0f);
 
-		SetTransitionTime(transitionDuration, 
-			static_cast<UITimeUnit>(transitionTimeUnit));
+		SetTransitionTime(
+			transitionDuration,
+			static_cast<UITimeUnit>(transitionTimeUnit)
+		);
 
 		int transitionEasing = 0;
-		styleState.TryGetValue<int>(Properties::durationEasing, transitionEasing, 0);
+		GetResolvedValue<int>(Properties::durationEasing, transitionEasing, 0);
 		m_transitionEasing = static_cast<UIEasing>(transitionEasing);
 
-		styleState.TryGetValue<bool>(Properties::borderInset, m_innerBorder, false);
-		styleState.TryGetValue<bool>(Properties::pointerEvents, m_hasPointerEvents, true);
-		styleState.TryGetValue<bool>(Properties::hitTestTransparent, m_hasHitTestTransparent, false);
-		styleState.TryGetValue<bool>(Properties::propagateStateToChildren, m_propagateStateToChildren, false);
-		styleState.TryGetValue<bool>(Properties::disabled, m_isDisabled, false);
-		styleState.TryGetValue<bool>(Properties::borderAffectsLayout, m_borderAffectsLayout, true);
+		GetResolvedValue<bool>(Properties::borderInset, m_innerBorder, false);
+		GetResolvedValue<bool>(Properties::pointerEvents, m_hasPointerEvents, true);
+		GetResolvedValue<bool>(Properties::hitTestTransparent, m_hasHitTestTransparent, false);
+		GetResolvedValue<bool>(Properties::propagateStateToChildren, m_propagateStateToChildren, false);
+		GetResolvedValue<bool>(Properties::disabled, m_isDisabled, false);
+		GetResolvedValue<bool>(Properties::borderAffectsLayout, m_borderAffectsLayout, true);
 
-		ApplyStyleCalled(ctx, styleState);
+		ApplyStyleCalled(ctx, m_renderedStyleState);
 
-		m_size.Set(0);
-		m_size = CalculateSize(ctx,
+		m_size = CalculateSize(
+			ctx,
 			static_cast<UISizeUnit>(sizeUnitW),
 			static_cast<UISizeUnit>(sizeUnitH),
-			width, height);
+			width,
+			height
+		);
 	}
 
 	UIStyleState UINode::ComputeTargetStyleState() {

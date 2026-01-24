@@ -49,6 +49,10 @@ namespace SDLCore::UI {
 
         void UpdateFinalStyle(UIContext* ctx);
 
+        // sets override style changed to true if value is different
+        UINode& SetOverride(UIPropertyID id, const PropertyValue& value, bool important = false);
+        UINode& ClearOverride(UIPropertyID id);
+
         /*
         * @brief Resets the state of the node to NORMAL
         */
@@ -74,6 +78,8 @@ namespace SDLCore::UI {
         uint64_t GetAppliedStyleHash() const; 
         // max lastModified of applied styles
         uint64_t GetAppliedStyleNode() const;
+
+        bool GetOverrideStyleChanged() const;
 
         /*
         * @brief node will be active after the first frame of creation
@@ -156,6 +162,7 @@ namespace SDLCore::UI {
         UIAlignment m_horizontalAligment = UIAlignment::START;
         UIAlignment m_verticalAligment = UIAlignment::START;
     private:
+        UIStyleState m_overrideState;
         UIStyleState m_renderedStyleState;
         UIStyleState m_transitionFrom;
         UIStyleState m_transitionTo;
@@ -168,6 +175,7 @@ namespace SDLCore::UI {
         float m_currentTransitionEnd = 0.0f;
         float m_currentTransition = 0.0f;
         bool m_transitionActive = false;
+        bool m_overrideStyleChanged = false;
 
         static inline uint32_t m_typeIDCounter = 0;
         static uint32_t GetUITypeID(const std::string& name);
@@ -180,6 +188,20 @@ namespace SDLCore::UI {
         void OnStyleStateChanged();
         void Update(UIContext* ctx, float dt);
         void UpdateStyle(UIContext* ctx, float dt);
+
+        template<typename T>
+        bool GetResolvedValue(UIPropertyID id, T& out, const T& fallback) const {
+            if (m_overrideState.IsValueSet(id)) {
+                if (m_overrideState.TryGetValue<T>(id, out, fallback))
+                    return true;
+            }
+
+            if (m_renderedStyleState.TryGetValue<T>(id, out, fallback))
+                return true;
+
+            out = fallback;
+            return false;
+        }
 
         // return true if last state is diff to current state
         bool HasStateChanged() const;

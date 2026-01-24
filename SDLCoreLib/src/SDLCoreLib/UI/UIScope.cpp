@@ -178,10 +178,10 @@ namespace SDLCore::UI {
         return stream.str();
     }
 
-    void BeginFrame(UIKey&& key, const std::vector<UIStyle>& styles) {
+    FrameNode* BeginFrame(UIKey&& key, const std::vector<UIStyle>& styles) {
         FrameNode* node = Internal::InternalBeginFrame(key.id);
         if (!node)
-            return;
+            return nullptr;
 
         const uint64_t newHash =
             Internal::InternalGenerateStyleHash(styles.begin(), styles.end());
@@ -190,7 +190,8 @@ namespace SDLCore::UI {
         for (const auto& style : styles)
             newestStyleFrame = std::max(newestStyleFrame, style.GetLastModified());
         
-        if (!node->IsActive() || node->GetAppliedStyleHash() != newHash ||
+        if (!node->IsActive() || node->GetOverrideStyleChanged() || 
+            node->GetAppliedStyleHash() != newHash ||
             node->GetAppliedStyleNode() < newestStyleFrame) 
         {
             node->ClearStyles();
@@ -201,16 +202,18 @@ namespace SDLCore::UI {
             
             g_currentUIContext.SetAppliedStyleParams(node, newHash, newestStyleFrame);
         }
+
+        return node;
     }
 
     UIEvent EndFrame() {
         return g_currentUIContext.EndFrame();
     }
 
-    UIEvent Text(UIKey&& key, const std::string& text, const std::vector<UIStyle>& styles) {
+    TextNode* Text(UIKey&& key, const std::string& text, const std::vector<UIStyle>& styles) {
         TextNode* node = Internal::InternalAddText(key.id);
         if (!node)
-            return UIEvent{};
+            return nullptr;
 
         if (node->m_text != text)
             node->m_text = text;
@@ -222,7 +225,8 @@ namespace SDLCore::UI {
         for (const auto& style : styles)
             newestStyleFrame = std::max(newestStyleFrame, style.GetLastModified());
 
-        if (!node->IsActive() || node->GetAppliedStyleHash() != newHash ||
+        if (!node->IsActive() || node->GetOverrideStyleChanged() || 
+            node->GetAppliedStyleHash() != newHash ||
             node->GetAppliedStyleNode() < newestStyleFrame)
         {
             node->ClearStyles();
@@ -233,7 +237,7 @@ namespace SDLCore::UI {
 
             Internal::InternalSetAppliedStyleParams(node, newHash, newestStyleFrame);
         }
-        return node->GetEvent();
+        return node;
     }
 
 }

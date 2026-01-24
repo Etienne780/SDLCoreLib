@@ -43,18 +43,19 @@ namespace SDLCore::UI {
 
     // faster begin frame. because styles canot change
     template<typename... Styles>
-    void BeginFrame(UIKey&& key, const Styles&... styles) {
+    FrameNode* BeginFrame(UIKey&& key, const Styles&... styles) {
         static_assert((std::is_same_v<Styles, UIStyle> && ...),
             "BeginFrame only accepts UIStyle parameters");
 
         FrameNode* node = Internal::InternalBeginFrame(key.id);
         if (!node)
-            return;
+            return nullptr;
 
         uint64_t newestStyleFrame = 0;
         ((newestStyleFrame = std::max(newestStyleFrame, styles.GetLastModified())), ...);
 
-        if (!node->IsActive() || node->GetAppliedStyleNode() < newestStyleFrame) {
+        if (!node->IsActive() || node->GetOverrideStyleChanged() || 
+            node->GetAppliedStyleNode() < newestStyleFrame) {
             node->ClearStyles();
             node->ReserveStyles(sizeof...(Styles));
             (node->AddStyle(styles), ...);
@@ -62,10 +63,12 @@ namespace SDLCore::UI {
 
             Internal::InternalSetAppliedStyleParams(node, 0, newestStyleFrame);
         }
+
+        return node;
     }
 
     // slower because styles can dynamically change
-    void BeginFrame(UIKey&& key, const std::vector<UIStyle>& styles);
+    FrameNode* BeginFrame(UIKey&& key, const std::vector<UIStyle>& styles);
 
     /*
     * @brief if the root nodes ends than the UI wil be rendererd. SDLCore::Render::Present() needs to be called ot see
@@ -74,13 +77,13 @@ namespace SDLCore::UI {
 
     // faster begin frame. because styles canot change
     template<typename... Styles>
-    UIEvent Text(UIKey&& key, const std::string& text, const Styles&... styles) {
+    TextNode* Text(UIKey&& key, const std::string& text, const Styles&... styles) {
         static_assert((std::is_same_v<Styles, UIStyle> && ...),
-            "BeginFrame only accepts UIStyle parameters");
+            "Text only accepts UIStyle parameters");
 
         TextNode* node = Internal::InternalAddText(key.id);
         if (!node)
-            return UIEvent{};
+            return nullptr;
 
         if(node->m_text != text)
             node->m_text = text;
@@ -88,7 +91,8 @@ namespace SDLCore::UI {
         uint64_t newestStyleFrame = 0;
         ((newestStyleFrame = std::max(newestStyleFrame, styles.GetLastModified())), ...);
 
-        if (!node->IsActive() || node->GetAppliedStyleNode() < newestStyleFrame) {
+        if (!node->IsActive() || node->GetOverrideStyleChanged() || 
+            node->GetAppliedStyleNode() < newestStyleFrame) {
             node->ClearStyles();
             node->ReserveStyles(sizeof...(Styles));
             (node->AddStyle(styles), ...);
@@ -97,10 +101,10 @@ namespace SDLCore::UI {
             Internal::InternalSetAppliedStyleParams(node, 0, newestStyleFrame);
         }
       
-        return node->GetEvent();
+        return node;
     }
 
     // slower because styles can dynamically change
-    UIEvent Text(UIKey&& key, const std::string& text, const std::vector<UIStyle>& styles);
+    TextNode* Text(UIKey&& key, const std::string& text, const std::vector<UIStyle>& styles);
 
 }

@@ -17,8 +17,12 @@ namespace SDLCore::UI {
 		* @param time 0 = start; 1 = end is clamped to 0-1
 		*/
 		static UIStyleState Interpolate(const UIStyleState& start, const UIStyleState& end, float time, UIEasing easing = UIEasing::Linear);
-		
-		bool SetValue(UIPropertyID id, PropertyValue value, bool important = false);
+
+		bool IsValueSet(UIPropertyID id) const;
+		// @returns true if prop value different
+		bool IsDifferent(UIPropertyID id, const PropertyValue& value, bool important) const;
+		bool SetValue(UIPropertyID id, const PropertyValue& value, bool important = false);
+		void ResetValue(UIPropertyID id);
 
 		/*
 		* @brief Merges other style on top of this
@@ -46,6 +50,9 @@ namespace SDLCore::UI {
 
 	private:
 		std::unordered_map<UIPropertyID, PropertyValue> m_properties;
+
+		const PropertyValue* TryGetPropValue(UIPropertyID id) const;
+		PropertyValue* TryGetPropValue(UIPropertyID id);
 	};
 	
 }
