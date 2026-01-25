@@ -13,6 +13,28 @@ namespace SDLCore::UI {
 			const std::string& description, 
 			PropertyValue defaultValue);
 
+		template<typename... SubProps>
+		static UIPropertyID RegisterCompositeProperty(
+			const std::string& name,
+			const std::string& description,
+			SubProps... subProperties)
+		{
+			static_assert((std::is_same_v<SubProps, UIPropertyID> && ...),
+				"Composite properties must be constructed from UIPropertyID values");
+
+			UIPropertyID newID = UIPropertyID(m_idManager.GetNewUniqueIdentifier());
+			m_registeredProperties.emplace(
+				newID,
+				UIProperty(
+					name,
+					description.empty() ? "-" : description,
+					subProperties...
+				)
+			);
+
+			return newID;
+		}
+
 		static UIProperty* TryGetProperty(UIPropertyID id);
 		static const std::unordered_map<UIPropertyID, UIProperty>& GetAllProperties();
 
@@ -198,6 +220,12 @@ namespace SDLCore::UI::Properties {
 	* Usage: style.SetValue<bool>(false)
 	*/
 	inline UIPropertyID borderAffectsLayout;
+
+	inline UIPropertyID overflowX;
+
+	inline UIPropertyID overflowY;
+
+	inline UIPropertyID overflow;
 
 	#pragma endregion
 

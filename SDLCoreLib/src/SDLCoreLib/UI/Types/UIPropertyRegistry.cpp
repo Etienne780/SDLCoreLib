@@ -120,6 +120,25 @@ namespace SDLCore::UI {
             PropertyValue(true)
         );
 
+        overflowX = RegisterProperty(
+            "overflow_x",
+            "",
+            PropertyValue(false)
+        );
+
+        overflowY = RegisterProperty(
+            "overflow_y",
+            "",
+            PropertyValue(false)
+        );
+
+        overflow = RegisterCompositeProperty(
+            "overflow",
+            "",
+            overflowX,
+            overflowY
+        );
+
         // ============ Other ============
 
         pointerEvents = RegisterProperty(

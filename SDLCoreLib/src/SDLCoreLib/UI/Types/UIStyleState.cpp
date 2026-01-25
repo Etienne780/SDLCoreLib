@@ -9,7 +9,8 @@ namespace SDLCore::UI {
 		const auto& allProps = UIPropertyRegistry::GetAllProperties();
 
 		for (const auto& [id, prop] : allProps) {
-			m_properties[id] = PropertyValue(prop.GetType(), prop.GetDefaultValue());
+			if(!prop.IsComposite())
+				m_properties[id] = PropertyValue(prop.GetType(), prop.GetDefaultValue());
 		}
 	}
 
