@@ -191,10 +191,8 @@ namespace SDLCore::UI {
 
         template<typename T>
         bool GetResolvedValue(UIPropertyID id, T& out, const T& fallback) const {
-            if (m_overrideState.IsValueSet(id)) {
-                if (m_overrideState.TryGetValue<T>(id, out, fallback))
-                    return true;
-            }
+            if (m_overrideState.TryGetValueIfSet<T>(id, out))
+                return true;
 
             if (m_renderedStyleState.TryGetValue<T>(id, out, fallback))
                 return true;

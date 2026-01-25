@@ -29,19 +29,61 @@ namespace SDLCore::UI {
 		*/
 		void Merge(const UIStyleState& other);
 
+		/**
+		* @brief Retrieves the value of a property if it exists and matches the requested type.
+		*
+		* If the property does not exist or the stored type does not match @p T,
+		* @p outValue is assigned the provided fallback value.
+		*
+		* @tparam T Expected value type.
+		* @param id Property identifier.
+		* @param outValue Reference receiving the resolved value or fallback.
+		* @param fallback Value assigned when the property is missing or incompatible.
+		*
+		* @return True if a value of type @p T was successfully retrieved, false otherwise.
+		*/
 		template<typename T>
 		bool TryGetValue(UIPropertyID id, T& outValue, const T& fallback) const {
 			bool result = false;
 
-			auto it = m_properties.find(id);
-			if (it != m_properties.end()) {
-				result = it->second.TryGetValue<T>(outValue);
+			const PropertyValue* propVal = TryGetPropValue(id);
+			if (propVal) {
+				result = propVal->TryGetValue<T>(outValue);
 			}
 
 			if(!result)
 				outValue = fallback;
 
 			return result;
+		}
+
+		/**
+		* @brief Retrieves the value of a property only if it is explicitly set.
+		*
+		* This function succeeds only if:
+		* 
+		* - the property exists,
+		* 
+		* - the property is marked as set,
+		* 
+		* - and the stored value matches the requested type.
+		*
+		* @tparam T Expected value type.
+		* @param id Property identifier.
+		* @param outValue Reference receiving the stored value.
+		*
+		* @return True if the property is set and successfully read, false otherwise.
+		*/
+		template<typename T>
+		bool TryGetValueIfSet(UIPropertyID id, T& outValue) const {
+			const PropertyValue* propVal = TryGetPropValue(id);
+			if (!propVal)
+				return false;
+
+			if (!propVal->GetIsSet())
+				return false;
+
+			return propVal->TryGetValue<T>(outValue);
 		}
 
 		std::unordered_map<UIPropertyID, PropertyValue>& GetAllPropertiesMap();
