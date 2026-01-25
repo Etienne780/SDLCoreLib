@@ -23,7 +23,7 @@ void App::OnStart() {
     testImageID = UI::UIRegistry::RegisterTexture("image.trust");
 
     namespace Prop = SDLCore::UI::Properties;
-    styleRoot.SetValue(Prop::backgroundColor, Vector4(0, 0, 0, 0))
+    styleRoot.SetValue(Prop::backgroundColor, Vector4(0, 0, 0, 0)).SetImportant(true)
         .SetValue(Prop::layoutDirection, UI::UILayoutDir::ROW)
         .SetValue(Prop::alignHorizontal, UI::UIAlignment::START)
         .SetValue(Prop::alignVertical, UI::UIAlignment::CENTER)
@@ -72,7 +72,7 @@ void App::OnUpdate() {
 
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
-            UI::BeginFrame(UI::UIKey("butten"), buttenStyle);
+            UI::BeginFrame(UI::UIKey("butten"), buttenStyle)->SetOverride(Prop::width, 500.0f);
             {
                 UI::Text(UI::UIKey("text"), "text", textStyle);
             }

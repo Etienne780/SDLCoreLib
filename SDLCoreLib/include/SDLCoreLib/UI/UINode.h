@@ -50,7 +50,18 @@ namespace SDLCore::UI {
         void UpdateFinalStyle(UIContext* ctx);
 
         // sets override style changed to true if value is different
-        UINode& SetOverride(UIPropertyID id, const PropertyValue& value, bool important = false);
+        template<typename... Args>
+        UINode& SetOverride(UIPropertyID id, Args&&... args) {
+            if (m_overrideState.IsDifferent(id, std::forward<Args>(args)...)) {
+                if (m_overrideState.SetValue(id, std::forward<Args>(args)...)) {
+                    m_lastOverrideID = id;
+                    m_overrideStyleChanged = true;
+                }
+            }
+            return *this;
+        }
+
+        UINode& SetImportant(bool value);
         UINode& ClearOverride(UIPropertyID id);
 
         /*
@@ -162,6 +173,7 @@ namespace SDLCore::UI {
         UIAlignment m_horizontalAligment = UIAlignment::START;
         UIAlignment m_verticalAligment = UIAlignment::START;
     private:
+        UIPropertyID m_lastOverrideID;
         UIStyleState m_overrideState;
         UIStyleState m_renderedStyleState;
         UIStyleState m_transitionFrom;

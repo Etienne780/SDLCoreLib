@@ -27,6 +27,28 @@ template<typename T>
 inline constexpr bool IsUINumberTarget_v = IsUINumberTarget<T>::value;
 
 namespace SDLCore::UI {
+	class PropertyValue;
+}
+
+template<typename T>
+struct IsPropertyValueArg
+	: std::bool_constant<
+	std::is_enum_v<T> ||
+	std::is_same_v<T, int> ||
+	std::is_same_v<T, float> ||
+	std::is_same_v<T, double> ||
+	std::is_same_v<T, bool> ||
+	std::is_same_v<T, Vector2> ||
+	std::is_same_v<T, Vector4> ||
+	std::is_same_v<T, SDLCore::UI::UIColorID> ||
+	std::is_same_v<T, SDLCore::UI::UIFontID> ||
+	std::is_same_v<T, SDLCore::UI::UITextureID> ||
+	std::is_same_v<T, SDLCore::UI::UINumberID> ||
+	std::is_same_v<T, SDLCore::UI::PropertyValue>
+	> {
+};
+
+namespace SDLCore::UI {
 	
 	class PropertyValue {
 	public:

@@ -45,7 +45,21 @@ namespace SDLCore::UI {
 		UIStyle& SetActiveState(UIState state);
 
 		// all properties registered by the UIPropertyRegistry should be in the SDLCore::UI::Properties namespace
-		UIStyle& SetValue(UIPropertyID propID, PropertyValue value, bool important = false);
+		template<typename... Args>
+		UIStyle& SetValue(UIPropertyID propID, Args&&... args) {
+			static_assert(
+				(IsPropertyValueArg<std::decay_t<Args>>::value && ...),
+				"Unsupported value type for SetValue"
+				);
+
+			UIStyleState* state = GetState(m_currentState);
+			if (state->SetValue(propID, std::forward<Args>(args)...))
+				UpdateLastModified();// if value could be set update last modifed
+			return *this;
+		}
+
+		// sets the last prop that was set to value
+		UIStyle& SetImportant(bool value);
 
 	private:
 		static inline IDManager m_idManager;
