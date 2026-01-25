@@ -102,6 +102,9 @@ namespace SDLCore::UI {
         bool IsStatePropagationEnabled() const;
         bool IsDisabled() const;
 
+        bool IsOverflowVisibleX() const;
+        bool IsOverflowVisibleY() const;
+
         /*
         * @brief used internaly to find out what elements have events
         * 
@@ -163,6 +166,8 @@ namespace SDLCore::UI {
         bool m_propagateStateToChildren = false;
         bool m_isDisabled = false;
         bool m_borderAffectsLayout = true;
+        bool m_isOverflowVisibleX = true;
+        bool m_isOverflowVisibleY = true;
 
         Vector2 m_position;
         Vector2 m_size;

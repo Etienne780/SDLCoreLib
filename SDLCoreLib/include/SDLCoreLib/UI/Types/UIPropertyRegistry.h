@@ -221,11 +221,40 @@ namespace SDLCore::UI::Properties {
 	*/
 	inline UIPropertyID borderAffectsLayout;
 
-	inline UIPropertyID overflowX;
+	/*
+	* @brief Horizontal overflow visible (bool)
+	*
+	* Controls whether content overflowing the element horizontally is visible.
+	*
+	* Default: true
+	*
+	* Usage: style.SetValue<bool>(true)
+	*/
+	inline UIPropertyID overflowVisibleX;
 
-	inline UIPropertyID overflowY;
+	/*
+	* @brief Vertical overflow visible (bool)
+	*
+	* Controls whether content overflowing the element vertically is visible.
+	*
+	* Default: true
+	*
+	* Usage: style.SetValue<bool>(true)
+	*/
+	inline UIPropertyID overflowVisibleY;
 
-	inline UIPropertyID overflow;
+	/*
+	* @brief Shorthand property for both horizontal and vertical overflow visibility (composite)
+	*
+	* Setting this will apply the value to both overflowVisibleX and overflowVisibleY.
+	*
+	* Default: true, true
+	*
+	* Composite layout: overflowVisibleX, overflowVisibleY
+	*
+	* Usage: style.SetValue<bool>(true, true)
+	*/
+	inline UIPropertyID overflowVisible;
 
 	#pragma endregion
 
