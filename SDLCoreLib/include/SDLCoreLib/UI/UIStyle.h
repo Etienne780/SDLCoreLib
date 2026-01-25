@@ -45,7 +45,7 @@ namespace SDLCore::UI {
 		UIStyle& SetActiveState(UIState state);
 
 		// all properties registered by the UIPropertyRegistry should be in the SDLCore::UI::Properties namespace
-		UIStyle& SetValue(UIPropertyID attID, PropertyValue value, bool important = false);
+		UIStyle& SetValue(UIPropertyID propID, PropertyValue value, bool important = false);
 
 	private:
 		static inline IDManager m_idManager;

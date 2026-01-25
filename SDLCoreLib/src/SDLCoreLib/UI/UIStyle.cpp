@@ -100,9 +100,9 @@ namespace SDLCore::UI {
 		return *this;
 	}
 
-	UIStyle& UIStyle::SetValue(UIPropertyID attID, PropertyValue value, bool important) {
+	UIStyle& UIStyle::SetValue(UIPropertyID propID, PropertyValue value, bool important) {
 		UIStyleState* state = GetState(m_currentState);
-		if (state->SetValue(attID, value, important))
+		if (state->SetValue(propID, value, important))
 			UpdateLastModified();// if value could be set update last modifed
 		return *this;
 	}
