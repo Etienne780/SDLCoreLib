@@ -70,12 +70,9 @@ void App::OnUpdate() {
         UI::SetContextWindow(context, m_winID);
         UI::BindContext(context);
 
-        float sin = std::sin(SDLCore::Time::GetFrameCount() * 0.001);
-        float w = ((sin + 1) * 0.5) * 500;
-
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
-            UI::BeginFrame(UI::UIKey("butten"), buttenStyle)->SetOverride(Prop::width, w);
+            UI::BeginFrame(UI::UIKey("butten"), buttenStyle);
             {
                 UI::Text(UI::UIKey("text"), "text", textStyle);
             }

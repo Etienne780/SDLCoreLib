@@ -199,7 +199,6 @@ namespace SDLCore::UI::Properties {
 	*/
 	inline UIPropertyID borderAffectsLayout;
 
-
 	#pragma endregion
 
 	#pragma region ================= Interaction ===================
