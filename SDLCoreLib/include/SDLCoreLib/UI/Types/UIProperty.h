@@ -72,6 +72,8 @@ namespace SDLCore::UI {
         */
         PropertyValue::ValueVariant GetDefaultValue() const;
 
+        const std::vector<UIPropertyID>& GetCompositePropertys() const;
+
     private:
         std::string m_name = "UNKOWN";
         std::string m_description = "-";
@@ -99,7 +101,7 @@ namespace SDLCore::UI {
         *
         * This vector is only valid and used when @ref m_isComposite is true.
         */
-        std::vector<UIPropertyID> m_compositePropertys;
+        std::vector<UIPropertyID> m_compositeProperties;
     };
 
 }

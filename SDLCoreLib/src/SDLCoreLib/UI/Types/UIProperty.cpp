@@ -22,15 +22,27 @@ namespace SDLCore::UI {
 	}
 
 	PropertyValue::Type UIProperty::GetType() const {
+#ifndef NDEBUG
 		if (m_isComposite)
-			Log::Warn("SDLCore::UI::UIProperty::GetType: Undefined behaviour, Trying to get type of Composite value {}", m_name);
+			Log::Warn("SDLCore::UI::UIProperty::GetType: Undefined behaviour, trying to get type of composite property '{}'!", m_name);
+#endif
 		return m_type;
 	}
 	
 	PropertyValue::ValueVariant UIProperty::GetDefaultValue() const {
+#ifndef NDEBUG
 		if (m_isComposite)
-			Log::Warn("SDLCore::UI::UIProperty::GetDefaultValue: Undefined behaviour, Trying to get default value of Composite value {}", m_name);
+			Log::Warn("SDLCore::UI::UIProperty::GetDefaultValue: Undefined behaviour, trying to get default value of composite property '{}'!", m_name);
+#endif
 		return m_defaultVaue;
+	}
+
+	const std::vector<UIPropertyID>& UIProperty::GetCompositePropertys() const {
+#ifndef NDEBUG
+		if(!m_isComposite)
+			Log::Warn("SDLCore::UI::UIProperty::GetCompositePropertys: Undefined behaviour, trying to get composite values of property '{}'!", m_name);
+#endif
+		return m_compositeProperties;
 	}
 
 }

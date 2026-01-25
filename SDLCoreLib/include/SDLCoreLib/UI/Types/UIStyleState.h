@@ -19,9 +19,121 @@ namespace SDLCore::UI {
 		static UIStyleState Interpolate(const UIStyleState& start, const UIStyleState& end, float time, UIEasing easing = UIEasing::Linear);
 
 		bool IsValueSet(UIPropertyID id) const;
-		// @returns true if prop value different
-		bool IsDifferent(UIPropertyID id, const PropertyValue& value, bool important) const;
-		bool SetValue(UIPropertyID id, const PropertyValue& value, bool important = false);
+		bool IsImportant(UIPropertyID id) const;
+
+		// @return true if the incoming value(s) differ from the currently stored value(s)
+		template<typename... Args>
+		bool IsDifferent(UIPropertyID id, Args&&... args) const {
+			// Composite property 
+			if (const auto* refs = TryGetCompositeProperyValues(id)) {
+				if (refs->size() != sizeof...(Args)) {
+#ifndef NDEBUG
+					Log::Error(
+						"SDLCore::UI::UIStyleState::IsDifferent: Composite property '{}' expects {} values, got {}",
+						id, refs->size(), sizeof...(Args));
+#endif
+					return true;
+				}
+
+				size_t index = 0;
+				bool different = false;
+
+				// Fold expression over args
+				(([&] {
+					const UIPropertyID subID = (*refs)[index++];
+					const PropertyValue* propValue = TryGetPropValue(subID);
+					if (!propValue) {
+						different = true;
+						return;
+					}
+
+					PropertyValue incoming(std::forward<Args>(args));
+
+					if (!propValue->IsSameType(incoming.GetType()) ||
+						propValue->GetVariant() != incoming.GetVariant() ||
+						propValue->GetIsImportant() != incoming.GetIsImportant()) {
+						different = true;
+					}
+				}()), ...);
+
+				return different;
+			}
+
+			// Single property 
+			static_assert(sizeof...(Args) == 1,
+				"Non-composite properties accept exactly one value");
+
+			const PropertyValue* propValue = TryGetPropValue(id);
+			if (!propValue) {
+#ifndef NDEBUG
+				Log::Error(
+					"SDLCore::UI::UIStyleState::IsDifferent: Could not check diff, property '{}' not found",
+					id);
+#endif
+				return false;
+			}
+
+			PropertyValue incoming(std::forward<Args>(args)...);
+
+			if (!propValue->IsSameType(incoming.GetType()))
+				return true;
+
+			return propValue->GetVariant() != incoming.GetVariant()
+				|| propValue->GetIsImportant() != incoming.GetIsImportant();
+		}
+
+		template<typename... Args>
+		bool SetValue(UIPropertyID id, Args&&... args) {
+			static_assert(
+				(IsPropertyValueArg<std::decay_t<Args>>::value && ...),
+				"Unsupported value type for SetValue"
+				);
+
+			constexpr size_t argCount = sizeof...(Args);
+
+			PropertyValue* propValue = TryGetPropValue(id);
+			if (propValue) {
+				// Normal property: exactly one value expected
+				static_assert(argCount == 1,
+					"Non-composite properties accept exactly one PropertyValue");
+
+				return SetSingleValue(id, std::forward<Args>(args)...);
+			}
+
+			// Composite property handling
+			const std::vector<UIPropertyID>* refs = TryGetCompositeProperyValues(id);
+			if (!refs) {
+#ifndef NDEBUG
+				Log::Error(
+					"SDLCore::UI::UIStyleState: Property '{}' not found",
+					id
+				);
+#endif
+				return false;
+			}
+
+			if (refs->size() != argCount) {
+#ifndef NDEBUG
+				Log::Error(
+					"SDLCore::UI::UIStyleState: Composite property '{}' expects {} values, got {}",
+					id, refs->size(), argCount
+				);
+#endif
+				return false;
+			}
+
+			bool result = true;
+			size_t index = 0;
+
+			// Expand arguments and map them to sub-properties
+			((result &= SetSingleValue((*refs)[index++], args)), ...);
+
+			return result;
+		}
+
+		// sets the last prop that was set to value
+		bool SetImportant(bool value);
+
 		void ResetValue(UIPropertyID id);
 
 		/*
@@ -91,10 +203,16 @@ namespace SDLCore::UI {
 		std::vector<PropertyValue> GetAllProperties();
 
 	private:
+		UIPropertyID m_lastPropSet;
 		std::unordered_map<UIPropertyID, PropertyValue> m_properties;
+		std::unordered_map<UIPropertyID, std::vector<UIPropertyID>> m_compositeRefs;/* < composite id to list of other props*/
 
 		const PropertyValue* TryGetPropValue(UIPropertyID id) const;
 		PropertyValue* TryGetPropValue(UIPropertyID id);
+
+		const std::vector<UIPropertyID>* TryGetCompositeProperyValues(UIPropertyID id) const;
+
+		bool SetSingleValue(UIPropertyID id, const PropertyValue& value);
 	};
 	
 }

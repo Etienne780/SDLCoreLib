@@ -39,12 +39,12 @@ namespace SDLCore::UI {
 		ApplyStyle(ctx);
 	}
 
-	UINode& UINode::SetOverride(UIPropertyID id, const PropertyValue& v, bool important) {
-		if (m_overrideState.IsDifferent(id, v, important)) {
-			if (m_overrideState.SetValue(id, v, important))
+	UINode& UINode::SetImportant(bool value) {
+		if (m_overrideState.IsImportant(m_lastOverrideID) != value) {
+			if (m_overrideState.SetImportant(value)) {
 				m_overrideStyleChanged = true;
+			}
 		}
-
 		return *this;
 	}
 
