@@ -137,7 +137,15 @@ namespace SDLCore::UI {
 	}
 
 	bool UINode::IsDisabled() const {
-		return !m_isDisabled;
+		return m_isDisabled;
+	}
+
+	bool UINode::IsOverflowVisibleX() const {
+		return m_isOverflowVisibleX;
+	}
+
+	bool UINode::IsOverflowVisibleY() const {
+		return m_isOverflowVisibleY;
 	}
 
 	void UINode::SetChildHasEvent(bool value) {
@@ -332,6 +340,8 @@ namespace SDLCore::UI {
 		GetResolvedValue<bool>(Properties::propagateStateToChildren, m_propagateStateToChildren, false);
 		GetResolvedValue<bool>(Properties::disabled, m_isDisabled, false);
 		GetResolvedValue<bool>(Properties::borderAffectsLayout, m_borderAffectsLayout, true);
+		GetResolvedValue<bool>(Properties::overflowVisibleX, m_isOverflowVisibleX, true);
+		GetResolvedValue<bool>(Properties::overflowVisibleY, m_isOverflowVisibleY, true);
 
 		ApplyStyleCalled(ctx, m_renderedStyleState);
 
