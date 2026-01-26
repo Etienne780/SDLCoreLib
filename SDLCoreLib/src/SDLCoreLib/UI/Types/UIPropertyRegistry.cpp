@@ -42,6 +42,13 @@ namespace SDLCore::UI {
             PropertyValue(static_cast<int>(UISizeUnit::PX))
         );
 
+        sizeUnit = RegisterCompositeProperty(
+            "sizeUnit",
+            "Shorthand property for both horizontal and vertical size units. Setting this applies the value to both widthUnit and heightHeight.",
+            widthUnit,
+            heightUnit
+        );
+
         width = RegisterProperty(
             "width",
             "Element width (interpreted using size_unit_w). Default: 0.0f",
@@ -52,6 +59,13 @@ namespace SDLCore::UI {
             "height",
             "Element height (interpreted using size_unit_h). Default: 0.0f",
             PropertyValue(0.0f)
+        );
+
+        size = RegisterCompositeProperty(
+            "size",
+            "Shorthand property for both horizontal and vertical sizes. Setting this applies the value to both width and height.",
+            width,
+            height
         );
 
         padding = RegisterProperty(
@@ -82,6 +96,13 @@ namespace SDLCore::UI {
             "align_vertical",
             "Vertical alignment of child elements. Default: UIAlignment::START",
             PropertyValue(UIAlignment::START)
+        );
+
+        align = RegisterCompositeProperty(
+            "align",
+            "Shorthand property for both horizontal and vertical alignemt. Setting this will apply the value to both alignHorizontal and alignVertical.",
+            alignHorizontal,
+            alignVertical
         );
         
         backgroundTexture = RegisterProperty(
