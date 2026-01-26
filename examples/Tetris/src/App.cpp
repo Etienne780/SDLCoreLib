@@ -11,6 +11,7 @@ SDLCore::UI::UIContext* context = SDLCore::UI::CreateContext();
 
 SDLCore::UI::UIStyle styleRoot("root");
 SDLCore::UI::UIStyle buttenStyle("element");
+SDLCore::UI::UIStyle innerBtnStyle("inner");
 SDLCore::UI::UIStyle textStyle("text");
 
 void App::OnStart() {
@@ -23,10 +24,9 @@ void App::OnStart() {
     testImageID = UI::UIRegistry::RegisterTexture("image.trust");
 
     namespace Prop = SDLCore::UI::Properties;
-    styleRoot.SetValue(Prop::overflowVisible, true, true)
-        .SetValue(Prop::backgroundColor, Vector4(0, 0, 0, 0))
+    styleRoot.SetValue(Prop::backgroundColor, Vector4(0, 0, 0, 0))
         .SetValue(Prop::layoutDirection, UI::UILayoutDir::ROW)
-        .SetValue(Prop::alignHorizontal, UI::UIAlignment::START)
+        .SetValue(Prop::alignHorizontal, UI::UIAlignment::CENTER)
         .SetValue(Prop::alignVertical, UI::UIAlignment::CENTER)
         .SetValue(Prop::widthUnit, UI::UISizeUnit::PERCENTAGE)
         .SetValue(Prop::heightUnit, UI::UISizeUnit::PERCENTAGE)
@@ -34,17 +34,22 @@ void App::OnStart() {
         .SetValue(Prop::height, 100.0f);
 
     buttenStyle.SetValue(Prop::layoutDirection, UI::UILayoutDir::COLUMN)
-        // .SetValue(Prop::propagateStateToChildren, true)
+        .SetValue(Prop::align, UI::UIAlignment::CENTER, UI::UIAlignment::CENTER)
+        .SetValue(Prop::overflowVisible, true, true)
         .SetValue(Prop::backgroundColor, Vector4(255.0f))
-        .SetValue(Prop::duration, 1.0f)
+        .SetValue(Prop::duration, 0.25f)
         .SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
         .SetValue(Prop::borderWidth, 12.0f)
         .SetValue(Prop::borderColor, Vector4(255, 0, 0, 255))
         .SetValue(Prop::backgroundTexture, testImageID);
     buttenStyle.SetActiveState(UI::UIState::HOVER)
         .SetValue(Prop::backgroundColor, Vector4(150.0f, 0.0f, 255.0f, 255.0f))
-        .SetValue(Prop::borderColor, Vector4(255, 255, 0, 255))
-        .SetValue(Prop::duration, 2.0f);
+        .SetValue(Prop::borderColor, Vector4(255, 255, 0, 255));
+
+    innerBtnStyle.SetValue(Prop::align, UI::UIAlignment::CENTER, UI::UIAlignment::CENTER)
+        .SetValue(Prop::sizeUnit, UI::UISizeUnit::PX, UI::UISizeUnit::PX)
+        .SetValue(Prop::size, 500.0f, 150.0f)
+        .SetValue(Prop::backgroundColor, Vector4(255));
 
     textStyle.SetValue(Prop::pointerEvents, true)
         .SetValue(Prop::hitTestTransparent, true)
@@ -75,13 +80,18 @@ void App::OnUpdate() {
         {
             UI::BeginFrame(UI::UIKey("butten"), buttenStyle);
             {
-                UI::Text(UI::UIKey("text"), "text", textStyle);
+                UI::BeginFrame(UI::UIKey("inner"), innerBtnStyle);
+                {
+                    UI::Text(UI::UIKey("text"), "text", textStyle);
+                }
+                UI::EndFrame();
             }
             UI::EndFrame();
         }
         UI::EndFrame();
 
-        // Log::Print(UI::GetContextStringHierarchy(context));
+        // if(SDLCore::Time::GetFrameCount() % 200 == 0)
+        //     Log::Print(UI::GetContextStringHierarchy(context));
         RE::Present();
     }
 
