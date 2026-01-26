@@ -39,10 +39,16 @@ namespace SDLCore::UI {
             return ctx->AddNode<T>(id, std::forward<Args>(args)...);
         }
 
-        UINode* GetRootNode() {
+        UINode* GetRootNode() const {
             if (IsContextNull("GetRootNode: Could not get root node"))
                 return nullptr;
             return ctx->GetRootNode();
+        }
+
+        size_t GetNodeCount() const {
+            if (IsContextNull("GetNodeCount: Could not get node count"))
+                return 0;
+            return ctx->GetNodeCount();
         }
 
         void SetWindowParams(WindowID id) {
@@ -176,6 +182,18 @@ namespace SDLCore::UI {
 
         BuildHierarchy(stream, root);
         return stream.str();
+    }
+
+    size_t GetNodeCount() {
+        return g_currentUIContext.GetNodeCount();
+    }
+
+    size_t GetNodeCount(UIContext* ctx) {
+        if (!ctx) {
+            Log::Error("SDLCore::UI::GetNodeCount: Cannot get node count: context is null");
+            return 0;
+        }
+        return g_currentUIContext.GetNodeCount();
     }
 
     FrameNode* BeginFrame(UIKey&& key, const std::vector<UIStyle>& styles) {

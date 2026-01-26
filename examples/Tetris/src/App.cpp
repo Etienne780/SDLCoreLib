@@ -35,7 +35,6 @@ void App::OnStart() {
 
     buttenStyle.SetValue(Prop::layoutDirection, UI::UILayoutDir::COLUMN)
         .SetValue(Prop::align, UI::UIAlignment::CENTER, UI::UIAlignment::CENTER)
-        .SetValue(Prop::overflowVisible, true, true)
         .SetValue(Prop::backgroundColor, Vector4(255.0f))
         .SetValue(Prop::duration, 0.25f)
         .SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
@@ -50,6 +49,8 @@ void App::OnStart() {
         .SetValue(Prop::sizeUnit, UI::UISizeUnit::PX, UI::UISizeUnit::PX)
         .SetValue(Prop::size, 500.0f, 150.0f)
         .SetValue(Prop::backgroundColor, Vector4(255));
+    innerBtnStyle.SetActiveState(UI::UIState::HOVER)
+        .SetValue(Prop::backgroundColor, Vector4(100, 100, 100, 255));
 
     textStyle.SetValue(Prop::pointerEvents, true)
         .SetValue(Prop::hitTestTransparent, true)
@@ -66,6 +67,20 @@ void App::OnUpdate() {
         namespace RE = SDLCore::Render;
         SDLCore::Input::SetWindow(m_winID);
 
+        static bool clipX = false;
+        static bool clipY = false;
+
+        if (SDLCore::Input::KeyJustPressed(SDLCore::KeyCode::W))
+            clipX = !clipX;
+
+        if (SDLCore::Input::KeyJustPressed(SDLCore::KeyCode::E))
+            clipY = !clipY;
+
+        float t = SDLCore::Time::GetFrameCount();
+        float w = 0, h = 0;
+        w = (std::cos(t * 0.001f) + 1) * 0.5f * 500.0f;
+        h = (std::sin(t * 0.001f) + 1) * 0.5f * 500.0f;
+
         RE::SetWindowRenderer(m_winID);
         RE::SetBlendMode(SDLCore::Render::BlendMode::BLEND);
         RE::SetColor(0);
@@ -78,7 +93,8 @@ void App::OnUpdate() {
 
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
-            UI::BeginFrame(UI::UIKey("butten"), buttenStyle);
+            UI::BeginFrame(UI::UIKey("butten"), buttenStyle)->SetOverride(Prop::size, w, h)
+                .SetOverride(Prop::overflowVisible, !clipX, !clipY);
             {
                 UI::BeginFrame(UI::UIKey("inner"), innerBtnStyle);
                 {
@@ -90,7 +106,8 @@ void App::OnUpdate() {
         }
         UI::EndFrame();
 
-        // if(SDLCore::Time::GetFrameCount() % 200 == 0)
+        if (SDLCore::Time::GetFrameCount() % 200 == 0)
+            Log::Print(SDLCore::Time::GetFrameRate());
         //     Log::Print(UI::GetContextStringHierarchy(context));
         RE::Present();
     }

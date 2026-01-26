@@ -21,6 +21,8 @@ namespace SDLCore::UI {
     UIContext* GetCurrentContext();
     std::string GetContextStringHierarchy();
     std::string GetContextStringHierarchy(UIContext* context);
+    size_t GetNodeCount();
+    size_t GetNodeCount(UIContext* context);
 
     namespace Internal {
         FrameNode* InternalBeginFrame(uintptr_t key);

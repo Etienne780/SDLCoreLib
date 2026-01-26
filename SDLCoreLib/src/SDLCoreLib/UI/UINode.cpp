@@ -132,6 +132,18 @@ namespace SDLCore::UI {
 		return m_hasHitTestTransparent;
 	}
 
+	bool UINode::HasOverflowVisible() const {
+		return HasOverflowVisibleX() && HasOverflowVisibleY();
+	}
+
+	bool UINode::HasOverflowVisibleX() const {
+		return m_isOverflowVisibleX;
+	}
+
+	bool UINode::HasOverflowVisibleY() const {
+		return m_isOverflowVisibleY;
+	}
+
 	bool UINode::IsStatePropagationEnabled() const {
 		return m_propagateStateToChildren;
 	}
@@ -156,8 +168,21 @@ namespace SDLCore::UI {
 		return m_position;
 	}
 
+	Vector2 UINode::GetVisiblePosition() const {
+		Vector4 bM = GetBorderLayoutMargin();
+		Vector2 p = GetPosition();
+		return Vector2(p.x - bM.y, p.y - bM.x);
+	}
+
 	Vector2 UINode::GetSize() const {
 		return m_size;
+	}
+
+	Vector2 UINode::GetVisibleSize() const {
+		Vector4 bM = GetBorderLayoutMargin();
+		Vector2 s = GetSize();
+		return Vector2(s.x + bM.y + bM.w, 
+			s.y + bM.x + bM.z);
 	}
 
 	Vector4 UINode::GetPadding() const {
@@ -192,6 +217,10 @@ namespace SDLCore::UI {
 			return Vector4(0.0f);
 
 		return Vector4(m_borderWidth);
+	}
+
+	Vector4 UINode::GetClippingRect() const {
+		return m_clippingMask;
 	}
 
 	UIState UINode::GetResolvedState() const {
@@ -230,9 +259,18 @@ namespace SDLCore::UI {
 		return IsPointInNode(Input::GetMousePosition());
 	}
 
+	bool UINode::IsMouseInClipRect(const Vector2& point) const {
+		return IsPointInClipRect(Input::GetMousePosition());
+	}
+
 	bool UINode::IsPointInNode(const Vector2& point) const {
 		return point.x > m_position.x && point.x <= m_position.x + m_size.x && 
 			point.y > m_position.y && point.y <= m_position.y + m_size.y;
+	}
+
+	bool UINode::IsPointInClipRect(const Vector2& point) const {
+		return point.x > m_clippingMask.x && point.x <= m_clippingMask.x + m_clippingMask.z &&
+			point.y > m_clippingMask.y && point.y <= m_clippingMask.y + m_clippingMask.w;
 	}
 
 	Vector2 UINode::CalculateSize(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h) {
@@ -447,6 +485,10 @@ namespace SDLCore::UI {
 		}
 	}
 
+	void UINode::SetClippingRect(const Vector4& clipRect) {
+		m_clippingMask = clipRect;
+	}
+
 	float UINode::GetAccumulatedChildSize(bool horizontal, int upToIndex) const {
 		if (!m_parent)
 			return 0.0f;
@@ -626,6 +668,13 @@ namespace SDLCore::UI {
 
 		const bool pressCaptured = ctx->GetActiveCapturedPressNode() == m_id;
 		const bool dragCaptured = ctx->GetActiveCapturedDragNode() == m_id;
+
+		// if is outside of the clipping rect skip events
+		if (!IsPointInClipRect(mousePos)) {
+			SetState(UIState::NORMAL);
+			ProcessEvent(event);
+			return;
+		}
 
 		// Hover state
 		if (isHovered)

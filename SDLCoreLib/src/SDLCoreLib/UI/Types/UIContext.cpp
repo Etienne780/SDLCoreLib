@@ -1,4 +1,4 @@
-#include <functional>
+﻿#include <functional>
 
 #include "Application.h"
 #include "SDLCoreTime.h"
@@ -112,12 +112,17 @@ namespace SDLCore::UI {
         return m_focusNodeID;
     }
 
+    size_t UIContext::GetNodeCount() const {
+        return m_nodeCount;
+    }
+
     void UIContext::SetNodeState(UINode* node, UIState state) {
         if(node)
             node->SetState(state);
     }
 
     FrameNode* UIContext::BeginFrame(uintptr_t id) {
+        m_currentNodeCount++;
         if (m_lastNodeStack.empty() && m_rootNode) {
             if (m_rootNode->GetID() != id) {
                 // Creats new root node
@@ -128,6 +133,9 @@ namespace SDLCore::UI {
                 m_lastNodeStack.push_back(reinterpret_cast<UINode*>(m_rootNode.get()));
                 m_lastChildPosition.push_back(0);
                 m_rootNode->SetNodeActive();
+
+                CalculateClippingMask(m_lastNodeStack.back());
+
                 return m_rootNode.get();
             }
         }
@@ -139,6 +147,9 @@ namespace SDLCore::UI {
             m_nodeCreationStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastChildPosition.push_back(0);
+
+            CalculateClippingMask(m_lastNodeStack.back());
+
             return frame;
         }
 
@@ -160,6 +171,8 @@ namespace SDLCore::UI {
             m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
             m_lastChildPosition.push_back(0);
 
+            CalculateClippingMask(m_lastNodeStack.back());
+
             return frame;
         }
         else {
@@ -173,10 +186,12 @@ namespace SDLCore::UI {
                 m_lastChildPosition.push_back(0);
                 currentNode->SetNodeActive();
 
-                // is state propagation is enabled calc event before  begin
+                // is state propagation is enabled calc event before end
                 if (currentNode->IsStatePropagationEnabled()) {
                     ResolveNodeState(this, currentNode);
                 }
+
+                CalculateClippingMask(currentNode);
 
                 return reinterpret_cast<FrameNode*>(currentNode);
             }
@@ -194,6 +209,9 @@ namespace SDLCore::UI {
                 m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
                 m_nodeCreationStack.push_back(reinterpret_cast<UINode*>(frame));
                 m_lastChildPosition.push_back(0);
+
+                CalculateClippingMask(m_lastNodeStack.back());
+
                 return frame;
             }
         }
@@ -223,6 +241,9 @@ namespace SDLCore::UI {
             m_lastNodeStack.pop_back();
             // last node poped
             if (m_lastNodeStack.empty()) {
+                m_nodeCount = m_currentNodeCount;
+                m_currentNodeCount = 0;
+
                 RenderNodes(this, m_rootNode.get());
             }
 
@@ -362,20 +383,121 @@ namespace SDLCore::UI {
         
         ctx->UpdateInput();
         node->ProcessEventInternal(ctx, event);
-
         node->SetResolvedState(UIState::NORMAL);
         return event;
     }
 
     void UIContext::RenderNodes(UIContext* ctx, UINode* rootNode) {
+        Rect r = SDLCore::Render::GetClipRect();
         ForEachNode(rootNode, [&](UINode* root) {
             root->Update(ctx, Time::GetDeltaTime());
 
-            if (!root || !root->IsActive())
+            if (!root)
                 return;
 
+            Vector4 clipRect = root->GetClippingRect();
+            if (!root->IsActive() || clipRect.z == 0 || clipRect.w == 0)
+                return;
+
+            SDLCore::Render::SetClipRect(clipRect);
             root->RenderNode(ctx);
         });
+        SDLCore::Render::SetClipRect(r);
+    }
+
+    void UIContext::CalculateClippingMask(UINode* node) {
+        if (!node)
+            return;
+
+        UINode* parent = node->GetParent();
+        Vector4 baseClip;
+
+        if (!parent) {
+            // Root node
+            bool clipX = !node->HasOverflowVisibleX();
+            bool clipY = !node->HasOverflowVisibleY();
+
+            if (clipX || clipY) {
+                // Root clips to its own rect
+                baseClip = CreateClipRect(node);
+            }
+            else {
+                // Root allows overflow -> window bounds
+                baseClip = GetWindowClip();
+            }
+        }
+        else {
+            // Non-root nodes always inherit parent's effective clip
+            baseClip = parent->GetClippingRect();
+        }
+
+        Vector4 selfClip = CreateClipRect(node);
+
+        bool clipX = !node->HasOverflowVisibleX();
+        bool clipY = !node->HasOverflowVisibleY();
+
+        Vector4 effectiveClip = IntersectAxis(
+            baseClip,
+            selfClip,
+            clipX,
+            clipY
+        );
+
+        node->SetClippingRect(effectiveClip);
+    }
+
+    Vector4 UIContext::GetWindowClip() const {
+        return Vector4{
+            0,
+            0,
+            m_windowSize.x,
+            m_windowSize.y
+        };
+    }
+
+    Vector4 UIContext::CreateClipRect(UINode* node) const {
+        if (!node)
+            return Vector4::zero;
+
+        Vector2 pos = node->GetVisiblePosition();
+        Vector2 size = node->GetVisibleSize();
+
+        return Vector4{ pos, size };
+    }
+
+    Vector4 UIContext::IntersectAxis(
+        const Vector4& parent,
+        const Vector4& self,
+        bool clipX,
+        bool clipY) const
+    {
+        Vector4 result = parent;
+
+        if (clipX)
+        {
+            float x1 = std::max(parent.x, self.x);
+            float x2 = std::min(parent.x + parent.z, self.x + self.z);
+
+            if (x2 <= x1)
+                return Vector4{ 0, 0, 0, 0 };
+
+            result.x = x1;
+            result.z = x2 - x1;
+        }
+
+        if (clipY)
+        {
+            float y1 = std::max(parent.y, self.y);
+            float y2 = std::min(parent.y + parent.w, self.y + self.w);
+
+            if (y2 <= y1)
+                return Vector4{ 0, 0, 0, 0 };
+
+            result.y = y1;
+            result.w = y2 - y1;
+        }
+
+        return result;
     }
 
     bool UIContext::IsIDUnique(uintptr_t idToCheck, UINode* parent) {
