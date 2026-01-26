@@ -37,7 +37,7 @@ namespace SDLCore::UI {
 		return m_defaultVaue;
 	}
 
-	const std::vector<UIPropertyID>& UIProperty::GetCompositePropertys() const {
+	const std::vector<UIPropertyID>& UIProperty::GetCompositePropertyIDs() const {
 #ifndef NDEBUG
 		if(!m_isComposite)
 			Log::Warn("SDLCore::UI::UIProperty::GetCompositePropertys: Undefined behaviour, trying to get composite values of property '{}'!", m_name);

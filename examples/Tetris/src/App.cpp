@@ -73,7 +73,7 @@ void App::OnUpdate() {
 
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
-            UI::BeginFrame(UI::UIKey("butten"), buttenStyle)->SetOverride(Prop::width, 500.0f);
+            UI::BeginFrame(UI::UIKey("butten"), buttenStyle);
             {
                 UI::Text(UI::UIKey("text"), "text", textStyle);
             }

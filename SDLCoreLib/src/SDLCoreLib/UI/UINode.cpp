@@ -40,7 +40,7 @@ namespace SDLCore::UI {
 	}
 
 	UINode& UINode::SetImportant(bool value) {
-		if (m_overrideState.IsImportant(m_lastOverrideID) != value) {
+		if (m_overrideState.IsImportantDiff(m_lastOverrideID, value)) {
 			if (m_overrideState.SetImportant(value)) {
 				m_overrideStyleChanged = true;
 			}

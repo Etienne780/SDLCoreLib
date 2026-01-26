@@ -59,7 +59,15 @@ namespace SDLCore::UI {
 		return propValue->GetIsSet();
 	}
 
-	bool UIStyleState::IsImportant(UIPropertyID id) const {
+	bool UIStyleState::IsImportantDiff(UIPropertyID id, bool value) const {
+		if (const std::vector<UIPropertyID>* refs = TryGetCompositeProperyValues(id)) {
+			for (const auto& refID : *refs) {
+				if (IsImportantDiff(refID, value))
+					return true;
+			}
+			return true;
+		}
+		
 		const PropertyValue* propValue = TryGetPropValue(id);
 		if (!propValue) {
 #ifndef NDEBUG
@@ -67,7 +75,7 @@ namespace SDLCore::UI {
 #endif
 			return false;
 		}
-		return propValue->GetIsImportant();
+		return propValue->GetIsImportant() != value;
 	}
 
 	bool UIStyleState::SetImportant(bool value) {
@@ -76,7 +84,21 @@ namespace SDLCore::UI {
 			return false;
 		}
 
-		PropertyValue* propValue = TryGetPropValue(m_lastPropSet);
+		return SetImportant(m_lastPropSet, value);
+	}
+
+	bool UIStyleState::SetImportant(UIPropertyID id, bool value) {
+		bool result = true;
+		if (const std::vector<UIPropertyID>* refs = TryGetCompositeProperyValues(id)) {
+			for (const auto& refID : *refs) {
+				if (!SetImportant(refID, value))
+					result = false;
+			}
+
+			return result;
+		}
+
+		PropertyValue* propValue = TryGetPropValue(id);
 		if (!propValue) {
 #ifndef NDEBUG
 			Log::Error("SDLCore::UI::UIStyleState::SetImportant: Could not set value, property '{}' not found", m_lastPropSet);
