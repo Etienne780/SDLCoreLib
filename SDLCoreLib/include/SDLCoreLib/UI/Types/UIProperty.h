@@ -72,7 +72,7 @@ namespace SDLCore::UI {
         */
         PropertyValue::ValueVariant GetDefaultValue() const;
 
-        const std::vector<UIPropertyID>& GetCompositePropertys() const;
+        const std::vector<UIPropertyID>& GetCompositePropertyIDs() const;
 
     private:
         std::string m_name = "UNKOWN";
