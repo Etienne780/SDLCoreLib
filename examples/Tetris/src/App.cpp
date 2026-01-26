@@ -23,7 +23,8 @@ void App::OnStart() {
     testImageID = UI::UIRegistry::RegisterTexture("image.trust");
 
     namespace Prop = SDLCore::UI::Properties;
-    styleRoot.SetValue(Prop::backgroundColor, Vector4(0, 0, 0, 0)).SetImportant(true)
+    styleRoot.SetValue(Prop::overflowVisible, true, true)
+        .SetValue(Prop::backgroundColor, Vector4(0, 0, 0, 0))
         .SetValue(Prop::layoutDirection, UI::UILayoutDir::ROW)
         .SetValue(Prop::alignHorizontal, UI::UIAlignment::START)
         .SetValue(Prop::alignVertical, UI::UIAlignment::CENTER)
