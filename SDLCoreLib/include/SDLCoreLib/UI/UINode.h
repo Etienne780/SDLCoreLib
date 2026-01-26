@@ -107,6 +107,9 @@ namespace SDLCore::UI {
 
         bool HasPointerEvents() const;
         bool HasHitTestTransparent() const;
+        bool HasOverflowVisible() const;
+        bool HasOverflowVisibleX() const;
+        bool HasOverflowVisibleY() const;
         bool IsStatePropagationEnabled() const;
         bool IsDisabled() const;
 
@@ -121,7 +124,11 @@ namespace SDLCore::UI {
         void SetChildHasEvent(bool value);
 
         Vector2 GetPosition() const;
+        // applys pos + borderWidth if outer border
+        Vector2 GetVisiblePosition() const;
         Vector2 GetSize() const;
+        // applys size + borderWidth if outer border
+        Vector2 GetVisibleSize() const;
         Vector4 GetPadding() const;
         Vector4 GetMargin() const;
 
@@ -131,6 +138,8 @@ namespace SDLCore::UI {
 
         Vector4 GetBorderLayoutPadding() const;
         Vector4 GetBorderLayoutMargin() const;
+        // will always have a valid clipping rect
+        Vector4 GetClippingRect() const;
 
         UIState GetResolvedState() const;
 
@@ -147,7 +156,9 @@ namespace SDLCore::UI {
         void SetResolvedState(UIState state);
 
         bool IsMouseInNode() const;
+        bool IsMouseInClipRect(const Vector2& point) const;
         bool IsPointInNode(const Vector2& point) const;
+        bool IsPointInClipRect(const Vector2& point) const;
 
         virtual void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) = 0;
         virtual Vector2 CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h);
@@ -201,6 +212,7 @@ namespace SDLCore::UI {
         float m_currentTransition = 0.0f;
         bool m_transitionActive = false;
         bool m_overrideStyleChanged = false;
+        Vector4 m_clippingMask;
 
         static inline uint32_t m_typeIDCounter = 0;
         static uint32_t GetUITypeID(const std::string& name);
@@ -232,6 +244,8 @@ namespace SDLCore::UI {
         void SetAppliedStyleHash(uint64_t newHash);
         void SetAppliedStyleNode(uint64_t node);
         void SetTransitionTime(float time, UITimeUnit unit);
+        // is set in UI context begin call
+        void SetClippingRect(const Vector4& clipRect);
 
         // is size + margin
         float GetAccumulatedChildSize(bool horizontal, int upToIndex) const;

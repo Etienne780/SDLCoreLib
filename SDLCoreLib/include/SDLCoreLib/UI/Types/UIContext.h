@@ -49,6 +49,8 @@ namespace SDLCore::UI {
 		// should be used with HasFocusNodeCaptured() to check if a node is Captured
 		uintptr_t GetActiveCapturedFocusNode() const;
 
+		size_t GetNodeCount() const;
+
 		void SetNodeState(UINode* node, UIState state);
 
 	private:
@@ -59,6 +61,8 @@ namespace SDLCore::UI {
 		std::vector<UINode*> m_nodeCreationStack;/*< is for creating nodes. if a node is this stack, than those nodes are currently created*/
 		std::vector<UINode*> m_lastNodeStack;
 		std::shared_ptr<FrameNode> m_rootNode = nullptr;
+		size_t m_currentNodeCount = 0;/* < changes while building nodeStack. Is used to update the stable node count */
+		size_t m_nodeCount = 0;/* < is the stable node count. gets update with the last end call */
 		WindowID m_windowID;
 		float m_windowContentScale = 1.0f;
 		Vector2 m_windowSize{ 0.0f, 0.0f };
@@ -79,6 +83,7 @@ namespace SDLCore::UI {
 		
 		template<typename T, typename ...Args>
 		T* AddNode(uintptr_t id, Args&&... args) {
+			m_currentNodeCount++;
 			if (!m_rootNode) {
 				Log::Error("SDLCore::UI::UICTXWrapper::AddNode: Could not add not. no valid root element was found!");
 				return nullptr;
@@ -92,6 +97,7 @@ namespace SDLCore::UI {
 			if (parentNode->ContainsChildAtPos(pos, id, currentNode)) {
 				// element with id exists at position. set it as last position
 				// no stack increas cause add node has no end func
+				CalculateClippingMask(currentNode);
 				ProcessEvent(this, currentNode);
 				currentNode->SetNodeActive();
 				return reinterpret_cast<T*>(currentNode);
@@ -106,6 +112,7 @@ namespace SDLCore::UI {
 
 			// element does not exist. create element and create stack
 			T* childNode = parentNode->AddChild<T>(static_cast<int>(pos), id, std::forward<Args>(args)...);
+			CalculateClippingMask(reinterpret_cast<UINode*>(childNode));
 			ProcessEvent(this, childNode);
 			// no stack increas cause add node has no end func
 			return childNode;
@@ -156,6 +163,11 @@ namespace SDLCore::UI {
 		void ResolveNodeState(UIContext* ctx, UINode* node);
 		UIEvent* ProcessEvent(UIContext* ctx, UINode* node);
 		void RenderNodes(UIContext* ctx, UINode* rootNode);
+		// gets called in begin, add element
+		void CalculateClippingMask(UINode* node);
+		Vector4 UIContext::GetWindowClip() const;
+		Vector4 CreateClipRect(UINode* node) const;
+		Vector4 IntersectAxis(const Vector4& parent, const Vector4& self, bool clipX, bool clipY) const;
 
 		/**
 		* @brief Checks whether an ID is unique among siblings and all parent layers.
