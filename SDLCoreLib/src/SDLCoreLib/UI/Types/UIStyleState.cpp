@@ -10,7 +10,7 @@ namespace SDLCore::UI {
 
 		for (const auto& [id, prop] : allProps) {
 			if (prop.IsComposite()) {
-				m_compositeRefs[id] = prop.GetCompositePropertys();
+				m_compositeRefs[id] = prop.GetCompositePropertyIDs();
 			}
 			else {
 				m_properties[id] = PropertyValue(prop.GetType(), prop.GetDefaultValue());

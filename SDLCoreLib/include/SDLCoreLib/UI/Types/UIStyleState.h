@@ -200,7 +200,6 @@ namespace SDLCore::UI {
 
 		std::unordered_map<UIPropertyID, PropertyValue>& GetAllPropertiesMap();
 		const std::unordered_map<UIPropertyID, PropertyValue>& GetAllPropertiesMap() const;
-		std::vector<PropertyValue> GetAllProperties();
 
 	private:
 		UIPropertyID m_lastPropSet;
