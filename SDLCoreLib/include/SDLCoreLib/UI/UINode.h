@@ -52,8 +52,16 @@ namespace SDLCore::UI {
         // sets override style changed to true if value is different
         template<typename... Args>
         UINode& SetOverride(UIPropertyID id, Args&&... args) {
-            if (m_overrideState.IsDifferent(id, std::forward<Args>(args)...)) {
-                if (m_overrideState.SetValue(id, std::forward<Args>(args)...)) {
+            auto values = std::forward_as_tuple(std::forward<Args>(args)...);
+
+            if (std::apply([&](auto&&... v) {
+                return m_overrideState.IsDifferent(id, v...);
+                }, values))
+            {
+                if (std::apply([&](auto&&... v) {
+                    return m_overrideState.SetValue(id, std::forward<decltype(v)>(v)...);
+                    }, values))
+                {
                     m_lastOverrideID = id;
                     m_overrideStyleChanged = true;
                 }
