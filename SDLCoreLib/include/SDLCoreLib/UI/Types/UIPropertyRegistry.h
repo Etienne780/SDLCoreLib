@@ -73,6 +73,19 @@ namespace SDLCore::UI::Properties {
 	inline UIPropertyID heightUnit;
 
 	/*
+	* @brief Shorthand property for both horizontal and vertical size units (composite)
+	*
+	* Setting this will apply the value to both widthUnit and heightUnit.
+	*
+	* Default: UISizeUnit::PX, UISizeUnit::PX
+	*
+	* Composite layout: widthUnit, heightHeight
+	*
+	* Usage: style.SetValue(UISizeUnit::PX, UISizeUnit::PX)
+	*/
+	inline UIPropertyID sizeUnit;
+
+	/*
 	* @brief Element width (float)
 	*
 	* Interpreted according to widthUnit.
@@ -82,6 +95,19 @@ namespace SDLCore::UI::Properties {
 	* Usage: style.SetValue<float>(100.0f)
 	*/
 	inline UIPropertyID width;
+
+	/*
+	* @brief Shorthand property for both horizontal and vertical sizes (composite)
+	*
+	* Setting this will apply the value to both width and height.
+	*
+	* Default: 0.0f, 0.0f
+	*
+	* Composite layout: width, height
+	*
+	* Usage: style.SetValue(10.0f, 20.0f)
+	*/
+	inline UIPropertyID size;
 
 	/*
 	* @brief Element height (float)
@@ -148,6 +174,19 @@ namespace SDLCore::UI::Properties {
 	* Usage: style.SetValue<int>(UIAlignment::START)
 	*/
 	inline UIPropertyID alignVertical;
+
+	/*
+	* @brief Shorthand property for both horizontal and vertical alignemt (composite)
+	*
+	* Setting this will apply the value to both alignHorizontal and alignVertical.
+	*
+	* Default: UIAlignment::START, UIAlignment::START
+	*
+	* Composite layout: alignHorizontal, alignVertical
+	*
+	* Usage: style.SetValue(UIAlignment::START, UIAlignment::START)
+	*/
+	inline UIPropertyID align;
 
 
 	#pragma endregion
@@ -252,7 +291,7 @@ namespace SDLCore::UI::Properties {
 	*
 	* Composite layout: overflowVisibleX, overflowVisibleY
 	*
-	* Usage: style.SetValue<bool>(true, true)
+	* Usage: style.SetValue(true, true)
 	*/
 	inline UIPropertyID overflowVisible;
 
