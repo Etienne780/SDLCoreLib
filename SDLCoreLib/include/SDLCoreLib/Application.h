@@ -160,7 +160,7 @@ namespace SDLCore {
 		* @return SystemFilePath representing the absolute, writable user directory.
 		*         Returns an empty path if the directory could not be created.
 		*/
-		const SystemFilePath& GetPrefPath(const std::string& orgName = "DefaultCompany") const;
+		SystemFilePath GetPrefPath(const std::string& orgName = "DefaultCompany") const;
 
 		/**
 		* @brief Returns the directory where the application was executed from.

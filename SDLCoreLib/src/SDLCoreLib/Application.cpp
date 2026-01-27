@@ -217,7 +217,7 @@ namespace SDLCore {
         return m_cursorLockWinID;
     }
 
-    const SystemFilePath& Application::GetPrefPath(const std::string& orgName) const {
+    SystemFilePath Application::GetPrefPath(const std::string& orgName) const {
         char* pathStr = SDL_GetPrefPath(orgName.c_str(), m_name.c_str());
         SystemFilePath filePath{ pathStr };
         SDL_free(pathStr);
