@@ -9,7 +9,14 @@
 
 namespace SDLCore {
 
+    static inline constexpr char* platformStrWindows = "Windows";
+    static inline constexpr char* platformStrMacOS = "macOS";
+    static inline constexpr char* platformStrLinux = "Linux";
+    static inline constexpr char* platformStrIOS = "iOS";
+    static inline constexpr char* platformStrAndroid = "Android";
+
     static Application* m_application = nullptr;
+
 
     Application::Application(std::string& name, const Version& version)
         : m_name(name), m_version(version) {
@@ -37,6 +44,32 @@ namespace SDLCore {
             return m_application->m_closeApplication;
         }
         return true;
+    }
+
+    Platform Application::GetPlatform() {
+        const char* platStr = SDL_GetPlatform();
+        Platform platform = Platform::UNKOWN;
+
+        if (std::strcmp(platStr, platformStrWindows) == 0) {
+            platform = Platform::WINDOWS;
+        }
+        else if (std::strcmp(platStr, platformStrMacOS) == 0) {
+            platform = Platform::MAC_OS;
+        }
+        else if (std::strcmp(platStr, platformStrLinux) == 0) {
+            platform = Platform::LINUX;
+        }
+        else if (std::strcmp(platStr, platformStrIOS) == 0) {
+            platform = Platform::IOS;
+        }
+        else if (std::strcmp(platStr, platformStrAndroid) == 0) {
+            platform = Platform::ANDROID;
+        }
+        else {
+            SetErrorF("SDLCore::Application::GetPlatform: Unknown platform '{}'", platStr);
+        }
+
+        return platform;
     }
 
     void Application::Init() {
@@ -73,7 +106,7 @@ namespace SDLCore {
         uint64_t frameStart = 0;
         OnStart();
         while(!m_closeApplication) {
-            frameStart = Time::GetTime();
+            frameStart = Time::GetTimeMS();
             Time::Update();
 
             ProcessSDLPollEvents();
@@ -184,6 +217,39 @@ namespace SDLCore {
         return m_cursorLockWinID;
     }
 
+    const SystemFilePath& Application::GetPrefPath(const std::string& orgName) const {
+        char* pathStr = SDL_GetPrefPath(orgName.c_str(), m_name.c_str());
+        SystemFilePath filePath{ pathStr };
+        SDL_free(pathStr);
+        return filePath;
+    }
+
+    SystemFilePath Application::GetBasePath() const {
+        const char* pathStr = SDL_GetBasePath();
+        if (!pathStr) {
+            SetErrorF("SDLCore::Application::GetBasePath: failed to retrieve application base path: {}", SDL_GetError());
+            return {};
+        }
+        return { pathStr };
+    }
+
+    std::vector<std::string> Application::GetRenderDrivers() const {
+        std::vector<std::string> drivers;
+        int count = SDL_GetNumRenderDrivers();
+
+        for (int i = 0; i < count; i++) {
+            const char* name = SDL_GetRenderDriver(i);
+            if (name) 
+                drivers.emplace_back(name);
+        }
+
+        return drivers;
+    }
+
+    const std::string& Application::GetCurrentRenderDriver() const {
+        return m_renderDriver;
+    }
+
     void Application::SetFPSCap(int value) {
         if (value < -2)
             value = APPLICATION_FPS_UNCAPPED;
@@ -284,6 +350,10 @@ namespace SDLCore {
         m_cursorLockPosY = y;
     }
 
+    void Application::SetRenderDriver(const std::string& driver) {
+        m_renderDriver = driver;
+    }
+
     void Application::SetVsyncOnWindows(int value) {
         for (auto& window : m_windows) {
             window->SetVsync(value);
@@ -357,9 +427,9 @@ namespace SDLCore {
         if (!m_cursorLockWinActive)
             return;
 
-        if (Time::GetTimeSec() < m_cursorLastTime + m_cursorTick)
+        if (Time::GetTimeSecF() < m_cursorLastTime + m_cursorTick)
             return;
-        m_cursorLastTime = Time::GetTimeSec();
+        m_cursorLastTime = Time::GetTimeSecF();
 
         if (!m_cursorLockWinID.IsInvalid()) {
             if(auto win = m_cursorLockSDLWin.lock())
