@@ -9,7 +9,14 @@
 
 namespace SDLCore {
 
+    static inline constexpr char* platformStrWindows = "Windows";
+    static inline constexpr char* platformStrMacOS = "macOS";
+    static inline constexpr char* platformStrLinux = "Linux";
+    static inline constexpr char* platformStrIOS = "iOS";
+    static inline constexpr char* platformStrAndroid = "Android";
+
     static Application* m_application = nullptr;
+
 
     Application::Application(std::string& name, const Version& version)
         : m_name(name), m_version(version) {
@@ -37,6 +44,32 @@ namespace SDLCore {
             return m_application->m_closeApplication;
         }
         return true;
+    }
+
+    Platform Application::GetPlatform() {
+        const char* platStr = SDL_GetPlatform();
+        Platform platform = Platform::UNKOWN;
+
+        if (std::strcmp(platStr, platformStrWindows) == 0) {
+            platform = Platform::WINDOWS;
+        }
+        else if (std::strcmp(platStr, platformStrMacOS) == 0) {
+            platform = Platform::MAC_OS;
+        }
+        else if (std::strcmp(platStr, platformStrLinux) == 0) {
+            platform = Platform::LINUX;
+        }
+        else if (std::strcmp(platStr, platformStrIOS) == 0) {
+            platform = Platform::IOS;
+        }
+        else if (std::strcmp(platStr, platformStrAndroid) == 0) {
+            platform = Platform::ANDROID;
+        }
+        else {
+            SetErrorF("SDLCore::Application::GetPlatform: Unknown platform '{}'", platStr);
+        }
+
+        return platform;
     }
 
     void Application::Init() {

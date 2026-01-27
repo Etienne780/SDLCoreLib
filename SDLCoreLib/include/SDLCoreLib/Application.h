@@ -28,6 +28,8 @@ namespace SDLCore {
 		*/
 		static bool IsQuit();
 
+		static Platform GetPlatform();
+
 		/**
 		* @brief Starts the main loop of the application
 		* @return returns an error code or 0
