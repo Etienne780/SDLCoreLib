@@ -4,8 +4,6 @@
 #include <CoreLib/Log.h>
 #include <CoreLib/Algorithm.h>
 
-#include <CoreLib/Profiler.h>
-
 #include "Types/Audio/SoundManager.h"
 #include "Application.h"
 
@@ -75,46 +73,17 @@ namespace SDLCore {
         uint64_t frameStart = 0;
         OnStart();
         while(!m_closeApplication) {
-            Profiler::Begin("app");
-            
             frameStart = Time::GetTime();
             Time::Update();
 
-            Profiler::Begin("SDL poll events");
             ProcessSDLPollEvents();
-            Profiler::End("SDL poll events");
             if (m_closeApplication)
                 break;
 
-            Profiler::Begin("App update");
             OnUpdate();
-            Profiler::End("App update");
-
-            Profiler::Begin("Input late update");
             Input::LateUpdate();
-            Profiler::End("Input late update");
-
-            Profiler::Begin("Lock cursor");
             LockCursor();
-            Profiler::End("Lock cursor");
-
-            Profiler::Begin("FPS cap delay");
             FPSCapDelay(frameStart);
-            Profiler::End("FPS cap delay");
-
-            Profiler::End("app");
-
-            auto top = std::chrono::high_resolution_clock::now();
-            Profiler::PrintAndReset();
-            Log::Print("FPS: {}", SDLCore::Time::GetFrameRate());
-            Log::Print("");
-
-
-            double ms = std::chrono::duration<double, std::milli>(
-                std::chrono::high_resolution_clock::now() - top
-            ).count();
-
-            Log::Print("print time: {}", ms);
         }
         OnQuit();
 
