@@ -106,6 +106,15 @@ namespace SDLCore {
 		PIXELS
 	};
 
+	enum class Platform {
+		UNKOWN = 0,
+		WINDOWS,
+		MAC_OS,
+		LINUX,
+		IOS,
+		ANDROID
+	};
+
 }
 
 template<>
@@ -169,5 +178,18 @@ static inline std::string FormatUtils::toString<SDLCore::UnitType>(SDLCore::Unit
 	case SDLCore::UnitType::CHARACTERS: return "Characters";
 	case SDLCore::UnitType::PIXELS:		return "Pixels";
 	default:						return "UNKOWN";
+	}
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::Platform>(SDLCore::Platform platform) {
+	switch (platform) {
+	case SDLCore::Platform::UNKOWN:    return "Unknown";
+	case SDLCore::Platform::WINDOWS:   return "Windows";
+	case SDLCore::Platform::MAC_OS:    return "MacOS";
+	case SDLCore::Platform::LINUX:     return "Linux";
+	case SDLCore::Platform::IOS:       return "iOS";
+	case SDLCore::Platform::ANDROID:   return "Android";
+	default:                           return "UNKNOWN";
 	}
 }
