@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include <unordered_map>
-#include "IDManager.h"
 #include "UI/Types/UIProperty.h"
 
 namespace SDLCore::UI {
@@ -40,7 +39,7 @@ namespace SDLCore::UI {
 
 	private:
 		static inline bool m_basePropertiesRegistered = false;
-		static inline IDManager m_idManager;
+		static inline SDLCoreIDManager m_idManager;
 		static inline std::unordered_map<UIPropertyID, UIProperty> m_registeredProperties;
 	};
 

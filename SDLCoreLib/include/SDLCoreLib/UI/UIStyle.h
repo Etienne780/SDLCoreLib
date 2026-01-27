@@ -4,7 +4,6 @@
 #include "UI/Types/UIPropertyRegistry.h"
 #include "UI/Types/UITypes.h"
 #include "UI/Types/UIStyleState.h"
-#include "IDManager.h"
 
 namespace SDLCore::UI {
 
@@ -62,7 +61,7 @@ namespace SDLCore::UI {
 		UIStyle& SetImportant(bool value);
 
 	private:
-		static inline IDManager m_idManager;
+		static inline SDLCoreIDManager m_idManager;
 		UIStyleID m_id{ SDLCORE_INVALID_ID };
 		std::string m_name = "UNKOWN";
 		UIState m_currentState = UIState::NORMAL;
