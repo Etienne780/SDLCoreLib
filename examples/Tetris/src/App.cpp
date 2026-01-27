@@ -1,5 +1,6 @@
 ﻿#include "App.h"
 #include <SDLCoreLib/SDLCoreUI.h>
+#include <CoreLib/Profiler.h>
 
 App::App()
     : Application("Tetris", SDLCore::Version(1, 0)) {
@@ -87,6 +88,8 @@ void App::OnUpdate() {
         RE::SetColor(0);
         RE::Clear();
 
+        Profiler::Begin("UI");
+
         using namespace SDLCore;
         namespace Prop = SDLCore::UI::Properties;
         UI::SetContextWindow(context, m_winID);
@@ -107,9 +110,14 @@ void App::OnUpdate() {
         }
         UI::EndFrame();
 
-        if (SDLCore::Time::GetFrameCount() % 200 == 0)
+        Profiler::End("UI");
+
+        if (SDLCore::Time::GetFrameCount() % 2000 == 0) {
+            Profiler::PrintAndReset();
             Log::Print(SDLCore::Time::GetFrameRate(), dt);
-        //     Log::Print(UI::GetContextStringHierarchy(context));
+            Log::Print("");
+        }
+        //    Log::Print(UI::GetContextStringHierarchy(context));
         RE::Present();
     }
 
