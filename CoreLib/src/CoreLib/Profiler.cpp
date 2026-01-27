@@ -29,7 +29,7 @@ void Profiler::End(const char* name) {
     stats.minMs = std::min(stats.minMs, ms);
     stats.maxMs = std::max(stats.maxMs, ms);
 
-    // save max nesting for indenting
+    // max nesting für Einrückung speichern
     s_maxNesting[name] = std::max(s_maxNesting[name], static_cast<uint32_t>(s_activeStack.size()));
 }
 
