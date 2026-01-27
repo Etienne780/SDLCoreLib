@@ -601,10 +601,8 @@ namespace SDLCore::Render {
 	* Uses {} placeholders to format the text. Text caching can improve performance
 	* for static or infrequently changing text.
 	*
-	* @param pos x, y position of the text in pixels
-	* @param args Variadic list of values inserted into the text format pattern ({} markers).
-	* @note Each {} placeholder is replaced by the corresponding value. This approach is simple but
-	*       may not be optimal for performance in frequent or high-volume calls.
+	* @param pos X,Y position of the text in pixels.
+	* @param args Values inserted into the text format pattern.
 	*/
 	template<typename... Args>
 	void TextF(const Vector2& pos, Args&&... args) {
