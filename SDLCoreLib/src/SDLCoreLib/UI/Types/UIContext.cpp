@@ -1,4 +1,5 @@
 ﻿#include <functional>
+#include <CoreLib/Profiler.h>
 
 #include "Application.h"
 #include "SDLCoreTime.h"
@@ -388,6 +389,9 @@ namespace SDLCore::UI {
     }
 
     void UIContext::RenderNodes(UIContext* ctx, UINode* rootNode) {
+       
+        Profiler::Begin("UI-Render");
+        
         Rect r = SDLCore::Render::GetClipRect();
         ForEachNode(rootNode, [&](UINode* root) {
             root->Update(ctx, Time::GetDeltaTime());
@@ -403,6 +407,8 @@ namespace SDLCore::UI {
             root->RenderNode(ctx);
         });
         SDLCore::Render::SetClipRect(r);
+
+        Profiler::End("UI-Render");
     }
 
     void UIContext::CalculateClippingMask(UINode* node) {
