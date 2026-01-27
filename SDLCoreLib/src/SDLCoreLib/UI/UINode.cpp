@@ -132,18 +132,6 @@ namespace SDLCore::UI {
 		return m_hasHitTestTransparent;
 	}
 
-	bool UINode::HasOverflowVisible() const {
-		return HasOverflowVisibleX() && HasOverflowVisibleY();
-	}
-
-	bool UINode::HasOverflowVisibleX() const {
-		return m_isOverflowVisibleX;
-	}
-
-	bool UINode::HasOverflowVisibleY() const {
-		return m_isOverflowVisibleY;
-	}
-
 	bool UINode::IsStatePropagationEnabled() const {
 		return m_propagateStateToChildren;
 	}
@@ -152,12 +140,17 @@ namespace SDLCore::UI {
 		return m_isDisabled;
 	}
 
-	bool UINode::IsOverflowVisibleX() const {
-		return m_isOverflowVisibleX;
+	bool UINode::IsOverflowHidden() const {
+		return IsHorizontalOverflowHidden() ||
+			IsVerticalOverflowHidden();
 	}
 
-	bool UINode::IsOverflowVisibleY() const {
-		return m_isOverflowVisibleY;
+	bool UINode::IsHorizontalOverflowHidden() const {
+		return m_isHorizontalOverflowHidden;
+	}
+
+	bool UINode::IsVerticalOverflowHidden() const {
+		return m_isVerticalOverflowHidden;
 	}
 
 	void UINode::SetChildHasEvent(bool value) {
@@ -378,8 +371,8 @@ namespace SDLCore::UI {
 		GetResolvedValue<bool>(Properties::propagateStateToChildren, m_propagateStateToChildren, false);
 		GetResolvedValue<bool>(Properties::disabled, m_isDisabled, false);
 		GetResolvedValue<bool>(Properties::borderAffectsLayout, m_borderAffectsLayout, true);
-		GetResolvedValue<bool>(Properties::overflowVisibleX, m_isOverflowVisibleX, true);
-		GetResolvedValue<bool>(Properties::overflowVisibleY, m_isOverflowVisibleY, true);
+		GetResolvedValue<bool>(Properties::hideOverflowX, m_isHorizontalOverflowHidden, true);
+		GetResolvedValue<bool>(Properties::hideOverflowY, m_isVerticalOverflowHidden, true);
 
 		ApplyStyleCalled(ctx, m_renderedStyleState);
 

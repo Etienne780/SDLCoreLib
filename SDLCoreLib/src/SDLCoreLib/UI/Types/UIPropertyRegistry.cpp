@@ -141,23 +141,23 @@ namespace SDLCore::UI {
             PropertyValue(true)
         );
 
-        overflowVisibleX = RegisterProperty(
-            "overflowVisibleX",
-            "Controls whether content overflowing the element horizontally is visible (bool). Default: true.",
-            PropertyValue(true)
+        hideOverflowX = RegisterProperty(
+            "hide_overflow_x",
+            "Controls whether content overflowing the element horizontally is hidden (bool). Default: false.",
+            PropertyValue(false)
         );
 
-        overflowVisibleY = RegisterProperty(
-            "overflowVisibleY",
-            "Controls whether content overflowing the element vertically is visible (bool). Default: true.",
-            PropertyValue(true)
+        hideOverflowY = RegisterProperty(
+            "hide_overflow_y",
+            "Controls whether content overflowing the element vertically is hidden (bool). Default: false.",
+            PropertyValue(false)
         );
 
-        overflowVisible = RegisterCompositeProperty(
-            "overflowVisible",
-            "Shorthand property for both horizontal and vertical overflow visibility. Setting this applies the value to both overflowVisibleX and overflowVisibleY.",
-            overflowVisibleX,
-            overflowVisibleY
+        hideOverflow = RegisterCompositeProperty(
+            "hide_overflow",
+            "Shorthand property for hidding both horizontal and vertical overflow. Setting this will apply the value to both hideOverflowX and hideOverflowY.",
+            hideOverflowX,
+            hideOverflowY
         );
 
         // ============ Other ============
