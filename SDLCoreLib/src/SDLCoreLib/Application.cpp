@@ -73,7 +73,7 @@ namespace SDLCore {
         uint64_t frameStart = 0;
         OnStart();
         while(!m_closeApplication) {
-            frameStart = Time::GetTime();
+            frameStart = Time::GetTimeMS();
             Time::Update();
 
             ProcessSDLPollEvents();

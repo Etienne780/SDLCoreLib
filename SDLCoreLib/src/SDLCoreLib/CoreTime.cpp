@@ -14,7 +14,7 @@ namespace SDLCore {
         return s_frameCount;
     }
 
-    uint64_t Time::GetTime() {
+    uint64_t Time::GetTimeMS() {
         return SDL_GetTicks();
     }
 
@@ -23,10 +23,10 @@ namespace SDLCore {
     }
 
     float Time::GetTimeSec() {
-        return static_cast<float>(GetTime()) / 1000.0f;
+        return static_cast<float>(GetTimeMS()) / 1000.0f;
     }
 
-    float Time::GetDeltaTime() {
+    float Time::GetDeltaMSTime() {
         return static_cast<float>(s_deltaTimeSec * 1000.0);
     }
 
@@ -39,10 +39,10 @@ namespace SDLCore {
     }
 
     double Time::GetTimeSecDouble() {
-        return static_cast<double>(GetTime()) / 1000.0;
+        return static_cast<double>(GetTimeMS()) / 1000.0;
     }
     
-    double Time::GetDeltaTimeDouble() {
+    double Time::GetDeltaTimeMSDouble() {
         return s_deltaTimeSec * 1000.0;
     }
 
@@ -57,7 +57,7 @@ namespace SDLCore {
     void Time::Update() {
         s_frameCount++;
         s_currentTimeNS = GetTimeNS();
-        s_deltaTimeSec = static_cast<double>(s_currentTimeNS - s_lastTimeNS) / 1e9; // ns -> s
+        s_deltaTimeSec = static_cast<double>(s_currentTimeNS - s_lastTimeNS) / SDL_NS_PER_SECOND; // ns -> s
         s_frameRate = (s_deltaTimeSec > 0.0) ? 1.0 / s_deltaTimeSec : 0.0;
         s_lastTimeNS = s_currentTimeNS;
     }

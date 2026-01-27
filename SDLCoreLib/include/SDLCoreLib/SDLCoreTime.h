@@ -19,7 +19,7 @@ namespace SDLCore {
         * @brief Gets the current time in milliseconds since application instance creation
         * @return Current time in milliseconds
         */
-        static uint64_t GetTime();
+        static uint64_t GetTimeMS();
 
         /**
         * @brief Gets the current time in Nanoseconds since application instance creation
@@ -37,7 +37,7 @@ namespace SDLCore {
         * @brief Gets the delta time since last frame in milliseconds
         * @return Delta time in milliseconds
         */
-        static float GetDeltaTime();
+        static float GetDeltaMSTime();
 
         /**
         * @brief Gets the delta time since last frame in seconds
@@ -61,7 +61,7 @@ namespace SDLCore {
         * @brief Gets the delta time since last frame in milliseconds
         * @return Delta time in milliseconds
         */
-        static double GetDeltaTimeDouble();
+        static double GetDeltaTimeMSDouble();
 
         /**
         * @brief Gets the delta time since last frame in seconds
