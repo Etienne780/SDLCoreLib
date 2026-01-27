@@ -4,19 +4,14 @@
 #include <CoreLib/Log.h>
 #include <CoreLib/Algorithm.h>
 
+#include <CoreLib/Profiler.h>
+
 #include "Types/Audio/SoundManager.h"
 #include "Application.h"
 
 namespace SDLCore {
 
-    static inline constexpr char* platformStrWindows = "Windows";
-    static inline constexpr char* platformStrMacOS = "macOS";
-    static inline constexpr char* platformStrLinux = "Linux";
-    static inline constexpr char* platformStrIOS = "iOS";
-    static inline constexpr char* platformStrAndroid = "Android";
-
     static Application* m_application = nullptr;
-
 
     Application::Application(std::string& name, const Version& version)
         : m_name(name), m_version(version) {
@@ -44,32 +39,6 @@ namespace SDLCore {
             return m_application->m_closeApplication;
         }
         return true;
-    }
-
-    Platform Application::GetPlatform() {
-        const char* platStr = SDL_GetPlatform();
-        Platform platform = Platform::UNKOWN;
-
-        if (std::strcmp(platStr, platformStrWindows) == 0) {
-            platform = Platform::WINDOWS;
-        }
-        else if (std::strcmp(platStr, platformStrMacOS) == 0) {
-            platform = Platform::MAC_OS;
-        }
-        else if (std::strcmp(platStr, platformStrLinux) == 0) {
-            platform = Platform::LINUX;
-        }
-        else if (std::strcmp(platStr, platformStrIOS) == 0) {
-            platform = Platform::IOS;
-        }
-        else if (std::strcmp(platStr, platformStrAndroid) == 0) {
-            platform = Platform::ANDROID;
-        }
-        else {
-            SetErrorF("SDLCore::Application::GetPlatform: Unknown platform '{}'", platStr);
-        }
-
-        return platform;
     }
 
     void Application::Init() {
@@ -106,17 +75,46 @@ namespace SDLCore {
         uint64_t frameStart = 0;
         OnStart();
         while(!m_closeApplication) {
-            frameStart = Time::GetTimeMS();
+            Profiler::Begin("app");
+            
+            frameStart = Time::GetTime();
             Time::Update();
 
+            Profiler::Begin("SDL poll events");
             ProcessSDLPollEvents();
+            Profiler::End("SDL poll events");
             if (m_closeApplication)
                 break;
 
+            Profiler::Begin("App update");
             OnUpdate();
+            Profiler::End("App update");
+
+            Profiler::Begin("Input late update");
             Input::LateUpdate();
+            Profiler::End("Input late update");
+
+            Profiler::Begin("Lock cursor");
             LockCursor();
+            Profiler::End("Lock cursor");
+
+            Profiler::Begin("FPS cap delay");
             FPSCapDelay(frameStart);
+            Profiler::End("FPS cap delay");
+
+            Profiler::End("app");
+
+            auto top = std::chrono::high_resolution_clock::now();
+            Profiler::PrintAndReset();
+            Log::Print("FPS: {}", SDLCore::Time::GetFrameRate());
+            Log::Print("");
+
+
+            double ms = std::chrono::duration<double, std::milli>(
+                std::chrono::high_resolution_clock::now() - top
+            ).count();
+
+            Log::Print("print time: {}", ms);
         }
         OnQuit();
 
@@ -183,29 +181,6 @@ namespace SDLCore {
         }
     }
 
-    void Application::RecreateRendererForWindow(WindowID id) {
-        auto it = std::find_if(m_windows.begin(), m_windows.end(),
-            [id](const std::unique_ptr<Window>& win) { return win->GetID() == id; });
-
-        if (it == m_windows.end())
-            return;
-
-        Window& win = *(*it);
-        if (!win.HasWindow())
-            return;
-
-        win.CreateRenderer();
-    }
-
-    void Application::RecreateRenderersForAllWindows() {
-        for (auto& win : m_windows) {
-            if (!win->HasWindow())
-                continue;
-
-            win->CreateRenderer();
-        }
-    }
-
     bool Application::IsCursorLocked() const {
         return !m_cursorLockWinID.IsInvalid();
     }
@@ -238,86 +213,6 @@ namespace SDLCore {
 
     WindowID Application::GetCursorLockWinID() const {
         return m_cursorLockWinID;
-    }
-
-    SystemFilePath Application::GetPrefPath(const std::string& orgName) const {
-        char* pathStr = SDL_GetPrefPath(orgName.c_str(), m_name.c_str());
-        SystemFilePath filePath{ pathStr };
-        SDL_free(pathStr);
-        return filePath;
-    }
-
-    SystemFilePath Application::GetBasePath() const {
-        const char* pathStr = SDL_GetBasePath();
-        if (!pathStr) {
-            SetErrorF("SDLCore::Application::GetBasePath: failed to retrieve application base path: {}", SDL_GetError());
-            return {};
-        }
-        return { pathStr };
-    }
-
-    std::vector<std::string> Application::GetRenderDrivers() const {
-        std::vector<std::string> drivers;
-        int count = SDL_GetNumRenderDrivers();
-
-        for (int i = 0; i < count; i++) {
-            const char* name = SDL_GetRenderDriver(i);
-            if (name) 
-                drivers.emplace_back(name);
-        }
-
-        return drivers;
-    }
-
-    const std::string& Application::GetCurrentRenderDriver() const {
-        return m_renderDriver;
-    }
-
-    std::string Application::GetClipboardText() const {
-        char* text = SDL_GetClipboardText();
-        if (!text) {
-            return {};
-        }
-
-        std::string result{ text };
-        SDL_free(text);
-        return result;
-    }
-
-    std::vector<std::string> Application::GetClipboardMimeTypes() const {
-        std::vector<std::string> result;
-
-        size_t count = 0;
-        char** types = SDL_GetClipboardMimeTypes(&count);
-        if (!types || count <= 0) {
-            return result;
-        }
-
-        result.reserve(static_cast<std::size_t>(count));
-        for (int i = 0; i < count; ++i) {
-            if (types[i]) {
-                result.emplace_back(types[i]);
-            }
-        }
-
-        SDL_free(types);
-        return result;
-    }
-
-    const void* Application::GetClipboardData(
-        const std::string& mimeType,
-        std::size_t& outSize
-    ) const {
-        outSize = 0;
-
-        std::size_t size = 0;
-        const void* data = SDL_GetClipboardData(mimeType.c_str(), &size);
-        if (!data) {
-            return nullptr;
-        }
-
-        outSize = size;
-        return data;
     }
 
     void Application::SetFPSCap(int value) {
@@ -420,39 +315,6 @@ namespace SDLCore {
         m_cursorLockPosY = y;
     }
 
-    void Application::SetRenderDriver(const std::string& driver) {
-        m_renderDriver = driver;
-    }
-    
-    bool Application::SetClipboardText(const std::string& text) const {
-        return SDL_SetClipboardText(text.c_str());
-    }
-
-    bool Application::SetClipboardData(
-        SDL_ClipboardDataCallback callback,
-        SDL_ClipboardCleanupCallback cleanup,
-        void* userdata,
-        const std::vector<std::string>& mimeTypes
-    ) const {
-        if (mimeTypes.empty()) {
-            return false;
-        }
-
-        std::vector<const char*> cMimeTypes;
-        cMimeTypes.reserve(mimeTypes.size());
-        for (const auto& type : mimeTypes) {
-            cMimeTypes.push_back(type.c_str());
-        }
-
-        return SDL_SetClipboardData(
-            callback,
-            cleanup,
-            userdata,
-            cMimeTypes.data(),
-            static_cast<int>(cMimeTypes.size())
-        );
-    }
-
     void Application::SetVsyncOnWindows(int value) {
         for (auto& window : m_windows) {
             window->SetVsync(value);
@@ -526,13 +388,13 @@ namespace SDLCore {
         if (!m_cursorLockWinActive)
             return;
 
-        if (Time::GetTimeSecF() < m_cursorLastTime + m_cursorTick)
+        if (Time::GetTimeSec() < m_cursorLastTime + m_cursorTick)
             return;
-        m_cursorLastTime = Time::GetTimeSecF();
+        m_cursorLastTime = Time::GetTimeSec();
 
         if (!m_cursorLockWinID.IsInvalid()) {
-            if(auto win = m_cursorLockSDLWin)
-                SDL_WarpMouseInWindow(win, m_cursorLockPosX, m_cursorLockPosY);
+            if(auto win = m_cursorLockSDLWin.lock())
+                SDL_WarpMouseInWindow(win.get(), m_cursorLockPosX, m_cursorLockPosY);
         }
         else {
             ResetCursorLockParams();
@@ -552,7 +414,7 @@ namespace SDLCore {
         m_cursorLockResizeCallbackID.SetInvalid();
         m_cursorLockFocusGainCallbackID.SetInvalid();
         m_cursorLockFocusLostCallbackID.SetInvalid();
-        m_cursorLockSDLWin = nullptr;
+        m_cursorLockSDLWin.reset();
     }
 
 }

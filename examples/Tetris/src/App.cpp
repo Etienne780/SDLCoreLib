@@ -16,6 +16,8 @@ SDLCore::UI::UIStyle innerBtnStyle("inner");
 SDLCore::UI::UIStyle textStyle("text");
 
 void App::OnStart() {
+    SetFPSCap(APPLICATION_FPS_UNCAPPED);
+
     SDLCore::Texture tex("J:/images/image.png");
     auto* win = CreateWindow(&m_winID, "Tetris", 800, 800);
     win->SetIcon(tex);
@@ -65,6 +67,7 @@ void App::OnStart() {
 void App::OnUpdate() {
 
     if (!m_winID.IsInvalid()) {
+        Profiler::Begin("PreUI");
         namespace RE = SDLCore::Render;
         SDLCore::Input::SetWindow(m_winID);
 
@@ -87,6 +90,7 @@ void App::OnUpdate() {
         RE::SetBlendMode(SDLCore::Render::BlendMode::BLEND);
         RE::SetColor(0);
         RE::Clear();
+        Profiler::End("PreUI");
 
         Profiler::Begin("UI");
 
@@ -111,14 +115,10 @@ void App::OnUpdate() {
         UI::EndFrame();
 
         Profiler::End("UI");
-
-        if (SDLCore::Time::GetFrameCount() % 2000 == 0) {
-            Profiler::PrintAndReset();
-            Log::Print(SDLCore::Time::GetFrameRate(), dt);
-            Log::Print("");
-        }
         //    Log::Print(UI::GetContextStringHierarchy(context));
+        Profiler::Begin("SDL present");
         RE::Present();
+        Profiler::End("SDL present");
     }
 
     /*
