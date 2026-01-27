@@ -28,6 +28,15 @@ namespace SDLCore {
 		*/
 		static bool IsQuit();
 
+		/**
+		* @brief Returns the platform on which the application is currently running.
+		*
+		* This function queries the underlying SDL platform and maps it to the corresponding
+		* SDLCore::Platform enum value. It can be used to implement platform-specific logic
+		* within the application.
+		*
+		* @return SDLCore::Platform Enum value representing the current platform.
+		*/
 		static Platform GetPlatform();
 
 		/**
