@@ -577,6 +577,7 @@ namespace SDLCore::Render {
 	*
 	* @param text The text to draw.
 	* @param pos X,Y position of the text in pixels.
+	* @param pos X,Y position of the text in pixels.
 	*/
 	void Text(const std::string& text, const Vector2& pos);
 
@@ -585,9 +586,12 @@ namespace SDLCore::Render {
 	*
 	* Uses {} placeholders to format the text. Text caching can improve performance
 	* for static or infrequently changing text.
+	* Uses {} placeholders to format the text. Text caching can improve performance
+	* for static or infrequently changing text.
 	*
 	* @param x X position in pixels.
 	* @param y Y position in pixels.
+	* @param args Values inserted into the text format pattern.
 	* @param args Values inserted into the text format pattern.
 	*/
 	template<typename... Args>
@@ -600,7 +604,11 @@ namespace SDLCore::Render {
 	*
 	* Uses {} placeholders to format the text. Text caching can improve performance
 	* for static or infrequently changing text.
+	* Uses {} placeholders to format the text. Text caching can improve performance
+	* for static or infrequently changing text.
 	*
+	* @param pos X,Y position of the text in pixels.
+	* @param args Values inserted into the text format pattern.
 	* @param pos X,Y position of the text in pixels.
 	* @param args Values inserted into the text format pattern.
 	*/
@@ -610,7 +618,7 @@ namespace SDLCore::Render {
 	}
 
 	/**
-	* @brief Enables or disables text caching for subsequent render calls.
+	* @brief Enables or disables text caching for subsequent render call.
 	*
 	* When enabled, the renderer will pre-render the text and store it for faster repeated rendering.
 	* Cached text that is not used for a certain number of frames will be automatically removed.
