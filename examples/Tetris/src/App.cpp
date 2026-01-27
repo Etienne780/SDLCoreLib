@@ -1,6 +1,5 @@
 ﻿#include "App.h"
 #include <SDLCoreLib/SDLCoreUI.h>
-#include <CoreLib/Profiler.h>
 
 App::App()
     : Application("Tetris", SDLCore::Version(1, 0)) {
@@ -9,6 +8,7 @@ App::App()
 SDLCore::UI::UINumberID spacingXS;
 SDLCore::UI::UITextureID testImageID;
 SDLCore::UI::UIContext* context = SDLCore::UI::CreateContext();
+SDLCore::UI::UIContext* contextFPS = SDLCore::UI::CreateContext();
 
 SDLCore::UI::UIStyle styleRoot("root");
 SDLCore::UI::UIStyle buttenStyle("element");
@@ -67,7 +67,6 @@ void App::OnStart() {
 void App::OnUpdate() {
 
     if (!m_winID.IsInvalid()) {
-        Profiler::Begin("PreUI");
         namespace RE = SDLCore::Render;
         SDLCore::Input::SetWindow(m_winID);
 
@@ -90,9 +89,6 @@ void App::OnUpdate() {
         RE::SetBlendMode(SDLCore::Render::BlendMode::BLEND);
         RE::SetColor(0);
         RE::Clear();
-        Profiler::End("PreUI");
-
-        Profiler::Begin("UI");
 
         using namespace SDLCore;
         namespace Prop = SDLCore::UI::Properties;
@@ -114,11 +110,24 @@ void App::OnUpdate() {
         }
         UI::EndFrame();
 
-        Profiler::End("UI");
-        //    Log::Print(UI::GetContextStringHierarchy(context));
-        Profiler::Begin("SDL present");
+        static float frameRate = 0;
+        static float deltaTime = 0;
+        static float updateTimeVal = 3;
+        updateTimeVal += dt;
+        if (updateTimeVal > 2) {
+            frameRate = SDLCore::Time::GetFrameRate();
+            deltaTime = SDLCore::Time::GetDeltaTimeSec();
+            updateTimeVal = 0;
+        }
+
+        UI::SetContextWindow(contextFPS, m_winID);
+        UI::BindContext(contextFPS);
+
+        UI::BeginFrame(UI::UIKey("rootFPS"));
+            UI::Text(UI::UIKey("text"), FormatUtils::formatString("FPS: {}, DT: {}s", frameRate, deltaTime));
+        UI::EndFrame();
+
         RE::Present();
-        Profiler::End("SDL present");
     }
 
     /*

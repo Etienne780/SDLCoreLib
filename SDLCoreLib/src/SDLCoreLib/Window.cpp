@@ -123,29 +123,6 @@ namespace SDLCore {
 			return false;
 		}
 
-		int count = SDL_GetNumRenderDrivers();
-
-		Log::Print("Renderer: {}", SDL_GetRendererName(rawRenderer));
-		Log::Print("RenderDrivers:");
-		for (int i = 0; i < count; i++) {
-			Log::Print("- {}", SDL_GetRenderDriver(i));
-		}
-		Log::Print();
-
-		int drivers;
-		drivers = SDL_GetNumVideoDrivers();
-		for (int d = 0; d < drivers; d++) {
-			SDL_Log("Available VideoDriver name: %s", SDL_GetVideoDriver(d));
-		}
-		drivers = SDL_GetNumRenderDrivers();
-		for (int d = 0; d < drivers; d++) {
-			SDL_Log("Available RenderDriver name: %s", SDL_GetRenderDriver(d));
-		}
-		drivers = SDL_GetNumGPUDrivers();
-		for (int d = 0; d < drivers; d++) {
-			SDL_Log("Available GPUDriver name: %s", SDL_GetGPUDriver(d));
-		}
-
 		m_sdlRenderer = std::shared_ptr<SDL_Renderer>(rawRenderer, [](SDL_Renderer*) {});
 
 		if (!SetVsync(m_vsync)) {
