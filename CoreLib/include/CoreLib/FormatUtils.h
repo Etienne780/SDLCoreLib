@@ -108,6 +108,14 @@ public:
         return std::string(arr);
     }
 
+    template<typename T>
+    static inline std::string toString(const std::optional<T>& optional) {
+        if (optional) {
+            return toString(*optional); // recursive call
+        }
+        return "nullopt";
+    }
+
     // Base toString for generic types
     template<typename T>
     static std::string toString(T value) {

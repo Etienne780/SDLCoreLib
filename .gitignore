@@ -1,6 +1,5 @@
 # Visual Studio / VS Code
 .vs/
-.vs/
 .vscode/
 **.sln
 **.vcxproj
@@ -30,19 +29,7 @@ build/
 *.log
 *.tmp
 
-# Keep all source, include and lib files in vendor
-!Lunara/vendor/**/include/**
-!Lunara/vendor/**/lib/**
-
 # Ignore cmake/build temp files in vendor
-Lunara/vendor/**/cmake/
-Lunara/vendor/**/bin/
-Lunara/vendor/**/obj/
-
-# Keep all source and include files
-!Lunara/CoreLib/include/**
-!Lunara/CoreLib/src/**
-!Lunara/SDLCoreLib/include/**
-!Lunara/SDLCoreLib/src/**
-!Lunara/Lunara/include/**
-!Lunara/Lunara/src/**
+./vendor/**/cmake/
+./vendor/**/bin/
+./vendor/**/obj/

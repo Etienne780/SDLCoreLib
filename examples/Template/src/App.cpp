@@ -1,4 +1,6 @@
 ﻿#include "App.h"
+#include <CoreLib/Random.h>
+#include <CoreLib/OTNFile.h>
 
 App::App()
     : Application("NAME", SDLCore::Version(1, 0)) {
@@ -9,6 +11,8 @@ void App::OnStart() {
 }
 
 void App::OnUpdate() {
+    return;
+
     // Quit if no windows remain
     if (GetWindowCount() <= 0)
         Quit();
