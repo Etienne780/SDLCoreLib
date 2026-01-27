@@ -114,7 +114,10 @@ namespace SDLCore {
 			return false;
 		}
 
-		SDL_Renderer* rawRenderer = SDL_CreateRenderer(m_sdlWindow.get(), nullptr);
+		Application* app = Application::GetInstance();
+		std::string renderDriver = (app) ? app->GetCurrentRenderDriver() : "";
+		const char* cStr = (renderDriver.empty()) ? nullptr : renderDriver.c_str();
+		SDL_Renderer* rawRenderer = SDL_CreateRenderer(m_sdlWindow.get(), cStr);
 		if (!rawRenderer) {
 			SetErrorF("SDLCore::Window::CreateRenderer: Renderer creation failed on window '{}': {}", m_name, SDL_GetError());
 			return false;
@@ -440,6 +443,14 @@ namespace SDLCore {
 
 	float Window::GetContentScale() const {
 		return m_contentScale;
+	}
+
+	std::string Window::GetRendererName() const {
+		if (!m_sdlRenderer)
+			return {};
+
+		const char* name = SDL_GetRendererName(m_sdlRenderer.get());
+		return (name) ? std::string{ name } : std::string{};
 	}
 
 	bool Window::SetName(const std::string& name) {

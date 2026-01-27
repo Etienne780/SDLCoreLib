@@ -28,6 +28,9 @@ void App::OnUpdate() {
 
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
             DeleteWindow(m_winID);
+
+        if (Time::GetFrameCount() % 200 == 0)
+            Log::Print("FPS: {}", Time::GetFrameRateHzF());
     }
 }
 

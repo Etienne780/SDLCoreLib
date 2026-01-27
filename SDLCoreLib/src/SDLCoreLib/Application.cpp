@@ -217,7 +217,7 @@ namespace SDLCore {
         return m_cursorLockWinID;
     }
 
-    SystemFilePath Application::GetPrefPath(const std::string& orgName) const {
+    const SystemFilePath& Application::GetPrefPath(const std::string& orgName) const {
         char* pathStr = SDL_GetPrefPath(orgName.c_str(), m_name.c_str());
         SystemFilePath filePath{ pathStr };
         SDL_free(pathStr);
@@ -231,6 +231,23 @@ namespace SDLCore {
             return {};
         }
         return { pathStr };
+    }
+
+    std::vector<std::string> Application::GetRenderDrivers() const {
+        std::vector<std::string> drivers;
+        int count = SDL_GetNumRenderDrivers();
+
+        for (int i = 0; i < count; i++) {
+            const char* name = SDL_GetRenderDriver(i);
+            if (name) 
+                drivers.emplace_back(name);
+        }
+
+        return drivers;
+    }
+
+    const std::string& Application::GetCurrentRenderDriver() const {
+        return m_renderDriver;
     }
 
     void Application::SetFPSCap(int value) {
@@ -331,6 +348,10 @@ namespace SDLCore {
         if (y < 0)
             y = 0;
         m_cursorLockPosY = y;
+    }
+
+    void Application::SetRenderDriver(const std::string& driver) {
+        m_renderDriver = driver;
     }
 
     void Application::SetVsyncOnWindows(int value) {

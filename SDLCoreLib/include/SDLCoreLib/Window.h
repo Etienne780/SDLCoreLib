@@ -248,6 +248,17 @@ namespace SDLCore {
 		*/
 		float GetContentScale() const;
 
+		/**
+		* @brief Returns the name of the renderer currently associated with this window.
+		*
+		* This function queries SDL for the name of the active renderer used by the window.
+		* The returned name is a low-ASCII identifier such as "opengl", "direct3d12" or "metal".
+		*
+		* @return Name of the renderer, or an empty string if no renderer exists or
+		*         the name could not be queried.
+		*/
+		std::string GetRendererName() const;
+
 		// ======= Dynamically modifiable properties =======
 
 		/**

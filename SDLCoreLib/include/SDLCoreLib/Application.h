@@ -160,7 +160,7 @@ namespace SDLCore {
 		* @return SystemFilePath representing the absolute, writable user directory.
 		*         Returns an empty path if the directory could not be created.
 		*/
-		SystemFilePath GetPrefPath(const std::string& orgName = "DefaultCompany") const;
+		const SystemFilePath& GetPrefPath(const std::string& orgName = "DefaultCompany") const;
 
 		/**
 		* @brief Returns the directory where the application was executed from.
@@ -182,6 +182,29 @@ namespace SDLCore {
 		* @threadsafety Safe to call from any thread.
 		*/
 		SystemFilePath GetBasePath() const;
+
+		/**
+		* @brief Returns the names of all available 2D rendering drivers.
+		*
+		* Queries SDL for all built-in rendering drivers and returns their names
+		* in the order SDL would normally initialize them.
+		*
+		* @return std::vector<std::string> containing the names of the render drivers.
+		*         Drivers that are unavailable (NULL) are omitted.
+		*
+		* @threadsafety Safe to call from any thread.
+		*/
+		std::vector<std::string> GetRenderDrivers() const;
+
+		/**
+		* @brief Returns the currently selected rendering driver.
+		*
+		* The returned string corresponds to the driver that will be used when
+		* creating the SDL_Renderer for application windows.
+		*
+		* @return std::string containing the name of the current render driver.
+		*/
+		const std::string& GetCurrentRenderDriver() const;
 
 		/**
 		* @brief Sets the application's frame rate cap or VSync mode.
@@ -237,6 +260,17 @@ namespace SDLCore {
 		*/
 		void SetCursorLockPosY(float y);
 
+		/**
+		* @brief Sets the rendering driver to use for newly created window renderer.
+		*
+		* This function updates the internal driver selection. It dose not create
+		* new renderers for the current windows
+		*
+		* @param driver Name of the rendering driver to use. If empty, SDL will choose
+		*               the default driver automatically.
+		*/
+		void SetRenderDriver(const std::string& driver);
+
 		/*
 		* @brief Called on programm start
 		*/
@@ -262,6 +296,7 @@ namespace SDLCore {
 		std::vector<std::unique_ptr<Window>> m_windows;
 		std::vector<WindowID> m_windowsToClose;
 		SDLCoreIDManager m_windowIDManager;
+		std::string m_renderDriver;
 
 		bool m_closeApplication = false;
 		int m_vsync = 0;
