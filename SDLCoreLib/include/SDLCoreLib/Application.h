@@ -139,6 +139,51 @@ namespace SDLCore {
 		WindowID GetCursorLockWinID() const;
 
 		/**
+		* @brief Returns a user- and app-specific directory path for storing files.
+		*
+		* This function returns the "preference directory" where the application can
+		* safely write user-specific files such as preferences or save games.
+		* The directory is unique per user and per application. The wrapper converts
+		* the SDL-allocated string to a SystemFilePath object and handles memory cleanup.
+		*
+		* Example paths:
+		* - Windows: `C:\Users\Bob\AppData\Roaming\MyCompany\MyApp\`
+		* - Linux:   `/home/bob/.local/share/MyApp/`
+		* - macOS:   `/Users/bob/Library/Application Support/MyApp/`
+		*
+		* Rules:
+		* - Provide a consistent organization name for all your apps.
+		* - Use a unique application name.
+		* - Only letters, numbers, and spaces; avoid punctuation.
+		*
+		* @param orgName Name of the organization (default: "DefaultCompany").
+		* @return SystemFilePath representing the absolute, writable user directory.
+		*         Returns an empty path if the directory could not be created.
+		*/
+		SystemFilePath GetPrefPath(const std::string& orgName = "DefaultCompany") const;
+
+		/**
+		* @brief Returns the directory where the application was executed from.
+		*
+		* This function wraps SDL_GetBasePath() and returns a SystemFilePath representing
+		* the absolute path of the directory containing the application binary.
+		* The path is guaranteed to end with a platform-specific separator ('\\' on Windows, '/' elsewhere).
+		*
+		* Notes:
+		* - On macOS and iOS, if the application is inside a ".app" bundle, this function
+		*   returns the Resource directory (e.g., MyApp.app/Contents/Resources/).
+		*   This can be overridden via the SDL_FILESYSTEM_BASE_DIR_TYPE property in Info.plist.
+		* - On platforms like Nintendo 3DS, this may return a read-only directory (e.g., "romfs").
+		* - SDL caches the result internally; the first call may be slower.
+		*
+		* @return SystemFilePath representing the base directory of the application.
+		*         Returns an empty path on error; GetError() contains the platform-specific reason.
+		*
+		* @threadsafety Safe to call from any thread.
+		*/
+		SystemFilePath GetBasePath() const;
+
+		/**
 		* @brief Sets the application's frame rate cap or VSync mode.
 		*
 		* This function configures how the application's rendering loop limits its frame rate.

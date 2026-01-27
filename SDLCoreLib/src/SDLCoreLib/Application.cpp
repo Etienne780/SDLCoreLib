@@ -217,6 +217,22 @@ namespace SDLCore {
         return m_cursorLockWinID;
     }
 
+    SystemFilePath Application::GetPrefPath(const std::string& orgName) const {
+        char* pathStr = SDL_GetPrefPath(orgName.c_str(), m_name.c_str());
+        SystemFilePath filePath{ pathStr };
+        SDL_free(pathStr);
+        return filePath;
+    }
+
+    SystemFilePath Application::GetBasePath() const {
+        const char* pathStr = SDL_GetBasePath();
+        if (!pathStr) {
+            SetErrorF("SDLCore::Application::GetBasePath: failed to retrieve application base path: {}", SDL_GetError());
+            return {};
+        }
+        return { pathStr };
+    }
+
     void Application::SetFPSCap(int value) {
         if (value < -2)
             value = APPLICATION_FPS_UNCAPPED;
