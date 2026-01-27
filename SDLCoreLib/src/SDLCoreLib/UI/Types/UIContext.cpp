@@ -391,7 +391,7 @@ namespace SDLCore::UI {
     void UIContext::RenderNodes(UIContext* ctx, UINode* rootNode) {
         Rect r = SDLCore::Render::GetClipRect();
         ForEachNode(rootNode, [&](UINode* root) {
-            root->Update(ctx, Time::GetDeltaTime());
+            root->Update(ctx, Time::GetDeltaTimeMSF());
 
             if (!root)
                 return;
