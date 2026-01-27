@@ -79,7 +79,7 @@ void App::OnUpdate() {
         if (SDLCore::Input::KeyJustPressed(SDLCore::KeyCode::E))
             clipY = !clipY;
 
-        float dt = SDLCore::Time::GetDeltaTimeSec();
+        float dt = SDLCore::Time::GetDeltaTimeSecF();
         static float elapsedTime = 0.0f;
         elapsedTime += dt;
         float w = (std::cos(elapsedTime) + 1.0f) * 0.5f * 500.0f;
@@ -115,8 +115,8 @@ void App::OnUpdate() {
         static float updateTimeVal = 3;
         updateTimeVal += dt;
         if (updateTimeVal > 2) {
-            frameRate = SDLCore::Time::GetFrameRate();
-            deltaTime = SDLCore::Time::GetDeltaTimeSec();
+            frameRate = SDLCore::Time::GetFrameRateHzF();
+            deltaTime = SDLCore::Time::GetDeltaTimeSecF();
             updateTimeVal = 0;
         }
 
