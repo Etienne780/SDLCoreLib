@@ -414,8 +414,8 @@ namespace SDLCore::UI {
 
         if (!parent) {
             // Root node
-            bool clipX = !node->HasOverflowVisibleX();
-            bool clipY = !node->HasOverflowVisibleY();
+            bool clipX = node->IsHorizontalOverflowHidden();
+            bool clipY = node->IsVerticalOverflowHidden();
 
             if (clipX || clipY) {
                 // Root clips to its own rect
@@ -433,8 +433,8 @@ namespace SDLCore::UI {
 
         Vector4 selfClip = CreateClipRect(node);
 
-        bool clipX = !node->HasOverflowVisibleX();
-        bool clipY = !node->HasOverflowVisibleY();
+        bool clipX = node->IsHorizontalOverflowHidden();
+        bool clipY = node->IsVerticalOverflowHidden();
 
         Vector4 effectiveClip = IntersectAxis(
             baseClip,

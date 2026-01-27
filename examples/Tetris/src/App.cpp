@@ -94,11 +94,11 @@ void App::OnUpdate() {
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
             UI::BeginFrame(UI::UIKey("butten"), buttenStyle)->SetOverride(Prop::size, w, h)
-                .SetOverride(Prop::overflowVisible, !clipX, !clipY);
+                .SetOverride(Prop::hideOverflow, clipX, clipY);
             {
                 UI::BeginFrame(UI::UIKey("inner"), innerBtnStyle);
                 {
-                    UI::Text(UI::UIKey("text"), "text", textStyle);
+                    UI::Text(UI::UIKey("text"), FormatUtils::formatString("clipX: {}, clipY: {}", clipX, clipY), textStyle);
                 }
                 UI::EndFrame();
             }

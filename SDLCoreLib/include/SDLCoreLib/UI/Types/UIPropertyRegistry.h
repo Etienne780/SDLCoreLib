@@ -261,39 +261,39 @@ namespace SDLCore::UI::Properties {
 	inline UIPropertyID borderAffectsLayout;
 
 	/*
-	* @brief Horizontal overflow visible (bool)
+	* @brief Hide horizontal overflow (bool)
 	*
-	* Controls whether content overflowing the element horizontally is visible.
+	* Controls whether content overflowing the element horizontally is hidden.
 	*
-	* Default: true
-	*
-	* Usage: style.SetValue<bool>(true)
-	*/
-	inline UIPropertyID overflowVisibleX;
-
-	/*
-	* @brief Vertical overflow visible (bool)
-	*
-	* Controls whether content overflowing the element vertically is visible.
-	*
-	* Default: true
+	* Default: false
 	*
 	* Usage: style.SetValue<bool>(true)
 	*/
-	inline UIPropertyID overflowVisibleY;
+	inline UIPropertyID hideOverflowX;
 
 	/*
-	* @brief Shorthand property for both horizontal and vertical overflow visibility (composite)
+	* @brief Hide vertical overflow (bool)
 	*
-	* Setting this will apply the value to both overflowVisibleX and overflowVisibleY.
+	* Controls whether content overflowing the element vertically is hidden.
 	*
-	* Default: true, true
+	* Default: false
 	*
-	* Composite layout: overflowVisibleX, overflowVisibleY
-	*
-	* Usage: style.SetValue(true, true)
+	* Usage: style.SetValue<bool>(true)
 	*/
-	inline UIPropertyID overflowVisible;
+	inline UIPropertyID hideOverflowY;
+
+	/*
+	* @brief Shorthand property for hidding both horizontal and vertical overflow (composite)
+	*
+	* Setting this will apply the value to both hideOverflowX and hideOverflowY.
+	*
+	* Default: false, false
+	*
+	* Composite layout: hideOverflowX, hideOverflowY
+	*
+	* Usage: style.SetValue(false, true)
+	*/
+	inline UIPropertyID hideOverflow;
 
 	#pragma endregion
 

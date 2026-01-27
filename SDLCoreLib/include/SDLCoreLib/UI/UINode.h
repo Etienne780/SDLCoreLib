@@ -107,14 +107,12 @@ namespace SDLCore::UI {
 
         bool HasPointerEvents() const;
         bool HasHitTestTransparent() const;
-        bool HasOverflowVisible() const;
-        bool HasOverflowVisibleX() const;
-        bool HasOverflowVisibleY() const;
         bool IsStatePropagationEnabled() const;
         bool IsDisabled() const;
 
-        bool IsOverflowVisibleX() const;
-        bool IsOverflowVisibleY() const;
+        bool IsOverflowHidden() const;
+        bool IsHorizontalOverflowHidden() const;
+        bool IsVerticalOverflowHidden() const;
 
         /*
         * @brief used internaly to find out what elements have events
@@ -185,8 +183,8 @@ namespace SDLCore::UI {
         bool m_propagateStateToChildren = false;
         bool m_isDisabled = false;
         bool m_borderAffectsLayout = true;
-        bool m_isOverflowVisibleX = true;
-        bool m_isOverflowVisibleY = true;
+        bool m_isHorizontalOverflowHidden = true;
+        bool m_isVerticalOverflowHidden = true;
 
         Vector2 m_position;
         Vector2 m_size;
