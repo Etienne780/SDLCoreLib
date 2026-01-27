@@ -8,7 +8,7 @@ namespace SDLCore {
     static uint64_t s_lastTimeNS = 0;
     static uint64_t s_currentTimeNS = 0;
     static double s_deltaTimeSec = 0.0;
-    static double s_frameRate = 0.0;
+    static double s_frameRateHz = 0.0;
 
     uint64_t Time::GetFrameCount() {
         return s_frameCount;
@@ -23,42 +23,50 @@ namespace SDLCore {
     }
 
     float Time::GetTimeSec() {
-        return static_cast<float>(GetTimeMS()) / 1000.0f;
+        return static_cast<float>(GetTimeNS()) / SDL_NS_PER_SECOND;
     }
 
-    float Time::GetDeltaMSTime() {
-        return static_cast<float>(s_deltaTimeSec * 1000.0);
+    float Time::GetDeltaTimeMS() {
+        return static_cast<float>(s_deltaTimeSec * SDL_MS_PER_SECOND);
     }
 
     float Time::GetDeltaTimeSec() {
         return static_cast<float>(s_deltaTimeSec);
     }
 
-    float Time::GetFrameRate() {
-        return static_cast<float>(s_frameRate);
+    float Time::GetFrameRateHz() {
+        return static_cast<float>(s_frameRateHz);
     }
 
     double Time::GetTimeSecDouble() {
-        return static_cast<double>(GetTimeMS()) / 1000.0;
+        return static_cast<double>(GetTimeMS()) / SDL_MS_PER_SECOND;
     }
     
     double Time::GetDeltaTimeMSDouble() {
-        return s_deltaTimeSec * 1000.0;
+        return s_deltaTimeSec * SDL_MS_PER_SECOND;
     }
 
     double Time::GetDeltaTimeSecDouble() {
         return s_deltaTimeSec;
     }
 
-    double Time::GetFrameRateDouble() {
-        return s_frameRate;
+    double Time::GetFrameRateHzDouble() {
+        return s_frameRateHz;
     }
 
     void Time::Update() {
-        s_frameCount++;
         s_currentTimeNS = GetTimeNS();
+
+        if (s_lastTimeNS == 0) {
+            s_lastTimeNS = s_currentTimeNS;
+            s_deltaTimeSec = 0.0;
+            s_frameRateHz = 0.0;
+            return;
+        }
+
+        s_frameCount++;
         s_deltaTimeSec = static_cast<double>(s_currentTimeNS - s_lastTimeNS) / SDL_NS_PER_SECOND; // ns -> s
-        s_frameRate = (s_deltaTimeSec > 0.0) ? 1.0 / s_deltaTimeSec : 0.0;
+        s_frameRateHz = (s_deltaTimeSec > 0.0) ? 1.0 / s_deltaTimeSec : 0.0;
         s_lastTimeNS = s_currentTimeNS;
     }
 
