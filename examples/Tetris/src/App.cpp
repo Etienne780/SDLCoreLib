@@ -76,10 +76,11 @@ void App::OnUpdate() {
         if (SDLCore::Input::KeyJustPressed(SDLCore::KeyCode::E))
             clipY = !clipY;
 
-        float t = SDLCore::Time::GetFrameCount();
-        float w = 0, h = 0;
-        w = (std::cos(t * 0.001f) + 1) * 0.5f * 500.0f;
-        h = (std::sin(t * 0.001f) + 1) * 0.5f * 500.0f;
+        float dt = SDLCore::Time::GetDeltaTimeSec();
+        static float elapsedTime = 0.0f;
+        elapsedTime += dt;
+        float w = (std::cos(elapsedTime) + 1.0f) * 0.5f * 500.0f;
+        float h = (std::sin(elapsedTime) + 1.0f) * 0.5f * 500.0f;
 
         RE::SetWindowRenderer(m_winID);
         RE::SetBlendMode(SDLCore::Render::BlendMode::BLEND);
@@ -107,7 +108,7 @@ void App::OnUpdate() {
         UI::EndFrame();
 
         if (SDLCore::Time::GetFrameCount() % 200 == 0)
-            Log::Print(SDLCore::Time::GetFrameRate());
+            Log::Print(SDLCore::Time::GetFrameRate(), dt);
         //     Log::Print(UI::GetContextStringHierarchy(context));
         RE::Present();
     }
