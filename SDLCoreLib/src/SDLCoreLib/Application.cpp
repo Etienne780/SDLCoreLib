@@ -357,9 +357,9 @@ namespace SDLCore {
         if (!m_cursorLockWinActive)
             return;
 
-        if (Time::GetTimeSec() < m_cursorLastTime + m_cursorTick)
+        if (Time::GetTimeSecF() < m_cursorLastTime + m_cursorTick)
             return;
-        m_cursorLastTime = Time::GetTimeSec();
+        m_cursorLastTime = Time::GetTimeSecF();
 
         if (!m_cursorLockWinID.IsInvalid()) {
             if(auto win = m_cursorLockSDLWin.lock())

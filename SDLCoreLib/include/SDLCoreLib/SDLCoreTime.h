@@ -31,49 +31,49 @@ namespace SDLCore {
         * @brief Gets the current time in seconds since application instance creation
         * @return Current time in seconds
         */
-        static float GetTimeSec();
+        static float GetTimeSecF();
 
         /**
         * @brief Gets the delta time since last frame in milliseconds
         * @return Delta time in milliseconds
         */
-        static float GetDeltaMSTime();
+        static float GetDeltaTimeMSF();
 
         /**
         * @brief Gets the delta time since last frame in seconds
         * @return Delta time in seconds
         */
-        static float GetDeltaTimeSec();
+        static float GetDeltaTimeSecF();
 
         /**
         * @brief Gets the current frame rate
         * @return Frames per second
         */
-        static float GetFrameRate();
+        static float GetFrameRateHzF();
 
         /**
         * @brief Gets the current time in seconds since application instance creation
         * @return Current time in seconds
         */
-        static double GetTimeSecDouble();
+        static double GetTimeSecD();
 
         /**
         * @brief Gets the delta time since last frame in milliseconds
         * @return Delta time in milliseconds
         */
-        static double GetDeltaTimeMSDouble();
+        static double GetDeltaTimeMSD();
 
         /**
         * @brief Gets the delta time since last frame in seconds
         * @return Delta time in seconds
         */
-        static double GetDeltaTimeSecDouble();
+        static double GetDeltaTimeSecD();
 
         /**
         * @brief Gets the current frame rate
         * @return Frames per second
         */
-        static double GetFrameRateDouble();
+        static double GetFrameRateHzD();
 
     private:
         Time() = delete;

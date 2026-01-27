@@ -22,35 +22,35 @@ namespace SDLCore {
         return SDL_GetTicksNS();
     }
 
-    float Time::GetTimeSec() {
+    float Time::GetTimeSecF() {
         return static_cast<float>(GetTimeNS()) / SDL_NS_PER_SECOND;
     }
 
-    float Time::GetDeltaTimeMS() {
+    float Time::GetDeltaTimeMSF() {
         return static_cast<float>(s_deltaTimeSec * SDL_MS_PER_SECOND);
     }
 
-    float Time::GetDeltaTimeSec() {
+    float Time::GetDeltaTimeSecF() {
         return static_cast<float>(s_deltaTimeSec);
     }
 
-    float Time::GetFrameRateHz() {
+    float Time::GetFrameRateHzF() {
         return static_cast<float>(s_frameRateHz);
     }
 
-    double Time::GetTimeSecDouble() {
+    double Time::GetTimeSecD() {
         return static_cast<double>(GetTimeMS()) / SDL_MS_PER_SECOND;
     }
     
-    double Time::GetDeltaTimeMSDouble() {
+    double Time::GetDeltaTimeMSD() {
         return s_deltaTimeSec * SDL_MS_PER_SECOND;
     }
 
-    double Time::GetDeltaTimeSecDouble() {
+    double Time::GetDeltaTimeSecD() {
         return s_deltaTimeSec;
     }
 
-    double Time::GetFrameRateHzDouble() {
+    double Time::GetFrameRateHzD() {
         return s_frameRateHz;
     }
 
