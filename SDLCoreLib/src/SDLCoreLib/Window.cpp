@@ -308,7 +308,7 @@ namespace SDLCore {
 
 	bool Window::UpdateCursorVisibility() const {
 		if (m_isFocused) {
-			return (m_isCursorHiden) ?
+			return (m_isCursorHidden) ?
 				SDL_HideCursor() : SDL_ShowCursor();
 		}
 		else {
@@ -785,8 +785,8 @@ namespace SDLCore {
 		return true;
 	}
 
-	bool Window::SetCursorHiden(bool visibility) {
-		m_isCursorHiden = visibility;
+	bool Window::SetCursorHidden(bool visibility) {
+		m_isCursorHidden = visibility;
 
 		if (!UpdateCursorVisibility()) {
 			SetErrorF("SDLCore::Window::SetCursorHidden: Failed to set cursor hidden: {}", SDL_GetError());

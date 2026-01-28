@@ -445,7 +445,7 @@ namespace SDLCore {
 		* @param visibility When true, the cursor will be hidden; when false, it will be shown.
 		* @return True if the visibility update was successfully applied, false on SDL failure.
 		*/
-		bool SetCursorHiden(bool visibility);
+		bool SetCursorHidden(bool visibility);
 
 		/**
 		* @brief Subscribes a callback to be called when this window object is destryoed.
@@ -648,7 +648,7 @@ namespace SDLCore {
 
 		WindowState m_state = WindowState::NORMAL;
 		bool m_isFocused = false;
-		bool m_isCursorHiden = false;
+		bool m_isCursorHidden = false;
 		bool m_resizable = true;
 		bool m_alwaysOnTop = false;
 		bool m_borderless = false;
