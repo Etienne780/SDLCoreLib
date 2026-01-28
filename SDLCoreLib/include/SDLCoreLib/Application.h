@@ -85,15 +85,41 @@ namespace SDLCore {
 		Window* CreateWindow(WindowID* idPtr, const std::string& name, int width, int height);
 
 		/**
-		* @brief Delete a Window
-		* @param id Window to Delete
+		* @brief Deletes a window and releases all associated resources.
+		*
+		* This function destroys the specified window, including its underlying SDL window
+		* and renderer, and removes it from the application's window list.
+		*
+		* @param id Unique identifier of the window to delete.
+		* @return true if the window was found and deleted successfully, false otherwise.
 		*/
 		bool DeleteWindow(WindowID id);
 
-		/*
-		* @brief Delete all windows
+		/**
+		* @brief Deletes all windows managed by the application.
+		*
+		* This function destroys all existing windows, releases their associated SDL resources,
+		* and clears the internal window list.
 		*/
 		void DeleteAllWindows();
+
+		/**
+		* @brief Recreates the renderer for a specific window.
+		*
+		* This function destroys the existing renderer (if any) associated with the specified
+		* window and creates a new renderer using the currently selected render driver.
+		*
+		* @param id Unique identifier of the window whose renderer should be recreated.
+		*/
+		void RecreateRendererForWindow(WindowID id);
+
+		/**
+		* @brief Recreates the renderers for all existing windows.
+		*
+		* This function iterates over all windows managed by the application and recreates
+		* their renderers using the currently selected render driver.
+		*/
+		void RecreateRenderersForAllWindows();
 
 		/**
 		* @brief Returns whether a window currently has cursor locking enabled.

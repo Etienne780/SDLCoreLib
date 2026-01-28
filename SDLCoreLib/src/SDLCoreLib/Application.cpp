@@ -183,6 +183,29 @@ namespace SDLCore {
         }
     }
 
+    void Application::RecreateRendererForWindow(WindowID id) {
+        auto it = std::find_if(m_windows.begin(), m_windows.end(),
+            [id](const std::unique_ptr<Window>& win) { return win->GetID() == id; });
+
+        if (it == m_windows.end())
+            return;
+
+        Window& win = *(*it);
+        if (!win.HasWindow())
+            return;
+
+        win.CreateRenderer();
+    }
+
+    void Application::RecreateRenderersForAllWindows() {
+        for (auto& win : m_windows) {
+            if (!win->HasWindow())
+                continue;
+
+            win->CreateRenderer();
+        }
+    }
+
     bool Application::IsCursorLocked() const {
         return !m_cursorLockWinID.IsInvalid();
     }
