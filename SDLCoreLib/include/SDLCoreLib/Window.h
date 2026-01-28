@@ -119,7 +119,7 @@ namespace SDLCore {
 
 		/**
 		* @brief Gets the SDL window ID
-		* @return SDL_WindowID if the window exists, otherwise SDLCORE_INVALID_ID
+		* @return SDL_WindowID if the window exists, otherwise 0
 		*/
 		SDL_WindowID GetSDLID() const;
 

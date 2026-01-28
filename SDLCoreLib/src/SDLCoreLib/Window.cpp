@@ -29,7 +29,7 @@ namespace SDLCore {
 	}
 
 	SDL_WindowID Window::GetSDLID() const {
-		return m_sdlWindow ? SDL_GetWindowID(m_sdlWindow.get()) : SDLCORE_INVALID_ID;
+		return m_sdlWindow ? SDL_GetWindowID(m_sdlWindow.get()) : 0;
 	}
 
 	std::string Window::GetName() const {
