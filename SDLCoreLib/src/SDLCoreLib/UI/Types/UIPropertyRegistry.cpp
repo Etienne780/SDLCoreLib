@@ -104,6 +104,12 @@ namespace SDLCore::UI {
             alignHorizontal,
             alignVertical
         );
+
+        positionType = RegisterProperty(
+            "positionType",
+            "Defines how this element is positioned within its parent layout (int, UIPositionType). Default: UIPositionType::FLOW",
+            PropertyValue(UIPositionType::FLOW)
+        );
         
         backgroundTexture = RegisterProperty(
             "background_texture",

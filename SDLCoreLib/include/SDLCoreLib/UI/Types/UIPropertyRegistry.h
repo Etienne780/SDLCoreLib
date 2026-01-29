@@ -187,6 +187,42 @@ namespace SDLCore::UI::Properties {
 	*/
 	inline UIPropertyID align;
 
+	/*
+	* @brief (UIPositionType)
+	*
+	* Defines how this element is positioned within its parent layout (int, UIPositionType).
+	*
+	* FLOW:
+	* 
+	*   - Participates in normal layout flow
+	* 
+	*   - Position is fully determined by the parent layout
+	*
+	* RELATIVE:
+	* 
+	*   - Participates in layout flow
+	* 
+	*   - Applies a local offset relative to its flow position
+	*
+	* ABSOLUTE:
+	* 
+	*   - Removed from layout flow
+	* 
+	*   - Positioned relative to the nearest positioned ancestor
+	*
+	* Default: UIPositionType::FLOW
+	*
+	* Usage: style.SetValue<UIPositionType>(UIPositionType::RELATIVE);
+	*/
+	inline UIPropertyID positionType;
+
+	inline UIPropertyID top;
+	inline UIPropertyID left;
+	inline UIPropertyID bottom;
+	inline UIPropertyID right;
+
+	inline UIPropertyID topLeft;
+	inline UIPropertyID bottomRigth;
 
 	#pragma endregion
 

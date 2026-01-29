@@ -31,6 +31,12 @@ namespace SDLCore::UI {
 	};
 	using UILayoutDir = UILayoutDirection;
 
+	enum UIPositionType : uint16_t {
+		FLOW = 0,
+		RELATIVE,
+		ABSOLUTE
+	};
+
 	enum UISizeUnit : uint16_t {
 		PX = 0,
 		PERCENTAGE,
