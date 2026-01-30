@@ -38,7 +38,6 @@ void App::OnStart() {
 
     buttenStyle.SetValue(Prop::layoutDirection, UI::UILayoutDir::COLUMN)
         .SetValue(Prop::align, UI::UIAlignment::CENTER, UI::UIAlignment::CENTER)
-        .SetValue(Prop::positionType, UI::UIPositionType::ABSOLUTE)
         .SetValue(Prop::backgroundColor, Vector4(255.0f))
         .SetValue(Prop::duration, 0.25f)
         .SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
@@ -58,6 +57,7 @@ void App::OnStart() {
 
     textStyle.SetValue(Prop::pointerEvents, true)
         .SetValue(Prop::hitTestTransparent, true)
+        .SetValue(Prop::positionType, UI::UIPositionType::ABSOLUTE)
         .SetValue(Prop::duration, 0.2f)
         .SetValue(Prop::textSize, 64.0f)
         .SetValue(Prop::textColor, Vector4(0, 0, 255, 255));
@@ -99,12 +99,12 @@ void App::OnUpdate() {
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
             UI::BeginFrame(UI::UIKey("butten"), buttenStyle)->SetOverride(Prop::size, w, h)
-                .SetOverride(Prop::hideOverflow, clipX, clipY)
-                .SetOverride(Prop::topLeft, Input::GetMousePosition().y, Input::GetMousePosition().x);
+                .SetOverride(Prop::hideOverflow, clipX, clipY);
             {
                 UI::BeginFrame(UI::UIKey("inner"), innerBtnStyle);
                 {
-                    UI::Text(UI::UIKey("text"), FormatUtils::formatString("clipX: {}, clipY: {}", clipX, clipY), textStyle);
+                    UI::Text(UI::UIKey("text"), FormatUtils::formatString("clipX: {}, clipY: {}", clipX, clipY), textStyle)
+                        ->SetOverride(Prop::topLeft, Input::GetMousePosition().y, Input::GetMousePosition().x);
                 }
                 UI::EndFrame();
             }

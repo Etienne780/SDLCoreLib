@@ -81,6 +81,12 @@ namespace SDLCore::UI {
 		uintptr_t m_focusNodeID = 0;/*< Address can not be 0 */
 
 		FrameNode* BeginFrame(uintptr_t id);
+		FrameNode* HandleExistingRootNode(uintptr_t id);
+		FrameNode* CreateRootNode(uintptr_t id);
+		FrameNode* CreateChildNodeInCreationMode(uintptr_t id);
+		FrameNode* ReuseOrCreateChildNode(uintptr_t id);
+		FrameNode* ReuseExistingNode(UINode* currentNode);
+		FrameNode* CreateNewChildNode(UINode* parentNode, uint16_t pos, uintptr_t id);
 		UIEvent EndFrame();
 		
 		template<typename T, typename ...Args>
