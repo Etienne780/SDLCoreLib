@@ -38,6 +38,7 @@ void App::OnStart() {
 
     buttenStyle.SetValue(Prop::layoutDirection, UI::UILayoutDir::COLUMN)
         .SetValue(Prop::align, UI::UIAlignment::CENTER, UI::UIAlignment::CENTER)
+        .SetValue(Prop::positionType, UI::UIPositionType::ABSOLUTE)
         .SetValue(Prop::backgroundColor, Vector4(255.0f))
         .SetValue(Prop::duration, 0.25f)
         .SetValue(Prop::width, 200.0f).SetValue(Prop::height, 200.0f)
@@ -98,7 +99,8 @@ void App::OnUpdate() {
         UI::BeginFrame(UI::UIKey("root"), styleRoot);
         {
             UI::BeginFrame(UI::UIKey("butten"), buttenStyle)->SetOverride(Prop::size, w, h)
-                .SetOverride(Prop::hideOverflow, clipX, clipY);
+                .SetOverride(Prop::hideOverflow, clipX, clipY)
+                .SetOverride(Prop::topLeft, Input::GetMousePosition().y, Input::GetMousePosition().x);
             {
                 UI::BeginFrame(UI::UIKey("inner"), innerBtnStyle);
                 {

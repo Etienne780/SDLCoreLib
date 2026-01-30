@@ -94,7 +94,7 @@ namespace SDLCore::UI {
         UIState GetLastState() const;
         bool GetChildHasEvent() const;
         // last style combination
-        uint64_t GetAppliedStyleHash() const; 
+        uint64_t GetAppliedStyleHash() const;
         // max lastModified of applied styles
         uint64_t GetAppliedStyleNode() const;
 
@@ -114,9 +114,13 @@ namespace SDLCore::UI {
         bool IsHorizontalOverflowHidden() const;
         bool IsVerticalOverflowHidden() const;
 
+        bool IsFlow() const;
+        bool IsRelative() const;
+        bool IsAbsolute() const;
+
         /*
         * @brief used internaly to find out what elements have events
-        * 
+        *
         * should not be set manuly
         */
         void SetChildHasEvent(bool value);
@@ -133,6 +137,7 @@ namespace SDLCore::UI {
         UILayoutDirection GetLayoutDirection() const;
         UIAlignment GetHorizontalAlignment() const;
         UIAlignment GetVerticalAlignment() const;
+        UIPositionType GetPositionType() const;
 
         Vector4 GetBorderLayoutPadding() const;
         Vector4 GetBorderLayoutMargin() const;
@@ -186,14 +191,16 @@ namespace SDLCore::UI {
         bool m_isHorizontalOverflowHidden = true;
         bool m_isVerticalOverflowHidden = true;
 
-        Vector2 m_position;
-        Vector2 m_size;
-        Vector4 m_padding;
-        Vector4 m_margin;
+        Vector2 m_position{ 0.0f, 0.0f };
+        Vector2 m_size{ 0.0f, 0.0f };
+        Vector4 m_padding{ 0.0f, 0.0f, 0.0f, 0.0f };/*< Top, Left, Bottom, Right */
+        Vector4 m_margin{ 0.0f, 0.0f, 0.0f, 0.0f };/*< Top, Left, Bottom, Right */
 
         UILayoutDirection m_layoutDir = UILayoutDirection::ROW;
         UIAlignment m_horizontalAligment = UIAlignment::START;
         UIAlignment m_verticalAligment = UIAlignment::START;
+        UIPositionType m_positionType = UIPositionType::FLOW;
+        Vector4 m_absolutePositionOffset{ 0.0f, 0.0f, 0.0f, 0.0f }; /*< Top, Left, Bottom, Right */
     private:
         UIPropertyID m_lastOverrideID;
         UIStyleState m_overrideState;
@@ -252,6 +259,9 @@ namespace SDLCore::UI {
         float GetTotalChildrenSize(bool horizontal) const;
         float AlignOffset(bool isHor, UIAlignment align, float freeSpace);
         void CalculateLayout(const UIContext* uiContext);
+        void CalculateLayoutAbsolute(const UIContext* uiContext);
+        void CalculateLayoutFlow(const UIContext* uiContext);
+
         void ProcessEventInternal(UIContext* ctx, UIEvent* event);
     };
 

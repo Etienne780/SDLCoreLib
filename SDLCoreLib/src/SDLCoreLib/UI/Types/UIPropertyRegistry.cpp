@@ -110,6 +110,58 @@ namespace SDLCore::UI {
             "Defines how this element is positioned within its parent layout (int, UIPositionType). Default: UIPositionType::FLOW",
             PropertyValue(UIPositionType::FLOW)
         );
+
+        top = RegisterProperty(
+            "top",
+            "Absolute offset from the top edge of the parent element (float). Only applicable when positionType == UIPositionType::ABSOLUTE.",
+            PropertyValue(0.0f)
+        );
+
+        left = RegisterProperty(
+            "left",
+            "Absolute offset from the left edge of the parent element (float). Only applicable when positionType == UIPositionType::ABSOLUTE.",
+            PropertyValue(0.0f)
+        );
+
+        bottom = RegisterProperty(
+            "bottom",
+            "Absolute offset from the bottom edge of the parent element (float). Only applicable when positionType == UIPositionType::ABSOLUTE.",
+            PropertyValue(0.0f)
+        );
+
+        right = RegisterProperty(
+            "right",
+            "Absolute offset from the right edge of the parent element (float). Only applicable when positionType == UIPositionType::ABSOLUTE.",
+            PropertyValue(0.0f)
+        );
+
+        topLeft = RegisterCompositeProperty(
+            "top_left",
+            "Shorthand property for absolute positioning using top and left offsets. Only applicable when positionType == UIPositionType::ABSOLUTE.",
+            top,
+            left
+        );
+
+        topRight = RegisterCompositeProperty(
+            "top_right",
+            "Shorthand property for absolute positioning using top and right offsets. Only applicable when positionType == UIPositionType::ABSOLUTE.",
+            top,
+            right
+        );
+
+        bottomLeft = RegisterCompositeProperty(
+            "bottom_left",
+            "Shorthand property for absolute positioning using bottom and left offsets. Only applicable when positionType == UIPositionType::ABSOLUTE.",
+            bottom,
+            left
+        );
+
+        bottomRight = RegisterCompositeProperty(
+            "bottom_right",
+            "Shorthand property for absolute positioning using bottom and right offsets. Only applicable when positionType == UIPositionType::ABSOLUTE.",
+            bottom,
+            right
+        );
         
         backgroundTexture = RegisterProperty(
             "background_texture",

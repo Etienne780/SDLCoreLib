@@ -14,6 +14,7 @@ namespace SDLCore::UI {
 	class FrameNode;
 	class UIContext {
 		friend class UICTXWrapper;
+		friend class UINode;
 	public:
 		~UIContext();
 
@@ -56,9 +57,11 @@ namespace SDLCore::UI {
 		UIContext();
 		WindowCallbackID m_windowResizeCBID;
 
-		std::vector<uint16_t> m_lastChildPosition;/*< is the position of the current child inside of last node*/
+		std::vector<uint16_t> m_lastChildPosition;/*< is the position of the current child inside of last parent node*/
 		std::vector<UINode*> m_nodeCreationStack;/*< is for creating nodes. if a node is this stack, than those nodes are currently created*/
 		std::vector<UINode*> m_lastNodeStack;
+		std::vector<UINode*> m_relativeStack;
+
 		std::shared_ptr<FrameNode> m_rootNode = nullptr;
 		size_t m_currentNodeCount = 0;/* < changes while building nodeStack. Is used to update the stable node count */
 		size_t m_nodeCount = 0;/* < is the stable node count. gets update with the last end call */
@@ -153,6 +156,7 @@ namespace SDLCore::UI {
 		}
 
 		UINode* GetRootNode() const;
+		const UINode* GetLastRelativeNode() const;
 		void SetWindowParams(WindowID id);
 		void RemoveWindowCB();
 
