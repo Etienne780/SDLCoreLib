@@ -410,6 +410,20 @@ namespace SDLCore::UI {
 		GetResolvedValue<float>(Properties::bottom, m_absolutePositionOffset.z, 0.0f);
 		GetResolvedValue<float>(Properties::right, m_absolutePositionOffset.w, 0.0f);
 
+		int absolutePosUnitTop = 0;
+		int absolutePosUnitLeft = 0;
+		int absolutePosUnitBottom = 0;
+		int absolutePosUnitRight = 0;
+
+		GetResolvedValue<int>(Properties::topUnit, absolutePosUnitTop, 0);
+		GetResolvedValue<int>(Properties::leftUnit, absolutePosUnitLeft, 0);
+		GetResolvedValue<int>(Properties::bottomUnit, absolutePosUnitBottom, 0);
+		GetResolvedValue<int>(Properties::rightUnit, absolutePosUnitRight, 0);
+		m_absolutePositionUnits[0] = static_cast<UISizeUnit>(absolutePosUnitTop);
+		m_absolutePositionUnits[1] = static_cast<UISizeUnit>(absolutePosUnitLeft);
+		m_absolutePositionUnits[2] = static_cast<UISizeUnit>(absolutePosUnitBottom);
+		m_absolutePositionUnits[3] = static_cast<UISizeUnit>(absolutePosUnitRight);
+
 		ApplyStyleCalled(ctx, m_renderedStyleState);
 
 		m_size = CalculateSize(
@@ -582,11 +596,39 @@ namespace SDLCore::UI {
 		return offset;
 	}
 
-	static bool IsRow(UILayoutDirection d) {
+	float UINode::ResolveAbsoluteValue(
+		const UINode* reference,
+		bool horizontal,
+		UISizeUnit unit,
+		float value
+	) {
+		float refW = reference->GetSize().x;
+		float refH = reference->GetSize().y;
+
+		Log::Debug("Hor: {}, ref: {}, value: {}", horizontal, reference->GetSize(), value);
+		switch (unit) {
+		case UISizeUnit::PX:
+			return value;
+
+		case UISizeUnit::PERCENTAGE:
+			return ((horizontal ? refW : refH) * value) / 100.0f;
+
+		case UISizeUnit::PERCENTAGE_W:
+			return (refW * value) / 100.0f;
+
+		case UISizeUnit::PERCENTAGE_H:
+			return (refH * value) / 100.0f;
+
+		default:
+			return 0.0f;
+		}
+	}
+
+	bool UINode::IsRow(UILayoutDirection d) {
 		return d == UILayoutDirection::ROW || d == UILayoutDirection::ROW_REVERSE;
 	}
 
-	static bool IsReverse(UILayoutDirection d) {
+	bool UINode::IsReverse(UILayoutDirection d) {
 		return d == UILayoutDirection::ROW_REVERSE || d == UILayoutDirection::COLUMN_REVERSE;
 	}
 
@@ -612,12 +654,36 @@ namespace SDLCore::UI {
 			return;
 
 		const Vector2 basePos = relNode->GetPosition();
+		const Vector2 baseSize = relNode->GetSize();
 
-		const float xOffset = m_absolutePositionOffset.y - m_absolutePositionOffset.w;
-		const float yOffset = m_absolutePositionOffset.x - m_absolutePositionOffset.z;
+		const float top = ResolveAbsoluteValue(
+			relNode, false,
+			m_absolutePositionUnits[0],
+			m_absolutePositionOffset.x
+		);
 
-		m_position.x = basePos.x + xOffset;
-		m_position.y = basePos.y + yOffset;
+		const float left = ResolveAbsoluteValue(
+			relNode, true,
+			m_absolutePositionUnits[1],
+			m_absolutePositionOffset.y
+		);
+
+		const float bottom = ResolveAbsoluteValue(
+			relNode, false,
+			m_absolutePositionUnits[2],
+			m_absolutePositionOffset.z
+		);
+
+		const float right = ResolveAbsoluteValue(
+			relNode, true,
+			m_absolutePositionUnits[3],
+			m_absolutePositionOffset.w
+		);
+
+		// CSS-like behavior:
+		// position = left - right, top - bottom
+		m_position.x = basePos.x + left - right;
+		m_position.y = basePos.y + top - bottom;
 	}
 
 	void UINode::CalculateLayoutFlow(const UIContext* uiContext) {

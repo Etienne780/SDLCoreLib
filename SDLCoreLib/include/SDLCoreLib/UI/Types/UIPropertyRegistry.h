@@ -320,6 +320,99 @@ namespace SDLCore::UI::Properties {
 	*/
 	inline UIPropertyID bottomRight;
 
+	/*
+	* @brief Unit for the absolute 'top' offset (UISizeUnit)
+	*
+	* Defines how the 'top' offset value is interpreted
+	* (pixels, percentage, etc.).
+	*
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Default: UISizeUnit::PX
+	*
+	* Usage: style.SetValue(Prop::topUnit, UISizeUnit::PERCENTAGE)
+	*/
+	inline UIPropertyID topUnit;
+
+	/*
+	* @brief Unit for the absolute 'left' offset (UISizeUnit)
+	*
+	* Defines how the 'left' offset value is interpreted.
+	*
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Default: UISizeUnit::PX
+	*/
+	inline UIPropertyID leftUnit;
+
+	/*
+	* @brief Unit for the absolute 'bottom' offset (UISizeUnit)
+	*
+	* Defines how the 'bottom' offset value is interpreted.
+	*
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Default: UISizeUnit::PX
+	*/
+	inline UIPropertyID bottomUnit;
+
+	/*
+	* @brief Unit for the absolute 'right' offset (UISizeUnit)
+	*
+	* Defines how the 'right' offset value is interpreted.
+	*
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Default: UISizeUnit::PX
+	*/
+	inline UIPropertyID rightUnit;
+
+	/*
+	* @brief Shorthand unit property for 'top' and 'left' offsets (composite)
+	*
+	* Setting this will apply the unit to both topUnit and leftUnit.
+	*
+	* Default: UISizeUnit::PX, UISizeUnit::PX
+	*
+	* Composite layout: topUnit, leftUnit
+	*
+	* Usage: style.SetValue(Prop::topLeftUnit, UISizeUnit::PERCENTAGE)
+	*/
+	inline UIPropertyID topLeftUnit;
+
+	/*
+	* @brief Shorthand unit property for 'top' and 'right' offsets (composite)
+	*
+	* Setting this will apply the unit to both topUnit and rightUnit.
+	*
+	* Default: UISizeUnit::PX, UISizeUnit::PX
+	*
+	* Composite layout: topUnit, rightUnit
+	*/
+	inline UIPropertyID topRightUnit;
+
+	/*
+	* @brief Shorthand unit property for 'bottom' and 'left' offsets (composite)
+	*
+	* Setting this will apply the unit to both bottomUnit and leftUnit.
+	*
+	* Default: UISizeUnit::PX, UISizeUnit::PX
+	*
+	* Composite layout: bottomUnit, leftUnit
+	*/
+	inline UIPropertyID bottomLeftUnit;
+
+	/*
+	* @brief Shorthand unit property for 'bottom' and 'right' offsets (composite)
+	*
+	* Setting this will apply the unit to both bottomUnit and rightUnit.
+	*
+	* Default: UISizeUnit::PX, UISizeUnit::PX
+	*
+	* Composite layout: bottomUnit, rightUnit
+	*/
+	inline UIPropertyID bottomRightUnit;
+
 
 	#pragma endregion
 

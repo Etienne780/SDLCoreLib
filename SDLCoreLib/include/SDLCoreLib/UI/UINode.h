@@ -201,6 +201,12 @@ namespace SDLCore::UI {
         UIAlignment m_verticalAligment = UIAlignment::START;
         UIPositionType m_positionType = UIPositionType::FLOW;
         Vector4 m_absolutePositionOffset{ 0.0f, 0.0f, 0.0f, 0.0f }; /*< Top, Left, Bottom, Right */
+        std::array<UISizeUnit, 4> m_absolutePositionUnits{ /*< Top, Left, Bottom, Right */
+            UISizeUnit::PX,
+            UISizeUnit::PX,
+            UISizeUnit::PX,
+            UISizeUnit::PX
+        };
     private:
         UIPropertyID m_lastOverrideID;
         UIStyleState m_overrideState;
@@ -258,6 +264,10 @@ namespace SDLCore::UI {
         // is size + margin
         float GetTotalChildrenSize(bool horizontal) const;
         float AlignOffset(bool isHor, UIAlignment align, float freeSpace);
+        float ResolveAbsoluteValue(const UINode* reference, 
+            bool horizontal,UISizeUnit unit, float value);
+        static bool IsRow(UILayoutDirection d);
+        static bool IsReverse(UILayoutDirection d);
         void CalculateLayout(const UIContext* uiContext);
         void CalculateLayoutAbsolute(const UIContext* uiContext);
         void CalculateLayoutFlow(const UIContext* uiContext);
