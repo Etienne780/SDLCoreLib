@@ -125,8 +125,9 @@ void App::OnUpdate() {
         UI::SetContextWindow(contextFPS, m_winID);
         UI::BindContext(contextFPS);
 
-        UI::BeginFrame(UI::UIKey("rootFPS"));
+        UI::BeginFrame(UI::UIKey("rootFPS"))->SetOverride(UI::Properties::layoutDirection, UI::UILayoutDir::ROW);
         UI::Text(UI::UIKey("text"), FormatUtils::formatString("FPS: {}, DT: {}s", frameRate, deltaTime));
+        UI::Text(UI::UIKey("other"), FormatUtils::formatString("Mouse: {}", Input::GetMousePosition()));
         UI::EndFrame();
 
         RE::Present();

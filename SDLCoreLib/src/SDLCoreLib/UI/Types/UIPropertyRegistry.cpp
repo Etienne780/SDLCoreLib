@@ -162,11 +162,63 @@ namespace SDLCore::UI {
             bottom,
             right
         );
+
+        topUnit = RegisterProperty(
+            "top_unit",
+            "Unit used to interpret the 'top' absolute offset value (UISizeUnit).",
+            PropertyValue(UISizeUnit::PX)
+        );
+
+        leftUnit = RegisterProperty(
+            "left_unit",
+            "Unit used to interpret the 'left' absolute offset value (UISizeUnit).",
+            PropertyValue(UISizeUnit::PX)
+        );
+
+        bottomUnit = RegisterProperty(
+            "bottom_unit",
+            "Unit used to interpret the 'bottom' absolute offset value (UISizeUnit).",
+            PropertyValue(UISizeUnit::PX)
+        );
+
+        rightUnit = RegisterProperty(
+            "right_unit",
+            "Unit used to interpret the 'right' absolute offset value (UISizeUnit).",
+            PropertyValue(UISizeUnit::PX)
+        );
+
+        topLeftUnit = RegisterCompositeProperty(
+            "top_left_unit",
+            "Shorthand unit property for both 'top' and 'left' absolute offsets.",
+            topUnit,
+            leftUnit
+        );
+
+        topRightUnit = RegisterCompositeProperty(
+            "top_right_unit",
+            "Shorthand unit property for both 'top' and 'right' absolute offsets.",
+            topUnit,
+            rightUnit
+        );
+
+        bottomLeftUnit = RegisterCompositeProperty(
+            "bottom_left_unit",
+            "Shorthand unit property for both 'bottom' and 'left' absolute offsets.",
+            bottomUnit,
+            leftUnit
+        );
+
+        bottomRightUnit = RegisterCompositeProperty(
+            "bottom_right_unit",
+            "Shorthand unit property for both 'bottom' and 'right' absolute offsets.",
+            bottomUnit,
+            rightUnit
+        );
         
         backgroundTexture = RegisterProperty(
             "background_texture",
             "Background texture identifier. Default: UITextureID(SDLCORE_INVALID_ID)",
-            PropertyValue(UITextureID{})
+            PropertyValue(UITextureID{ SDLCORE_INVALID_ID })
         );
 
         backgroundColor = RegisterProperty(
