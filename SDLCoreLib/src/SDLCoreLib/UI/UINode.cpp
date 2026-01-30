@@ -609,7 +609,6 @@ namespace SDLCore::UI {
 		float refW = reference->GetSize().x;
 		float refH = reference->GetSize().y;
 
-		Log::Debug("Hor: {}, ref: {}, value: {}", horizontal, reference->GetSize(), value);
 		switch (unit) {
 		case UISizeUnit::PX:
 			return value;
