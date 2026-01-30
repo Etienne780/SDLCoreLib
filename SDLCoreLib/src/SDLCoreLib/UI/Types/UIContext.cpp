@@ -124,108 +124,119 @@ namespace SDLCore::UI {
 
     FrameNode* UIContext::BeginFrame(uintptr_t id) {
         m_currentNodeCount++;
+
         if (m_lastNodeStack.empty() && m_rootNode) {
-            if (m_rootNode->GetID() != id) {
-                // Creats new root node
-                m_rootNode = nullptr;
-            }
-            else {
-                // pushes root node on to stack
-                m_lastNodeStack.push_back(reinterpret_cast<UINode*>(m_rootNode.get()));
-                m_lastChildPosition.push_back(0);
-                m_rootNode->SetNodeActive();
-
-                if (m_rootNode->IsStatePropagationEnabled()) {
-                    ResolveNodeState(this, m_rootNode.get());
-                }
-
-                CalculateClippingMask(m_lastNodeStack.back());
-
-                return m_rootNode.get();
-            }
+            return HandleExistingRootNode(id);
         }
 
-        // create root node
         if (!m_rootNode) {
-            m_rootNode = std::make_shared<FrameNode>(-1, id);
-            FrameNode* frame = m_rootNode.get();
-            m_nodeCreationStack.push_back(reinterpret_cast<UINode*>(frame));
-            m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
-            m_lastChildPosition.push_back(0);
-
-            CalculateClippingMask(m_lastNodeStack.back());
-
-            return frame;
+            return CreateRootNode(id);
         }
 
-        // create child node 
         if (!m_nodeCreationStack.empty()) {
-            UINode* parentNode = m_nodeCreationStack.back();
-            if (!parentNode)
-                return nullptr;
-
-            int currentChildPos = (!m_lastChildPosition.empty()) ?
-                static_cast<int>(m_lastChildPosition.back()) : 0;
-
-#ifndef NDEBUG
-            LogDuplicateIDIfAny(id, parentNode);
-#endif
-
-            FrameNode* frame = parentNode->AddChild<FrameNode>(currentChildPos, id);
-            m_nodeCreationStack.push_back(reinterpret_cast<UINode*>(frame));
-            m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
-            m_lastChildPosition.push_back(0);
-
-            CalculateClippingMask(m_lastNodeStack.back());
-
-            return frame;
-        }
-        else {
-            UINode* parentNode = m_lastNodeStack.back();
-            uint16_t pos = (m_lastChildPosition.empty()) ? 0 : m_lastChildPosition.back();
-            UINode* currentNode = nullptr;
-            // node exists at position
-            if (parentNode->ContainsChildAtPos(pos, id, currentNode)) {
-                // element with id exists at position. set it as last position
-                m_lastNodeStack.push_back(currentNode);
-                m_lastChildPosition.push_back(0);
-                currentNode->SetNodeActive();
-
-                // is state propagation is enabled calc event before end
-                if (currentNode->IsStatePropagationEnabled()) {
-                    ResolveNodeState(this, currentNode);
-                }
-
-                if (currentNode->IsRelative()) {
-                    m_relativeStack.push_back(currentNode);
-                }
-
-                CalculateClippingMask(currentNode);
-
-                return reinterpret_cast<FrameNode*>(currentNode);
-            }
-            else {
-                // create node if it is not at its correct position
-                // remove pos and every entry after
-                parentNode->RemoveChildrenFromIndex(pos);
-
-#ifndef NDEBUG
-                LogDuplicateIDIfAny(id, parentNode);
-#endif
-
-                // element does not exist. create element and create stack
-                FrameNode* frame = parentNode->AddChild<FrameNode>(static_cast<int>(pos), id);
-                m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
-                m_nodeCreationStack.push_back(reinterpret_cast<UINode*>(frame));
-                m_lastChildPosition.push_back(0);
-
-                CalculateClippingMask(m_lastNodeStack.back());
-
-                return frame;
-            }
+            return CreateChildNodeInCreationMode(id);
         }
 
-        return nullptr;
+        return ReuseOrCreateChildNode(id);
+    }
+
+    FrameNode* UIContext::HandleExistingRootNode(uintptr_t id) {
+        if (m_rootNode->GetID() != id) {
+            m_rootNode = nullptr;
+            return nullptr;
+        }
+
+        m_lastNodeStack.push_back(reinterpret_cast<UINode*>(m_rootNode.get()));
+        m_lastChildPosition.push_back(0);
+        m_rootNode->SetNodeActive();
+
+        if (m_rootNode->IsStatePropagationEnabled()) {
+            ResolveNodeState(this, m_rootNode.get());
+        }
+
+        CalculateClippingMask(m_lastNodeStack.back());
+        return m_rootNode.get();
+    }
+
+    FrameNode* UIContext::CreateRootNode(uintptr_t id) {
+        m_rootNode = std::make_shared<FrameNode>(-1, id);
+        FrameNode* frame = m_rootNode.get();
+
+        m_nodeCreationStack.push_back(reinterpret_cast<UINode*>(frame));
+        m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
+        m_lastChildPosition.push_back(0);
+        CalculateClippingMask(m_lastNodeStack.back());
+
+        return frame;
+    }
+
+    FrameNode* UIContext::CreateChildNodeInCreationMode(uintptr_t id) {
+        UINode* parentNode = m_nodeCreationStack.back();
+        if (!parentNode) {
+            return nullptr;
+        }
+
+        int currentChildPos = (!m_lastChildPosition.empty()) ?
+            static_cast<int>(m_lastChildPosition.back()) : 0;
+
+#ifndef NDEBUG
+        LogDuplicateIDIfAny(id, parentNode);
+#endif
+
+        FrameNode* frame = parentNode->AddChild<FrameNode>(currentChildPos, id);
+
+        m_nodeCreationStack.push_back(reinterpret_cast<UINode*>(frame));
+        m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
+        m_lastChildPosition.push_back(0);
+        CalculateClippingMask(m_lastNodeStack.back());
+
+        return frame;
+    }
+
+    FrameNode* UIContext::ReuseOrCreateChildNode(uintptr_t id) {
+        UINode* parentNode = m_lastNodeStack.back();
+        uint16_t pos = m_lastChildPosition.empty() ? 0 : m_lastChildPosition.back();
+        UINode* currentNode = nullptr;
+
+        if (parentNode->ContainsChildAtPos(pos, id, currentNode)) {
+            return ReuseExistingNode(currentNode);
+        }
+
+        return CreateNewChildNode(parentNode, pos, id);
+    }
+
+    FrameNode* UIContext::ReuseExistingNode(UINode* currentNode) {
+        m_lastNodeStack.push_back(currentNode);
+        m_lastChildPosition.push_back(0);
+        currentNode->SetNodeActive();
+
+        if (currentNode->IsStatePropagationEnabled()) {
+            ResolveNodeState(this, currentNode);
+        }
+
+        if (currentNode->IsRelative()) {
+            m_relativeStack.push_back(currentNode);
+        }
+
+        CalculateClippingMask(currentNode);
+        return reinterpret_cast<FrameNode*>(currentNode);
+    }
+
+    FrameNode* UIContext::CreateNewChildNode(UINode* parentNode, uint16_t pos, uintptr_t id) {
+        parentNode->RemoveChildrenFromIndex(pos);
+
+#ifndef NDEBUG
+        LogDuplicateIDIfAny(id, parentNode);
+#endif
+
+        FrameNode* frame = parentNode->AddChild<FrameNode>(static_cast<int>(pos), id);
+
+        m_lastNodeStack.push_back(reinterpret_cast<UINode*>(frame));
+        m_nodeCreationStack.push_back(reinterpret_cast<UINode*>(frame));
+        m_lastChildPosition.push_back(0);
+        CalculateClippingMask(m_lastNodeStack.back());
+
+        return frame;
     }
 
     UIEvent UIContext::EndFrame() {
