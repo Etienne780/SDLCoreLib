@@ -135,12 +135,16 @@ namespace SDLCore::UI {
                 m_lastChildPosition.push_back(0);
                 m_rootNode->SetNodeActive();
 
+                if (m_rootNode->IsStatePropagationEnabled()) {
+                    ResolveNodeState(this, m_rootNode.get());
+                }
+
                 CalculateClippingMask(m_lastNodeStack.back());
 
                 return m_rootNode.get();
             }
         }
-        
+
         // create root node
         if (!m_rootNode) {
             m_rootNode = std::make_shared<FrameNode>(-1, id);
@@ -160,7 +164,7 @@ namespace SDLCore::UI {
             if (!parentNode)
                 return nullptr;
 
-            int currentChildPos = (!m_lastChildPosition.empty()) ? 
+            int currentChildPos = (!m_lastChildPosition.empty()) ?
                 static_cast<int>(m_lastChildPosition.back()) : 0;
 
 #ifndef NDEBUG
@@ -192,6 +196,10 @@ namespace SDLCore::UI {
                     ResolveNodeState(this, currentNode);
                 }
 
+                if (currentNode->IsRelative()) {
+                    m_relativeStack.push_back(currentNode);
+                }
+
                 CalculateClippingMask(currentNode);
 
                 return reinterpret_cast<FrameNode*>(currentNode);
@@ -221,12 +229,18 @@ namespace SDLCore::UI {
     }
 
     UIEvent UIContext::EndFrame() {
+        if (!m_relativeStack.empty()) {
+            if (m_relativeStack.back() == m_lastNodeStack.back()) {
+                m_relativeStack.pop_back();
+            }
+        }
+
         if (!m_lastChildPosition.empty() && !m_lastNodeStack.empty()) {
             UINode* node = m_lastNodeStack.back();
             if (node && m_lastChildPosition.back() < node->GetChildren().size()) {
                 node->RemoveChildrenFromIndex(m_lastChildPosition.back());
             }
-            
+
             m_lastChildPosition.pop_back();
             if (!m_lastChildPosition.empty()) {
                 m_lastChildPosition.back()++;
@@ -259,6 +273,10 @@ namespace SDLCore::UI {
 
     UINode* UIContext::GetRootNode() const {
         return m_rootNode.get();
+    }
+
+    const UINode* UIContext::GetLastRelativeNode() const {
+        return m_relativeStack.empty() ? m_rootNode.get() : m_relativeStack.back();
     }
 
     void UIContext::SetWindowParams(WindowID id) {

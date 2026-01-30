@@ -216,13 +216,110 @@ namespace SDLCore::UI::Properties {
 	*/
 	inline UIPropertyID positionType;
 
+	/*
+	* @brief Absolute offset from the top edge of the parent (float)
+	*
+	* Defines the vertical distance to the parent's top edge.
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Default: 0.0f
+	*
+	* Usage: style.SetValue(Prop::top, 20.0f)
+	*/
 	inline UIPropertyID top;
+
+	/*
+	* @brief Absolute offset from the left edge of the parent (float)
+	*
+	* Defines the horizontal distance to the parent's left edge.
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Default: 0.0f
+	*
+	* Usage: style.SetValue(Prop::left, 20.0f)
+	*/
 	inline UIPropertyID left;
+
+	/*
+	* @brief Absolute offset from the bottom edge of the parent (float)
+	*
+	* Defines the vertical distance to the parent's bottom edge.
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Default: 0.0f
+	*
+	* Usage: style.SetValue(Prop::bottom, 20.0f)
+	*/
 	inline UIPropertyID bottom;
+
+	/*
+	* @brief Absolute offset from the right edge of the parent (float)
+	*
+	* Defines the horizontal distance to the parent's right edge.
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Default: 0.0f
+	*
+	* Usage: style.SetValue(Prop::right, 20.0f)
+	*/
 	inline UIPropertyID right;
 
+	/*
+	* @brief Shorthand property for top and left absolute offsets (composite)
+	*
+	* Applies values to both top and left.
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Composite layout: top, left
+	*
+	* Default: 0.0f, 0.0f
+	*
+	* Usage: style.SetValue(Prop::topLeft, 20.0f, 20.0f)
+	*/
 	inline UIPropertyID topLeft;
-	inline UIPropertyID bottomRigth;
+
+	/*
+	* @brief Shorthand property for top and right absolute offsets (composite)
+	*
+	* Applies values to both top and right.
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Composite layout: top, right
+	*
+	* Default: 0.0f, 0.0f
+	*
+	* Usage: style.SetValue(Prop::topRight, 20.0f, 20.0f)
+	*/
+	inline UIPropertyID topRight;
+
+	/*
+	* @brief Shorthand property for bottom and left absolute offsets (composite)
+	*
+	* Applies values to both bottom and left.
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Composite layout: bottom, left
+	*
+	* Default: 0.0f, 0.0f
+	*
+	* Usage: style.SetValue(Prop::bottomLeft, 20.0f, 20.0f)
+	*/
+	inline UIPropertyID bottomLeft;
+
+	/*
+	* @brief Shorthand property for bottom and right absolute offsets (composite)
+	*
+	* Applies values to both bottom and right.
+	* Only evaluated when positionType == UIPositionType::ABSOLUTE.
+	*
+	* Composite layout: bottom, right
+	*
+	* Default: 0.0f, 0.0f
+	*
+	* Usage: style.SetValue(Prop::bottomRight, 20.0f, 20.0f)
+	*/
+	inline UIPropertyID bottomRight;
+
 
 	#pragma endregion
 

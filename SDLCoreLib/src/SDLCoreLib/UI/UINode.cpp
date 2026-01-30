@@ -153,6 +153,18 @@ namespace SDLCore::UI {
 		return m_isVerticalOverflowHidden;
 	}
 
+	bool UINode::IsFlow() const {
+		return m_positionType == UIPositionType::FLOW;
+	}
+
+	bool UINode::IsRelative() const {
+		return m_positionType == UIPositionType::RELATIVE;
+	}
+
+	bool UINode::IsAbsolute() const {
+		return m_positionType == UIPositionType::ABSOLUTE;
+	}
+
 	void UINode::SetChildHasEvent(bool value) {
 		m_childHasEvent = value;
 	}
@@ -196,6 +208,10 @@ namespace SDLCore::UI {
 
 	UIAlignment UINode::GetVerticalAlignment() const {
 		return m_verticalAligment;
+	}
+
+	UIPositionType UINode::GetPositionType() const {
+		return m_positionType;
 	}
 
 	Vector4 UINode::GetBorderLayoutPadding() const {
@@ -271,12 +287,23 @@ namespace SDLCore::UI {
 			return Vector2(0.0f, 0.0f);
 
 		auto resolveBaseSize = [&](bool horizontal) -> float {
-			if (m_parent) {
-				const auto& pPadding = m_parent->m_padding + m_parent->GetBorderLayoutPadding();
-				return horizontal ? m_parent->m_size.x - pPadding.y - pPadding.w : m_parent->m_size.y - pPadding.x - pPadding.z;
+			const UINode* baseNode = m_parent;
+
+			if (m_positionType == UIPositionType::ABSOLUTE) {
+				baseNode = ctx->GetLastRelativeNode();
+				if (!baseNode)
+					baseNode = m_parent;
 			}
+
+			if (baseNode) {
+				const auto& pPadding = baseNode->m_padding + baseNode->GetBorderLayoutPadding();
+				return horizontal ? baseNode->m_size.x - pPadding.y - pPadding.w
+					: baseNode->m_size.y - pPadding.x - pPadding.z;
+			}
+
 			return horizontal ? ctx->GetWindowSize().x : ctx->GetWindowSize().y;
 		};
+
 
 		auto calc = [&](bool horizontal, UISizeUnit unit, float value) -> float {
 			switch (unit) {
@@ -373,6 +400,15 @@ namespace SDLCore::UI {
 		GetResolvedValue<bool>(Properties::borderAffectsLayout, m_borderAffectsLayout, true);
 		GetResolvedValue<bool>(Properties::hideOverflowX, m_isHorizontalOverflowHidden, true);
 		GetResolvedValue<bool>(Properties::hideOverflowY, m_isVerticalOverflowHidden, true);
+
+		int positionType = 0;
+		GetResolvedValue<int>(Properties::positionType, positionType, 0);
+		m_positionType = static_cast<UIPositionType>(positionType);
+
+		GetResolvedValue<float>(Properties::top, m_absolutePositionOffset.x, 0.0f);
+		GetResolvedValue<float>(Properties::left, m_absolutePositionOffset.y, 0.0f);
+		GetResolvedValue<float>(Properties::bottom, m_absolutePositionOffset.z, 0.0f);
+		GetResolvedValue<float>(Properties::right, m_absolutePositionOffset.w, 0.0f);
 
 		ApplyStyleCalled(ctx, m_renderedStyleState);
 
@@ -558,6 +594,33 @@ namespace SDLCore::UI {
 		if (!uiContext || !m_parent)
 			return;
 
+		switch (m_positionType) {
+		case SDLCore::UI::ABSOLUTE:
+			CalculateLayoutAbsolute(uiContext);
+			break;
+		case SDLCore::UI::FLOW:
+		case SDLCore::UI::RELATIVE:
+		default:
+			CalculateLayoutFlow(uiContext);
+			break;
+		}
+	}
+
+	void UINode::CalculateLayoutAbsolute(const UIContext* ctx) {
+		const UINode* relNode = ctx->GetLastRelativeNode();
+		if (!relNode)
+			return;
+
+		const Vector2 basePos = relNode->GetPosition();
+
+		const float xOffset = m_absolutePositionOffset.y - m_absolutePositionOffset.w;
+		const float yOffset = m_absolutePositionOffset.x - m_absolutePositionOffset.z;
+
+		m_position.x = basePos.x + xOffset;
+		m_position.y = basePos.y + yOffset;
+	}
+
+	void UINode::CalculateLayoutFlow(const UIContext* uiContext) {
 		const Vector2 parentSize = m_parent->m_size;
 		const UILayoutDirection dir = m_parent->GetLayoutDirection();
 
