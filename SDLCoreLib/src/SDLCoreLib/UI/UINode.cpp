@@ -42,7 +42,7 @@ namespace SDLCore::UI {
 	UINode& UINode::SetImportant(bool value) {
 		if (m_overrideState.IsImportantDiff(m_lastOverrideID, value)) {
 			if (m_overrideState.SetImportant(value)) {
-				m_overrideStyleChanged = true;
+				SetNodeStyleDirty();
 			}
 		}
 		return *this;
@@ -116,8 +116,8 @@ namespace SDLCore::UI {
 		return m_appliedStyleNode;
 	}
 
-	bool UINode::GetOverrideStyleChanged() const {
-		return m_overrideStyleChanged;
+	bool UINode::GetStyleChanged() const {
+		return m_styleDirty;
 	}
 
 	bool UINode::IsActive() const {
@@ -252,6 +252,10 @@ namespace SDLCore::UI {
 		return outStyle;
 	}
 
+	void UINode::SetNodeStyleDirty() {
+		m_styleDirty = true;
+	}
+
 	void UINode::SetNodeActive() {
 		m_isActive = true;
 	}
@@ -345,7 +349,7 @@ namespace SDLCore::UI {
 		if (!ctx)
 			return;
 
-		m_overrideStyleChanged = false;
+		m_styleDirty = false;
 		m_lastState = m_state;
 
 		int layoutDir = 0;

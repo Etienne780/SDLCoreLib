@@ -63,7 +63,7 @@ namespace SDLCore::UI {
                     }, values))
                 {
                     m_lastOverrideID = id;
-                    m_overrideStyleChanged = true;
+                    m_styleDirty = true;
                 }
             }
             return *this;
@@ -98,7 +98,7 @@ namespace SDLCore::UI {
         // max lastModified of applied styles
         uint64_t GetAppliedStyleNode() const;
 
-        bool GetOverrideStyleChanged() const;
+        bool GetStyleChanged() const;
 
         /*
         * @brief node will be active after the first frame of creation
@@ -154,6 +154,7 @@ namespace SDLCore::UI {
         */
         UIStyle CreateStyle();
 
+        void SetNodeStyleDirty();
         void SetNodeActive();
         void SetState(UIState state);
         void SetResolvedState(UIState state);
@@ -222,7 +223,7 @@ namespace SDLCore::UI {
         float m_currentTransitionEnd = 0.0f;
         float m_currentTransition = 0.0f;
         bool m_transitionActive = false;
-        bool m_overrideStyleChanged = false;
+        bool m_styleDirty = false;
         Vector4 m_clippingMask;
 
         static inline uint32_t m_typeIDCounter = 0;

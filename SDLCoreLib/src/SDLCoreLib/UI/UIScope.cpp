@@ -208,7 +208,7 @@ namespace SDLCore::UI {
         for (const auto& style : styles)
             newestStyleFrame = std::max(newestStyleFrame, style.GetLastModified());
         
-        if (!node->IsActive() || node->GetOverrideStyleChanged() || 
+        if (!node->IsActive() || node->GetStyleChanged() || 
             node->GetAppliedStyleHash() != newHash ||
             node->GetAppliedStyleNode() < newestStyleFrame) 
         {
@@ -233,8 +233,8 @@ namespace SDLCore::UI {
         if (!node)
             return nullptr;
 
-        if (node->m_text != text)
-            node->m_text = text;
+        if (node->GetText() != text)
+            node->SetText(text);
 
         const uint64_t newHash =
             Internal::InternalGenerateStyleHash(styles.begin(), styles.end());
@@ -243,7 +243,7 @@ namespace SDLCore::UI {
         for (const auto& style : styles)
             newestStyleFrame = std::max(newestStyleFrame, style.GetLastModified());
 
-        if (!node->IsActive() || node->GetOverrideStyleChanged() || 
+        if (!node->IsActive() || node->GetStyleChanged() || 
             node->GetAppliedStyleHash() != newHash ||
             node->GetAppliedStyleNode() < newestStyleFrame)
         {
