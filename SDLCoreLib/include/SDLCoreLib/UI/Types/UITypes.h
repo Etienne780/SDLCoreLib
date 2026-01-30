@@ -37,11 +37,14 @@ namespace SDLCore::UI {
 		ABSOLUTE
 	};
 
+	/*
+	* @brief Unit describing how a scalar layout value is resolved.
+	*/
 	enum UISizeUnit : uint16_t {
-		PX = 0,
-		PERCENTAGE,
-		PERCENTAGE_W,
-		PERCENTAGE_H
+		PX = 0,            // Absolute pixels
+		PERCENTAGE,        // Percentage of the local reference size
+		PERCENTAGE_W,      // Percentage of reference width
+		PERCENTAGE_H       // Percentage of reference height
 	};
 
 	enum class UITimeUnit : uint16_t {
@@ -180,6 +183,16 @@ static inline std::string FormatUtils::toString<SDLCore::UI::UILayoutDirection>(
 	case SDLCore::UI::UILayoutDirection::ROW_REVERSE:	return "Row_reverse";
 	case SDLCore::UI::UILayoutDirection::COLUMN_REVERSE:return "Column_reverse";
 	default:											return "UNKOWN";
+	}
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::UI::UIPositionType>(SDLCore::UI::UIPositionType type) {
+	switch (type) {
+	case SDLCore::UI::UIPositionType::FLOW:		return "Flow";
+	case SDLCore::UI::UIPositionType::RELATIVE:	return "Relative";
+	case SDLCore::UI::UIPositionType::ABSOLUTE:	return "Absolute";
+	default:									return "UNKOWN";
 	}
 }
 
