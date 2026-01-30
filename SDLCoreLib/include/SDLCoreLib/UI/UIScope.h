@@ -56,7 +56,7 @@ namespace SDLCore::UI {
         uint64_t newestStyleFrame = 0;
         ((newestStyleFrame = std::max(newestStyleFrame, styles.GetLastModified())), ...);
 
-        if (!node->IsActive() || node->GetOverrideStyleChanged() || 
+        if (!node->IsActive() || node->GetStyleChanged() || 
             node->GetAppliedStyleNode() < newestStyleFrame) {
             node->ClearStyles();
             node->ReserveStyles(sizeof...(Styles));
@@ -87,13 +87,13 @@ namespace SDLCore::UI {
         if (!node)
             return nullptr;
 
-        if(node->m_text != text)
-            node->m_text = text;
+        if(node->GetText() != text)
+            node->SetText(text);
 
         uint64_t newestStyleFrame = 0;
         ((newestStyleFrame = std::max(newestStyleFrame, styles.GetLastModified())), ...);
 
-        if (!node->IsActive() || node->GetOverrideStyleChanged() || 
+        if (!node->IsActive() || node->GetStyleChanged() || 
             node->GetAppliedStyleNode() < newestStyleFrame) {
             node->ClearStyles();
             node->ReserveStyles(sizeof...(Styles));

@@ -25,6 +25,24 @@ namespace SDLCore::UI {
 		return Internal::nameToID[textNodeName];
 	}
 
+	const std::string& TextNode::GetText() const {
+		return m_text;
+	}
+
+	float TextNode::GetTextSize() const {
+		return m_textSize;
+	}
+
+	const Vector4& TextNode::GetTextColor() const {
+		return m_textColor;
+	}
+
+	TextNode& TextNode::SetText(const std::string& text) {
+		m_text = text;
+		this->SetNodeStyleDirty();
+		return *this;
+	}
+
 	void TextNode::ApplyStyleCalled(UIContext* ctx, const UIStyleState& styleState) {
 		if (!ctx)
 			return;
