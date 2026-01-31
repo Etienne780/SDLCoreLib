@@ -353,6 +353,9 @@ namespace SDLCore::UI {
         m_leftMouseDown = Input::MousePressed(MouseButton::LEFT);
         m_leftMouseJustDown = Input::MouseJustPressed(MouseButton::LEFT);
         m_leftMouseJustUp = Input::MouseJustReleased(MouseButton::LEFT);
+
+        auto* app = Application::GetInstance();
+        m_cursorLocked = (app) ? app->IsCursorLocked() : false;
     }
 
     void UIContext::ResolveNodeState(UIContext* ctx, UINode* node) {
@@ -371,14 +374,17 @@ namespace SDLCore::UI {
 
     UIEvent* UIContext::ProcessEvent(UIContext* ctx, UINode* node) {
         static UIEvent dummy;
+        ctx->UpdateInput();
 
         // skip inactive nodes
         if (!node || !node->IsActive())
             return &dummy;
 
+        // reset child-event state for this traversal
+        node->SetChildHasEvent(false);
+
         // do not UI processing if cursor is locked
-        auto* app = Application::GetInstance();
-        if (app && app->IsCursorLocked())
+        if (m_cursorLocked)
             return &dummy;
 
         auto parent = node->GetParent();
@@ -387,33 +393,40 @@ namespace SDLCore::UI {
             return node->GetEventPtr();
         }
 
-        // skips this element if a child has a event
+        // skip this element if a non-transparent child has an event
         const auto& children = node->GetChildren();
         for (const auto& child : children) {
-            if (!child)
+            if (!child || child->IsDisabled())
                 continue;
 
-            // if a child of the child has an event
-            if (child->GetChildHasEvent() || (!child->IsDisabled() && child->IsMouseInNode())) {
+            // child subtree already consumed an event (only if not hit-test transparent)
+            if (child->GetChildHasEvent() && !child->HasHitTestTransparent()) {
                 node->SetChildHasEvent(true);
-                node->ResetState();// resets the node to normal
+                node->ResetState(); // reset this node to normal
                 return node->GetEventPtr();
             }
 
+            // mouse is over child and child blocks hit testing
+            if (child->IsMouseInNode() && !child->HasHitTestTransparent()) {
+                node->SetChildHasEvent(true);
+                node->ResetState(); // reset this node to normal
+                return node->GetEventPtr();
+            }
+
+            // explicit child event (hover etc.) that blocks parents
             UIEvent* childEvent = child->GetEventPtr();
-            // if this child as an event 
             if (childEvent && childEvent->IsHover() && !child->HasHitTestTransparent()) {
                 node->SetChildHasEvent(true);
-                node->ResetState();// resets the node to normal
+                node->ResetState(); // reset this node to normal
                 return node->GetEventPtr();
             }
         }
-            
+
+        // process this node
         UIEvent* event = node->GetEventPtr();
-        
-        ctx->UpdateInput();
         node->ProcessEventInternal(ctx, event);
         node->SetResolvedState(UIState::NORMAL);
+
         return event;
     }
 
