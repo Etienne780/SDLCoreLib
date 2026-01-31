@@ -51,13 +51,15 @@ void App::OnStart() {
     innerBtnStyle.SetValue(Prop::align, UI::UIAlignment::CENTER, UI::UIAlignment::CENTER)
         .SetValue(Prop::sizeUnit, UI::UISizeUnit::PX, UI::UISizeUnit::PX)
         .SetValue(Prop::size, 500.0f, 150.0f)
-        .SetValue(Prop::backgroundColor, Vector4(255));
+        .SetValue(Prop::backgroundColor, Vector4(255))
+        .SetValue(Prop::duration, 0.1f);
     innerBtnStyle.SetActiveState(UI::UIState::HOVER)
-        .SetValue(Prop::backgroundColor, Vector4(100, 100, 100, 255));
+        .SetValue(Prop::backgroundColor, Vector4(100, 100, 100, 255))
+        .SetValue(Prop::visualOffset, -50.0f/2, -50.0f/2)
+        .SetValue(Prop::visualScale, 50.0f,  50.0f);
 
     textStyle.SetValue(Prop::pointerEvents, true)
         .SetValue(Prop::hitTestTransparent, true)
-        .SetValue(Prop::positionType, UI::UIPositionType::ABSOLUTE)
         .SetValue(Prop::duration, 0.2f)
         .SetValue(Prop::textSize, 64.0f)
         .SetValue(Prop::textColor, Vector4(0, 0, 255, 255));
@@ -112,11 +114,12 @@ void App::OnUpdate() {
         }
         UI::EndFrame();
 
+        static constexpr float updateTimeInterval = 0.5f;
         static float frameRate = 0;
         static float deltaTime = 0;
-        static float updateTimeVal = 3;
+        static float updateTimeVal = updateTimeInterval;
         updateTimeVal += dt;
-        if (updateTimeVal > 2) {
+        if (updateTimeVal > updateTimeInterval) {
             frameRate = SDLCore::Time::GetFrameRateHzF();
             deltaTime = SDLCore::Time::GetDeltaTimeSecF();
             updateTimeVal = 0;
@@ -125,7 +128,7 @@ void App::OnUpdate() {
         UI::SetContextWindow(contextFPS, m_winID);
         UI::BindContext(contextFPS);
 
-        UI::BeginFrame(UI::UIKey("rootFPS"))->SetOverride(UI::Properties::layoutDirection, UI::UILayoutDir::ROW);
+        UI::BeginFrame(UI::UIKey("rootFPS"))->SetOverride(UI::Properties::layoutDirection, UI::UILayoutDir::COLUMN);
         UI::Text(UI::UIKey("text"), FormatUtils::formatString("FPS: {}, DT: {}s", frameRate, deltaTime));
         UI::Text(UI::UIKey("other"), FormatUtils::formatString("Mouse: {}", Input::GetMousePosition()));
         UI::EndFrame();

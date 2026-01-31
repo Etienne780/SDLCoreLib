@@ -9,6 +9,10 @@
 #include "UI/UIStyle.h"
 #include "UI/Types/UIEvent.h"
 
+#ifndef NDEBUG
+#include "UI/Types/UIPropertyRegistry.h"
+#endif 
+
 namespace SDLCore::UI {
 
     namespace Internal {
@@ -125,12 +129,61 @@ namespace SDLCore::UI {
         */
         void SetChildHasEvent(bool value);
 
+        // Layout position (top-left of layout box, no visual effects)
         Vector2 GetPosition() const;
-        // applys pos + borderWidth if outer border
-        Vector2 GetVisiblePosition() const;
+
+        // Layout size (content + padding + border layout size)
         Vector2 GetSize() const;
-        // applys size + borderWidth if outer border
+
+        /*
+        * @brief Position used for clipping& hit testing
+        *
+        * Includes:
+        *
+        * - outer border expansion
+        *
+        * - visualOffset
+        */
+        Vector2 GetVisiblePosition() const;
+
+
+        /*
+        * @brief Size used for clipping & hit testing
+        *
+        * Includes:
+        *
+        * - outer border expansion
+        *
+        * - visualScale
+        */
         Vector2 GetVisibleSize() const;
+
+        /*
+        * @brief Position used for rendering content & background
+        *
+        * Includes:
+        *
+        * - visualOffset
+        *
+        * Excludes:
+        *
+        * - outer border expansion
+        */
+        Vector2 GetRenderPosition() const;
+
+        /*
+        * @brief Size used for rendering content & background
+        *
+        * Includes:
+        *
+        * - visualScale
+        *
+        * Excludes:
+        *
+        * - outer border expansion
+        */
+        Vector2 GetRenderSize() const;
+
         Vector4 GetPadding() const;
         Vector4 GetMargin() const;
 
@@ -164,9 +217,38 @@ namespace SDLCore::UI {
         bool IsPointInNode(const Vector2& point) const;
         bool IsPointInClipRect(const Vector2& point) const;
 
-        virtual void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) = 0;
+        float ResolveUnitValue(UIContext* context, UISizeUnit unit, float value, bool horizontal, const UINode* referenceNode) const;
+        Vector2 ResolveVisualOffset(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h) const;
         virtual Vector2 CalculateSize(UIContext* context, UISizeUnit unitW, UISizeUnit unitH, float w, float h);
-        virtual void ProcessEvent(UIEvent* event) {};
+        virtual void ApplyStyleCalled(UIContext* context, const UIStyleState& styleState) {}
+        virtual void ProcessEvent(UIEvent* event) {}
+
+        template<typename T>
+        bool GetResolvedValue(UIPropertyID id, T& out, const T& fallback) const {
+#ifndef NDEBUG
+            if (auto* prop = UIPropertyRegistry::TryGetProperty(id)) {
+                if (prop->IsComposite()) {
+                    Log::Error("SDLCore::UI::UINode::GetResolvedValue: Cant resolve value of composite property '{}({})'!", prop->GetName(), id);
+                    out = fallback;
+                    return false;
+                }
+            }
+            else {
+                Log::Error("SDLCore::UI::UINode::GetResolvedValue: Cant resolve value of property with id '{}', property not found!", id);
+                out = fallback;
+                return false;
+            }
+#endif 
+            if (m_overrideState.TryGetValueIfSet<T>(id, out))
+                return true;
+
+            if (m_renderedStyleState.TryGetValue<T>(id, out, fallback))
+                return true;
+
+            out = fallback;
+            return false;
+        }
+
 
         uintptr_t m_id = 0;
         int m_childPos = -1;/*< position inside of the children */
@@ -194,6 +276,9 @@ namespace SDLCore::UI {
 
         Vector2 m_position{ 0.0f, 0.0f };
         Vector2 m_size{ 0.0f, 0.0f };
+        Vector2 m_visualPosition{ 0.0f, 0.0f };
+        Vector2 m_visualSize{ 0.0f, 0.0f };
+
         Vector4 m_padding{ 0.0f, 0.0f, 0.0f, 0.0f };/*< Top, Left, Bottom, Right */
         Vector4 m_margin{ 0.0f, 0.0f, 0.0f, 0.0f };/*< Top, Left, Bottom, Right */
 
@@ -237,18 +322,6 @@ namespace SDLCore::UI {
         void OnStyleStateChanged();
         void Update(UIContext* ctx, float dt);
         void UpdateStyle(UIContext* ctx, float dt);
-
-        template<typename T>
-        bool GetResolvedValue(UIPropertyID id, T& out, const T& fallback) const {
-            if (m_overrideState.TryGetValueIfSet<T>(id, out))
-                return true;
-
-            if (m_renderedStyleState.TryGetValue<T>(id, out, fallback))
-                return true;
-
-            out = fallback;
-            return false;
-        }
 
         // return true if last state is diff to current state
         bool HasStateChanged() const;

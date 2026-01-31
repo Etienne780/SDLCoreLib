@@ -520,6 +520,122 @@ namespace SDLCore::UI::Properties {
 	*/
 	inline UIPropertyID hideOverflow;
 
+	/*
+	* @brief Visual horizontal offset applied after layout (float)
+	*
+	* Offsets the rendered position of this node on the X axis.
+	* This does NOT affect layout, parent sizing, or child placement.
+	*
+	* Default: 0.0f
+	*
+	* Usage: style.SetValue(Prop::visualOffsetX, 10.0f)
+	*/
+	inline UIPropertyID visualOffsetX;
+
+	/*
+	* @brief Visual vertical offset applied after layout (float)
+	*
+	* Offsets the rendered position of this node on the Y axis.
+	* This does NOT affect layout, parent sizing, or child placement.
+	*
+	* Default: 0.0f
+	*
+	* Usage: style.SetValue(Prop::visualOffsetY, -5.0f)
+	*/
+	inline UIPropertyID visualOffsetY;
+
+	/*
+	* @brief Shorthand property for visual X and Y offset (composite)
+	*
+	* Applies a visual offset after layout calculation.
+	* Does NOT affect layout, parent size, or child placement.
+	*
+	* Default: 0.0f, 0.0f
+	*
+	* Composite layout: visualOffsetX, visualOffsetY
+	*
+	* Usage: style.SetValue(Prop::visualOffset, 10.0f, -5.0f)
+	*/
+	inline UIPropertyID visualOffset;
+
+	inline UIPropertyID visualOffsetXUnit;
+	inline UIPropertyID visualOffsetYUnit;
+	inline UIPropertyID visualOffsetUnit;
+
+	/*
+	* @brief Visual scale factor on the X axis (float)
+	*
+	* Scales the rendered width of this node.
+	* This does NOT affect layout or child positioning.
+	*
+	* Default: 1.0f
+	*
+	* Usage: style.SetValue(Prop::visualScaleX, 1.5f)
+	*/
+	inline UIPropertyID visualScaleX;
+
+	/*
+	* @brief Visual scale factor on the Y axis (float)
+	*
+	* Scales the rendered height of this node.
+	* This does NOT affect layout or child positioning.
+	*
+	* Default: 1.0f
+	*
+	* Usage: style.SetValue(Prop::visualScaleY, 0.75f)
+	*/
+	inline UIPropertyID visualScaleY;
+
+	/*
+	* @brief Shorthand property for visual scale on both axes (composite)
+	*
+	* Scales the rendered size of this node without affecting layout.
+	*
+	* Default: 1.0f, 1.0f
+	*
+	* Composite layout: visualScaleX, visualScaleY
+	*
+	* Usage: style.SetValue(Prop::visualScale, 1.2f, 1.2f)
+	*/
+	inline UIPropertyID visualScale;
+
+	/*
+	* @brief Unit for visual scale on the X axis (UISizeUnit)
+	*
+	* Defines how visualScaleX is interpreted.
+	* Only affects rendering, not layout.
+	*
+	* Default: UISizeUnit::PX
+	*
+	* Usage: style.SetValue(Prop::visualScaleXUnit, UISizeUnit::PX)
+	*/
+	inline UIPropertyID visualScaleXUnit;
+
+	/*
+	* @brief Unit for visual scale on the Y axis (UISizeUnit)
+	*
+	* Defines how visualScaleY is interpreted.
+	* Only affects rendering, not layout.
+	*
+	* Default: UISizeUnit::PX
+	*
+	* Usage: style.SetValue(Prop::visualScaleYUnit, UISizeUnit::PX)
+	*/
+	inline UIPropertyID visualScaleYUnit;
+
+	/*
+	* @brief Shorthand property for visual scale units (composite)
+	*
+	* Applies the same unit to both visualScaleXUnit and visualScaleYUnit.
+	*
+	* Default: UISizeUnit::PX, UISizeUnit::PX
+	*
+	* Composite layout: visualScaleXUnit, visualScaleYUnit
+	*
+	* Usage: style.SetValue(Prop::visualScaleUnit, UISizeUnit::PX)
+	*/
+	inline UIPropertyID visualScaleUnit;
+
 	#pragma endregion
 
 	#pragma region ================= Interaction ===================

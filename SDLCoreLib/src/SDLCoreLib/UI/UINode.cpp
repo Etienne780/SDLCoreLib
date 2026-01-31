@@ -176,7 +176,7 @@ namespace SDLCore::UI {
 	Vector2 UINode::GetVisiblePosition() const {
 		Vector4 bM = GetBorderLayoutMargin();
 		Vector2 p = GetPosition();
-		return Vector2(p.x - bM.y, p.y - bM.x);
+		return Vector2(p.x - bM.y, p.y - bM.x) + m_visualPosition;
 	}
 
 	Vector2 UINode::GetSize() const {
@@ -187,7 +187,15 @@ namespace SDLCore::UI {
 		Vector4 bM = GetBorderLayoutMargin();
 		Vector2 s = GetSize();
 		return Vector2(s.x + bM.y + bM.w, 
-			s.y + bM.x + bM.z);
+			s.y + bM.x + bM.z) + m_visualSize;
+	}
+
+	Vector2 UINode::GetRenderPosition() const {
+		return GetPosition() + m_visualPosition;
+	}
+
+	Vector2 UINode::GetRenderSize() const {
+		return GetSize() + m_visualSize;
 	}
 
 	Vector4 UINode::GetPadding() const {
@@ -286,53 +294,65 @@ namespace SDLCore::UI {
 			point.y > m_clippingMask.y && point.y <= m_clippingMask.y + m_clippingMask.w;
 	}
 
-	Vector2 UINode::CalculateSize(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h) {
+	float UINode::ResolveUnitValue(
+		UIContext* ctx,
+		UISizeUnit unit,
+		float value,
+		bool horizontal,
+		const UINode* referenceNode
+	) const {
 		if (!ctx)
-			return Vector2(0.0f, 0.0f);
+			return 0.0f;
 
-		auto resolveBaseSize = [&](bool horizontal) -> float {
-			const UINode* baseNode = m_parent;
-
-			if (m_positionType == UIPositionType::ABSOLUTE) {
-				baseNode = ctx->GetLastRelativeNode();
-				if (!baseNode)
-					baseNode = m_parent;
+		auto resolveBase = [&](bool hor) -> float {
+			if (referenceNode) {
+				const auto& pad =
+					referenceNode->m_padding + referenceNode->GetBorderLayoutPadding();
+				return hor
+					? referenceNode->m_size.x - pad.y - pad.w
+					: referenceNode->m_size.y - pad.x - pad.z;
 			}
 
-			if (baseNode) {
-				const auto& pPadding = baseNode->m_padding + baseNode->GetBorderLayoutPadding();
-				return horizontal ? baseNode->m_size.x - pPadding.y - pPadding.w
-					: baseNode->m_size.y - pPadding.x - pPadding.z;
-			}
+			return hor ? ctx->GetWindowSize().x : ctx->GetWindowSize().y;
+			};
 
-			return horizontal ? ctx->GetWindowSize().x : ctx->GetWindowSize().y;
-		};
+		switch (unit) {
+		case UISizeUnit::PX:
+			return value;
 
+		case UISizeUnit::PERCENTAGE:
+			return resolveBase(horizontal) * value / 100.0f;
 
-		auto calc = [&](bool horizontal, UISizeUnit unit, float value) -> float {
-			switch (unit) {
-			case UISizeUnit::PX:
-				return value;
+		case UISizeUnit::PERCENTAGE_W:
+			return resolveBase(true) * value / 100.0f;
 
-			case UISizeUnit::PERCENTAGE:
-				return resolveBaseSize(horizontal) * value / 100.0f;
+		case UISizeUnit::PERCENTAGE_H:
+			return resolveBase(false) * value / 100.0f;
 
-			case UISizeUnit::PERCENTAGE_W:
-				return resolveBaseSize(true) * value / 100.0f;
+		default:
+			return 0.0f;
+		}
+	}
 
-			case UISizeUnit::PERCENTAGE_H:
-				return resolveBaseSize(false) * value / 100.0f;
+	Vector2 UINode::ResolveVisualOffset(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h) const {
+		const UINode* baseNode = m_parent;
 
-			default:
-				return 0.0f;
-			}
-		};
+		if (m_positionType == UIPositionType::ABSOLUTE) {
+			baseNode = ctx->GetLastRelativeNode();
+			if (!baseNode)
+				baseNode = m_parent;
+		}
 
 		return Vector2(
-			calc(true, unitW, w),
-			calc(false, unitH, h)
+			ResolveUnitValue(ctx, unitW, w, true, baseNode),
+			ResolveUnitValue(ctx, unitH, h, false, baseNode)
 		);
 	}
+
+	Vector2 UINode::CalculateSize(UIContext* ctx, UISizeUnit unitW, UISizeUnit unitH, float w, float h) {
+		return ResolveVisualOffset(ctx, unitW, unitH, w, h);
+	}
+
 
 	uint32_t UINode::GetUITypeID(const std::string& name) {
 		auto it = Internal::nameToID.find(name);
@@ -375,6 +395,26 @@ namespace SDLCore::UI {
 
 		GetResolvedValue<int>(Properties::widthUnit, sizeUnitW, 0);
 		GetResolvedValue<int>(Properties::heightUnit, sizeUnitH, 0);
+
+		float visualPosX = 0.0f;
+		float visualPosY = 0.0f;
+		float visualSizeX = 0.0f;
+		float visualSizeY = 0.0f;
+
+		GetResolvedValue<float>(Properties::visualOffsetX, visualPosX, 0.0f);
+		GetResolvedValue<float>(Properties::visualOffsetY, visualPosY, 0.0f);
+		GetResolvedValue<float>(Properties::visualScaleX, visualSizeX, 0.0f);
+		GetResolvedValue<float>(Properties::visualScaleY, visualSizeY, 0.0f);
+
+		int visualPosUnitX = 0; // PX
+		int visualPosUnitY = 0;
+		int visualSizeUnitW = 0; // PX
+		int visualSizeUnitH = 0;
+
+		GetResolvedValue<int>(Properties::visualOffsetXUnit, visualPosUnitX, 0);
+		GetResolvedValue<int>(Properties::visualOffsetYUnit, visualPosUnitY, 0);
+		GetResolvedValue<int>(Properties::visualScaleXUnit, visualSizeUnitW, 0);
+		GetResolvedValue<int>(Properties::visualScaleYUnit, visualSizeUnitH, 0);
 
 		GetResolvedValue<Vector4>(Properties::padding, m_padding, Vector4(0.0f));
 		GetResolvedValue<Vector4>(Properties::margin, m_margin, Vector4(0.0f));
@@ -436,6 +476,22 @@ namespace SDLCore::UI {
 			static_cast<UISizeUnit>(sizeUnitH),
 			width,
 			height
+		);
+
+		m_visualPosition = ResolveVisualOffset(
+			ctx,
+			static_cast<UISizeUnit>(visualPosUnitX),
+			static_cast<UISizeUnit>(visualPosUnitY),
+			visualPosX,
+			visualPosY
+		);
+
+		m_visualSize = ResolveVisualOffset(
+			ctx,
+			static_cast<UISizeUnit>(sizeUnitW),
+			static_cast<UISizeUnit>(sizeUnitH),
+			visualSizeX,
+			visualSizeY
 		);
 	}
 
