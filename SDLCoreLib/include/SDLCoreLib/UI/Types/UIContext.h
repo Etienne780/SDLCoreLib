@@ -75,6 +75,7 @@ namespace SDLCore::UI {
 		bool m_leftMouseDown = false;
 		bool m_leftMouseJustDown = false;
 		bool m_leftMouseJustUp = false;
+		bool m_cursorLocked = false;
 
 		uintptr_t m_pressNodeID = 0;/*< Address can not be 0 */
 		uintptr_t m_dragNodeID = 0;/*< Address can not be 0 */
