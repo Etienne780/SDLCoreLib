@@ -14,17 +14,19 @@ namespace SDLCore::UI {
 	void FrameNode::RenderNode(UIContext* ctx) const {
 		namespace RE = SDLCore::Render;
 
+		const Vector2& pos = this->GetRenderPosition();
+		const Vector2& size = this->GetRenderSize();
+
 		if (m_backgroundColor.w > 0) {
 			if (m_useTexture && m_texture) {
-				const Vector2& size = this->GetSize();
 				if (size != Vector2::zero) {
 					m_texture->SetColorTint(m_backgroundColor);
-					m_texture->Render(this->GetPosition(), size);
+					m_texture->Render(pos, size);
 				}
 			}
 			else {
 				RE::SetColor(m_backgroundColor);
-				RE::FillRect(this->GetPosition(), this->GetSize());
+				RE::FillRect(pos, size);
 			}
 		}
 
@@ -32,7 +34,7 @@ namespace SDLCore::UI {
 			RE::SetColor(m_borderColor);
 			RE::SetInnerStroke(m_innerBorder);
 			RE::SetStrokeWidth(m_borderWidth);
-			RE::Rect(this->GetPosition(), this->GetSize());
+			RE::Rect(pos, size);
 		}
 	}
 
@@ -44,9 +46,9 @@ namespace SDLCore::UI {
 		if (!ctx)
 			return;
 
-		styleState.TryGetValue<Vector4>(Properties::backgroundColor, m_backgroundColor, Vector4(0.0f));
-		styleState.TryGetValue<Vector4>(Properties::borderColor, m_borderColor, Vector4(0.0f));
-		m_useTexture = styleState.TryGetValue<std::shared_ptr<Texture>>(Properties::backgroundTexture, m_texture, nullptr);
+		GetResolvedValue<Vector4>(Properties::backgroundColor, m_backgroundColor, Vector4(0.0f));
+		GetResolvedValue<Vector4>(Properties::borderColor, m_borderColor, Vector4(0.0f));
+		m_useTexture = GetResolvedValue<std::shared_ptr<Texture>>(Properties::backgroundTexture, m_texture, nullptr);
 	}
 
 

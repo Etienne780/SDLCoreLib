@@ -270,6 +270,82 @@ namespace SDLCore::UI {
             hideOverflowY
         );
 
+        visualOffsetX = RegisterProperty(
+            "visual_offset_x",
+            "Visual horizontal offset applied after layout (float). Does not affect layout. Default: 0.0f.",
+            PropertyValue(0.0f)
+        );
+
+        visualOffsetY = RegisterProperty(
+            "visual_offset_y",
+            "Visual vertical offset applied after layout (float). Does not affect layout. Default: 0.0f.",
+            PropertyValue(0.0f)
+        );
+
+        visualOffset = RegisterCompositeProperty(
+            "visual_offset",
+            "Shorthand for visualOffsetX and visualOffsetY.",
+            visualOffsetX,
+            visualOffsetY
+        );
+
+        visualOffsetXUnit = RegisterProperty(
+            "visual_offset_x_unit",
+            "Unit for visualOffsetX (UISizeUnit). Default: UISizeUnit::PX",
+            PropertyValue(UISizeUnit::PX)
+        );
+
+        visualOffsetYUnit = RegisterProperty(
+            "visual_offset_y_unit",
+            "Unit for visualOffsetY (UISizeUnit). Default: UISizeUnit::PX",
+            PropertyValue(UISizeUnit::PX)
+        );
+
+        visualOffsetUnit = RegisterCompositeProperty(
+            "visual_offset_unit",
+            "Shorthand for visualOffsetXUnit and visualOffsetYUnit.",
+            visualOffsetXUnit,
+            visualOffsetYUnit
+        );
+
+        visualScaleX = RegisterProperty(
+            "visual_scale_x",
+            "Visual scale factor on the X axis. Does not affect layout (float). Default: 0.0f",
+            PropertyValue(1.0f)
+        );
+
+        visualScaleY = RegisterProperty(
+            "visual_scale_y",
+            "Visual scale factor on the Y axis. Does not affect layout (float). Default: 0.0f",
+            PropertyValue(1.0f)
+        );
+
+        visualScale = RegisterCompositeProperty(
+            "visual_scale",
+            "Shorthand for visualScaleX and visualScaleY.",
+            visualScaleX,
+            visualScaleY
+        );
+
+        visualScaleXUnit = RegisterProperty(
+            "visual_scale_x_unit",
+            "Unit for visualScaleX (UISizeUnit). Default: UISizeUnit::PX",
+            PropertyValue(UISizeUnit::PX)
+        );
+
+        visualScaleYUnit = RegisterProperty(
+            "visual_scale_y_unit",
+            "Unit for visualScaleY (UISizeUnit). Default: UISizeUnit::PX",
+            PropertyValue(UISizeUnit::PX)
+        );
+
+        visualScaleUnit = RegisterCompositeProperty(
+            "visual_scale_unit",
+            "Shorthand for visualScaleXUnit and visualScaleYUnit.",
+            visualScaleXUnit,
+            visualScaleYUnit
+        );
+
         // ============ Other ============
 
         pointerEvents = RegisterProperty(
