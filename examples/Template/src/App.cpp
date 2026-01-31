@@ -1,6 +1,4 @@
 ﻿#include "App.h"
-#include <CoreLib/Random.h>
-#include <CoreLib/OTNFile.h>
 
 App::App()
     : Application("NAME", SDLCore::Version(1, 0)) {

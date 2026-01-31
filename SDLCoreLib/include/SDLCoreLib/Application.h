@@ -173,13 +173,19 @@ namespace SDLCore {
 		* the SDL-allocated string to a SystemFilePath object and handles memory cleanup.
 		*
 		* Example paths:
+		* 
 		* - Windows: `C:\Users\Bob\AppData\Roaming\MyCompany\MyApp\`
+		* 
 		* - Linux:   `/home/bob/.local/share/MyApp/`
+		* 
 		* - macOS:   `/Users/bob/Library/Application Support/MyApp/`
 		*
 		* Rules:
+		* 
 		* - Provide a consistent organization name for all your apps.
+		* 
 		* - Use a unique application name.
+		* 
 		* - Only letters, numbers, and spaces; avoid punctuation.
 		*
 		* @param orgName Name of the organization (default: "DefaultCompany").
@@ -196,10 +202,13 @@ namespace SDLCore {
 		* The path is guaranteed to end with a platform-specific separator ('\\' on Windows, '/' elsewhere).
 		*
 		* Notes:
+		* 
 		* - On macOS and iOS, if the application is inside a ".app" bundle, this function
 		*   returns the Resource directory (e.g., MyApp.app/Contents/Resources/).
 		*   This can be overridden via the SDL_FILESYSTEM_BASE_DIR_TYPE property in Info.plist.
+		* 
 		* - On platforms like Nintendo 3DS, this may return a read-only directory (e.g., "romfs").
+		* 
 		* - SDL caches the result internally; the first call may be slower.
 		*
 		* @return SystemFilePath representing the base directory of the application.
@@ -233,6 +242,134 @@ namespace SDLCore {
 		const std::string& GetCurrentRenderDriver() const;
 
 		/**
+		* @brief Returns the current clipboard text.
+		*
+		* @return Clipboard text as std::string.
+		*         Returns an empty string if no text is available or on error.
+		*
+		* @threadsafety Safe to call from any thread.
+		*/
+		std::string GetClipboardText() const;
+
+		/**
+		* @brief Returns all available clipboard MIME types.
+		*
+		* @return Vector of MIME type strings.
+		*
+		* @threadsafety Safe to call from any thread.
+		*/
+		std::vector<std::string> GetClipboardMimeTypes() const;
+
+		/**
+		* @brief Retrieves raw clipboard data for a specific MIME type.
+		*
+		* Queries SDL for the clipboard content of the given MIME type.
+		*
+		* @param mimeType MIME type to query.
+		* @param outSize Will be set to the size of the returned data in bytes.
+		* @return Pointer to SDL-owned clipboard data, or nullptr if unavailable.
+		*
+		* @note The returned pointer is owned by SDL and valid only until the next
+		*       clipboard operation. Do not attempt to free it.
+		* @threadsafety Safe to call from any thread.
+		*/
+		const void* GetClipboardData(const std::string& mimeType, std::size_t& outSize) const;
+
+		/**
+		* @brief Retrieves clipboard data cast to a specific type.
+		*
+		* Returns a pointer to type T if the clipboard data size matches sizeof(T).
+		*
+		* @tparam T Type to cast the clipboard data to.
+		* @param mimeType MIME type to query.
+		* @param outSize Will be set to the size of the returned data in bytes if successful.
+		* @return Pointer to T, or nullptr if size/type mismatch.
+		* @threadsafety Safe to call from any thread.
+		*/
+		template<typename T>
+		const T* GetClipboardData(const std::string& mimeType, size_t& outSize) const {
+			std::size_t size = 0;
+			const void* rawData = GetClipboardData(mimeType, size);
+			if (rawData && size == sizeof(T)) {
+				outSize = size;
+				return static_cast<const T*>(rawData);
+			}
+			return nullptr;
+		}
+
+		/**
+		* @brief Retrieves clipboard data cast to a specific type, ignoring size.
+		*
+		* Returns a pointer to type T if the clipboard data size matches sizeof(T).
+		*
+		* @tparam T Type to cast the clipboard data to.
+		* @param mimeType MIME type to query.
+		* @return Pointer to T, or nullptr if size/type mismatch.
+		* @threadsafety Safe to call from any thread.
+		*/
+		template<typename T>
+		const T* GetClipboardData(const std::string& mimeType) const {
+			std::size_t size = 0;
+			const void* rawData = GetClipboardData(mimeType, size);
+			if (rawData && size == sizeof(T)) {
+				return static_cast<const T*>(rawData);
+			}
+			return nullptr;
+		}
+
+		/**
+		* @brief Container traits to extract element type for generic clipboard array access.
+		*
+		* Provides a generic way to deduce value_type from containers.
+		*/
+		template<typename Container>
+		struct ContainerTraits {
+			using value_type = typename Container::value_type;
+			static constexpr bool is_fixed_size = false; ///< Indicates whether container size is fixed (e.g., std::array)
+		};
+
+		/**
+		* @brief Specialization of ContainerTraits for std::array.
+		*/
+		template<typename T, std::size_t N>
+		struct ContainerTraits<std::array<T, N>> {
+			using value_type = T;
+			static constexpr bool is_fixed_size = true;
+		};
+
+		/**
+		* @brief Retrieves clipboard data for containers (std::vector, std::array, etc.).
+		*
+		* Returns a pointer to the underlying element type if the data size
+		* is compatible (multiple of element size).
+		*
+		* @tparam Container The container type (must have value_type defined).
+		* @param mimeType MIME type to query.
+		* @param outSize Will be set to the total size in bytes of the returned data.
+		* @return Pointer to the first element, or nullptr if size/type mismatch.
+		* @threadsafety Safe to call from any thread.
+		*/
+		template<typename Container>
+		const typename ContainerTraits<Container>::value_type* GetClipboardDataArray(
+			const std::string& mimeType,
+			std::size_t& outSize
+		) const {
+			static_assert(std::is_standard_layout_v<typename ContainerTraits<Container>::value_type>,
+				"Clipboard template only works with standard-layout types");
+
+			outSize = 0;
+			const void* rawData = GetClipboardData(mimeType, outSize);
+			if (!rawData)
+				return nullptr;
+
+			using Element = typename ContainerTraits<Container>::value_type;
+			if (outSize % sizeof(Element) != 0)
+				return nullptr;
+
+			return static_cast<const Element*>(rawData);
+		}
+
+		/**
 		* @brief Sets the application's frame rate cap or VSync mode.
 		*
 		* This function configures how the application's rendering loop limits its frame rate.
@@ -241,9 +378,13 @@ namespace SDLCore {
 		* to represent different synchronization modes.
 		*
 		* @param value Frame cap mode or FPS limit.
+		* 
 		* - APPLICATION_FPS_UNCAPPED: No frame rate limit.
+		* 
 		* - APPLICATION_FPS_VSYNC_ON: Enables standard VSync.
+		* 
 		* - APPLICATION_FPS_VSYNC_ADAPTIVE_ON: Enables adaptive VSync.
+		* 
 		* - Any positive integer: Caps the frame rate to the specified FPS value.
 		*/
 		void SetFPSCap(int value);
@@ -296,6 +437,171 @@ namespace SDLCore {
 		*               the default driver automatically.
 		*/
 		void SetRenderDriver(const std::string& driver);
+
+		/**
+		* @brief Sets the clipboard text.
+		*
+		* @param text UTF-8 encoded text to place into the clipboard.
+		* @return true on success, false on failure.
+		*
+		* @threadsafety Safe to call from any thread.
+		*/
+		bool SetClipboardText(const std::string& text) const;
+
+		/**
+		* @brief Sets custom clipboard data using SDL clipboard callbacks.
+		*
+		* Registers clipboard data that is provided on demand via SDL callbacks.
+		* This is the low-level entry point used internally by higher-level
+		* typed clipboard helper functions.
+		*
+		* The clipboard data may be exposed under multiple MIME types at once.
+		*
+		* note: The lifetime of the data referenced by userdata must exceed the
+		*       lifetime of the clipboard ownership.
+		* 
+		* @param callback Callback invoked by SDL when clipboard data is requested.
+		* @param cleanup Optional cleanup callback invoked by SDL when clipboard data is released.
+		* @param userdata User-defined pointer passed to the callbacks.
+		* @param mimeTypes List of MIME types under which the clipboard data is advertised.
+		*
+		* @return true if the clipboard data was successfully registered, false otherwise.
+		*
+		* @threadsafety Safe to call from any thread.
+		*/
+		bool SetClipboardData(
+			SDL_ClipboardDataCallback callback,
+			SDL_ClipboardCleanupCallback cleanup,
+			void* userdata,
+			const std::vector<std::string>& mimeTypes
+		) const;
+		
+		/**
+		* @brief Sets clipboard data for a single fixed-size value.
+		*
+		* Stores a trivially copyable value in the clipboard under one or more
+		* MIME types. The data is exposed to SDL as a raw memory block of size
+		* sizeof(T).
+		*
+		*  note: The referenced value must remain valid while the clipboard owns the data.
+		* 
+		* @tparam T Type of the value to store. Must be standard-layout.
+		* @param value Value to expose via the clipboard.
+		* @param mimeTypes List of MIME types identifying the clipboard data.
+		*
+		* @return true on success, false on failure.
+		*
+		* @threadsafety Safe to call from any thread.
+		*/
+		template<typename T>
+		bool SetClipboardData(const T& value, const std::vector<std::string>& mimeTypes) const {
+			static_assert(std::is_standard_layout_v<T>,
+				"Clipboard data must be standard-layout");
+
+			auto callback = [](void* userdata, const char* mime, size_t* outSize) -> const void* {
+				if (!userdata || !outSize) return nullptr;
+				*outSize = sizeof(T);
+				return userdata;
+			};
+
+			return SetClipboardData(
+				callback,
+				nullptr,
+				const_cast<T*>(&value),
+				mimeTypes
+			);
+		}
+
+		/**
+		* @brief Sets clipboard data for a dynamic array of values.
+		*
+		* Stores the contents of a std::vector as a contiguous block of memory
+		* in the clipboard. The clipboard data size is calculated as
+		* values.size() * sizeof(T).
+		*
+		* The same data block can be exposed under multiple MIME types.
+		*
+		* note: Only the raw element data is exposed, not the std::vector object itself.
+		*       The vector must remain valid while the clipboard owns the data.
+		* 
+		* @tparam T Element type of the vector. Must be standard-layout.
+		* @param values Vector containing the data to expose.
+		* @param mimeTypes List of MIME types identifying the clipboard data.
+		*
+		* @return true on success, false on failure.
+		*
+		* @threadsafety Safe to call from any thread.
+		*/
+		template<typename T>
+		bool SetClipboardData(
+			const std::vector<T>& values,
+			const std::vector<std::string>& mimeTypes
+		) const {
+			static_assert(std::is_standard_layout_v<T>,
+				"Clipboard vector elements must be standard-layout");
+
+			auto callback = [](void* userdata, const char*, size_t* outSize) -> const void* {
+				if (!userdata || !outSize) 
+					return nullptr;
+
+				const auto* vec = static_cast<const std::vector<T>*>(userdata);
+				*outSize = vec->size() * sizeof(T);
+				return vec->data();
+			};
+
+			return SetClipboardData(
+				callback,
+				nullptr,
+				const_cast<std::vector<T>*>(&values),
+				mimeTypes
+			);
+		}
+
+		/**
+		* @brief Sets clipboard data for a fixed-size array of values.
+		*
+		* Stores the contents of a std::array as a contiguous block of memory
+		* in the clipboard. The clipboard data size is calculated as
+		* N * sizeof(T).
+		*
+		* The same data block can be exposed under multiple MIME types.
+		*
+		* note: Only the raw element data is exposed, not the std::array object itself.
+		*       The array must remain valid while the clipboard owns the data.
+		* 
+		* @tparam T Element type of the array. Must be standard-layout.
+		* @tparam N Number of elements in the array.
+		* @param values Array containing the data to expose.
+		* @param mimeTypes List of MIME types identifying the clipboard data.
+		*
+		* @return true on success, false on failure.
+		*
+		* @threadsafety Safe to call from any thread.
+		*/
+		template<typename T, size_t N>
+		bool SetClipboardData(
+			const std::array<T, N>& values,
+			const std::vector<std::string>& mimeTypes
+		) const {
+			static_assert(std::is_standard_layout_v<T>,
+				"Clipboard vector elements must be standard-layout");
+
+			auto callback = [](void* userdata, const char*, size_t* outSize) -> const void* {
+				if (!userdata || !outSize) 
+					return nullptr;
+
+				const auto* vec = static_cast<const std::array<T, N>*>(userdata);
+				*outSize = N * sizeof(T);
+				return vec->data();
+			};
+
+			return SetClipboardData(
+				callback,
+				nullptr,
+				const_cast<std::array<T, N>*>(&values),
+				mimeTypes
+			);
+		}
 
 		/*
 		* @brief Called on programm start
