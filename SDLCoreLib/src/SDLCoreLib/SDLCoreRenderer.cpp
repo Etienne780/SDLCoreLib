@@ -12,7 +12,7 @@
 
 namespace SDLCore::Render {
 
-    static std::weak_ptr<SDL_Renderer> s_renderer;
+    static SDL_Renderer* s_renderer = nullptr;
     static WindowID s_winID { SDLCORE_INVALID_ID };
 
     // ========== Primitives ========== 
@@ -101,10 +101,7 @@ namespace SDLCore::Render {
     std::unordered_map<TextCacheKey, CachedText, TextCacheKeyHash> s_textCache;
 
     SDL_Renderer* GetActiveRenderer() {
-        auto rendererPtr = s_renderer.lock();
-        if (!rendererPtr)
-            return nullptr;
-        return rendererPtr.get();
+        return s_renderer;
     }
 
     WindowID GetActiveWindowID() {
@@ -142,18 +139,17 @@ namespace SDLCore::Render {
         }
     }
 
-    static std::shared_ptr<SDL_Renderer> GetActiveRenderer(const char* func) {
-        auto rendererPtr = s_renderer.lock();
-        if (!rendererPtr) {
+    static SDL_Renderer* GetActiveRenderer(const char* func) {
+        if (!s_renderer) {
             SetErrorF("SDLCore::Renderer::{}: Current renderer is null", func);
         }
-        return rendererPtr;
+        return s_renderer;
     }
 
     void SetWindowRenderer(WindowID winID) {
         if (winID.value == SDLCORE_INVALID_ID) {
             s_winID.value = SDLCORE_INVALID_ID;
-            s_renderer.reset();
+            s_renderer = nullptr;
             return;
         }
 
@@ -163,33 +159,33 @@ namespace SDLCore::Render {
 
         if (!win) {
             s_winID.value = SDLCORE_INVALID_ID;
-            s_renderer.reset();
+            s_renderer = nullptr;
             return;
         }
 
         if (!win->HasRenderer()) {
             Log::Error("SDLCore::Renderer::SetWindowRenderer: Renderer of window '{}' is null or destroyed!", win->GetName());
             s_winID.value = SDLCORE_INVALID_ID;
-            s_renderer.reset();
+            s_renderer = nullptr;
             return;
         }
 
-        std::weak_ptr<SDL_Renderer> rendererWeak = win->GetSDLRenderer();
-        if (!rendererWeak.lock()) {
+        SDL_Renderer* rendererPtr = win->GetSDLRenderer();
+        if (!rendererPtr) {
             Log::Error("SDLCore::Renderer::SetWindowRenderer: Renderer of window '{}' is null or destroyed!", win->GetName());
             s_winID.value = SDLCORE_INVALID_ID;
-            s_renderer.reset();
+            s_renderer = nullptr;
             return;
         }
 
-        s_renderer = rendererWeak;
+        s_renderer = rendererPtr;
     }
 
     void Clear() {
         auto renderer = GetActiveRenderer("Clear");
         if (!renderer)
             return;
-        if (!SDL_RenderClear(renderer.get())) {
+        if (!SDL_RenderClear(renderer)) {
             Log::Error("SDLCore::Renderer::Clear: Failed to clear renderer: {}", SDL_GetError());
         }
     }
@@ -198,7 +194,7 @@ namespace SDLCore::Render {
         auto renderer = GetActiveRenderer("Present");
         if (!renderer)
             return;
-        if (!SDL_RenderPresent(renderer.get())) {
+        if (!SDL_RenderPresent(renderer)) {
             Log::Error("SDLCore::Renderer::Present: Failed to Present: {}", SDL_GetError());
         }
     }
@@ -207,7 +203,7 @@ namespace SDLCore::Render {
         auto renderer = GetActiveRenderer("SetRenderScale");
         if (!renderer)
             return;
-        if (!SDL_SetRenderScale(renderer.get(),scaleX, scaleY)) {
+        if (!SDL_SetRenderScale(renderer,scaleX, scaleY)) {
             Log::Error("SDLCore::Renderer::SetRenderScale: Failed to SetRenderScale: {}", SDL_GetError());
         }
     }
@@ -225,7 +221,7 @@ namespace SDLCore::Render {
         auto renderer = GetActiveRenderer("GetRenderScale");
         if (!renderer)
             return scale;
-        if (!SDL_GetRenderScale(renderer.get(), &scale.x, &scale.y)) {
+        if (!SDL_GetRenderScale(renderer, &scale.x, &scale.y)) {
             Log::Error("SDLCore::Renderer::GetRenderScale: Failed to SetRenderScale: {}", SDL_GetError());
         }
         return scale;
@@ -237,7 +233,7 @@ namespace SDLCore::Render {
         if (!renderer)
             return viewport;
 
-        if (!SDL_GetRenderViewport(renderer.get(), &viewport)) {
+        if (!SDL_GetRenderViewport(renderer, &viewport)) {
             Log::Error("SDLCore::Renderer::GetViewport: Failed to get viewport: {}", SDL_GetError());
         }
         return viewport;
@@ -249,7 +245,7 @@ namespace SDLCore::Render {
             return;
 
         SDL_Rect viewport{ x, y, w, h };
-        if (!SDL_SetRenderViewport(renderer.get(), &viewport)) {
+        if (!SDL_SetRenderViewport(renderer, &viewport)) {
             Log::Error("SDLCore::Renderer::SetViewport: Failed to set viewport ({}, {}, {}, {}): {}",
                 x, y, w, h, SDL_GetError());
         }
@@ -282,7 +278,7 @@ namespace SDLCore::Render {
         if (!renderer)
             return;
 
-        if (!SDL_SetRenderViewport(renderer.get(), nullptr)) {
+        if (!SDL_SetRenderViewport(renderer, nullptr)) {
             Log::Error("SDLCore::Renderer::ResetViewport: Failed to reset viewport: {}", SDL_GetError());
         }
     }
@@ -293,7 +289,7 @@ namespace SDLCore::Render {
         if (!renderer)
             return clipRect;
 
-        if (!SDL_GetRenderClipRect(renderer.get(), &clipRect)) {
+        if (!SDL_GetRenderClipRect(renderer, &clipRect)) {
             Log::Error("SDLCore::Renderer::GetClipRect: Failed to get clipRect: {}", SDL_GetError());
         }
         return clipRect;
@@ -305,7 +301,7 @@ namespace SDLCore::Render {
             return;
 
         SDL_Rect clipRect{ x, y, w, h };
-        if (!SDL_SetRenderClipRect(renderer.get(), &clipRect)) {
+        if (!SDL_SetRenderClipRect(renderer, &clipRect)) {
             Log::Error("SDLCore::Renderer::SetClipRect: Failed to set clipRect ({}, {}, {}, {}): {}",
                 x, y, w, h, SDL_GetError());
         }
@@ -338,7 +334,7 @@ namespace SDLCore::Render {
         if (!renderer)
             return;
 
-        if (!SDL_SetRenderClipRect(renderer.get(), nullptr)) {
+        if (!SDL_SetRenderClipRect(renderer, nullptr)) {
             Log::Error("SDLCore::Renderer::ResetClipRect: Failed to reset clipRect: {}", SDL_GetError());
         }
     }
@@ -349,7 +345,7 @@ namespace SDLCore::Render {
             return;
 
         SDL_BlendMode mode = enabled ? SDL_BLENDMODE_BLEND : SDL_BLENDMODE_NONE;
-        if (!SDL_SetRenderDrawBlendMode(renderer.get(), mode)) {
+        if (!SDL_SetRenderDrawBlendMode(renderer, mode)) {
             Log::Error("SDLCore::Renderer::SetBlendMode: Failed to set blend mode {}: {}",
                 enabled ? "BLEND" : "NONE", SDL_GetError());
         }
@@ -359,7 +355,7 @@ namespace SDLCore::Render {
         auto renderer = GetActiveRenderer("SetBlendMode");
         if (!renderer)
             return;
-        if (!SDL_SetRenderDrawBlendMode(renderer.get(), static_cast<SDL_BlendMode>(mode))) {
+        if (!SDL_SetRenderDrawBlendMode(renderer, static_cast<SDL_BlendMode>(mode))) {
             Log::Error("SDLCore::Renderer::SetBlendMode: Failed to set blend mode {}: {}", static_cast<int>(mode), SDL_GetError());
         }
     }
@@ -375,7 +371,7 @@ namespace SDLCore::Render {
         if (!renderer)
             return;
         s_activeColor = { r, g, b, a};
-        if (!SDL_SetRenderDrawColor(renderer.get(), r, g, b, a)) {
+        if (!SDL_SetRenderDrawColor(renderer, r, g, b, a)) {
             Log::Error("SDLCore::Renderer::SetColor: Failed to set color ({}, {}, {}, {}): {}", r, g, b, a, SDL_GetError());
         }
     }
@@ -425,7 +421,7 @@ namespace SDLCore::Render {
         if (!renderer)
             return;
         SDL_FRect rect{ x, y, w, h };
-        if (!SDL_RenderFillRect(renderer.get(), &rect)) {
+        if (!SDL_RenderFillRect(renderer, &rect)) {
             Log::Error("SDLCore::Renderer::FillRect: Failed to fill rect ({}, {}, {}, {}): {}", x, y, w, h, SDL_GetError());
         }
     }
@@ -458,7 +454,7 @@ namespace SDLCore::Render {
         }
 
         if (!rects.empty()) {
-            if (!SDL_RenderFillRects(renderer.get(), rects.data(), static_cast<int>(rects.size()))) {
+            if (!SDL_RenderFillRects(renderer, rects.data(), static_cast<int>(rects.size()))) {
                 Log::Error("SDLCore::Renderer::FillRects: Failed to fill rects count '{}', {}", count, SDL_GetError());
             }
         }
@@ -475,7 +471,7 @@ namespace SDLCore::Render {
 
         if (s_strokeWidth == 1) {
             SDL_FRect rect{ x, y, w, h };
-            if (!SDL_RenderRect(renderer.get(), &rect)) {
+            if (!SDL_RenderRect(renderer, &rect)) {
                 Log::Error("SDLCore::Renderer::Rect: Failed to draw rect ({}, {}, {}, {}): {}",
                     rect.x, rect.y, rect.w, rect.h, SDL_GetError());
             }
@@ -502,7 +498,7 @@ namespace SDLCore::Render {
         }
 
         for (auto& rect : rects) {
-            if (!SDL_RenderFillRect(renderer.get(), &rect)) {
+            if (!SDL_RenderFillRect(renderer, &rect)) {
                 Log::Error("SDLCore::Renderer::Rect: Failed to draw rect ({}, {}, {}, {}): {}",
                     rect.x, rect.y, rect.w, rect.h, SDL_GetError());
                 break;
@@ -563,9 +559,9 @@ namespace SDLCore::Render {
         if (!rects.empty()) {
             bool result = true;
             if (s_strokeWidth == 1)
-                result = SDL_RenderRects(renderer.get(), rects.data(), static_cast<int>(rects.size()));
+                result = SDL_RenderRects(renderer, rects.data(), static_cast<int>(rects.size()));
             else
-                result = SDL_RenderFillRects(renderer.get(), rects.data(), static_cast<int>(rects.size()));
+                result = SDL_RenderFillRects(renderer, rects.data(), static_cast<int>(rects.size()));
 
             if (!result)
                 Log::Error("SDLCore::Renderer::Rects: Failed to draw rects count '{}', {}", count, SDL_GetError());
@@ -586,7 +582,7 @@ namespace SDLCore::Render {
             return;
 
         if (s_strokeWidth <= 1) {
-            SDL_RenderLine(renderer.get(), x1, y1, x2, y2);
+            SDL_RenderLine(renderer, x1, y1, x2, y2);
             return;
         }
 
@@ -611,7 +607,7 @@ namespace SDLCore::Render {
             { x1 - nx * halfStroke, y1 - ny * halfStroke }
         };
         Uint8 r, g, b, a;
-        SDL_GetRenderDrawColor(renderer.get(), &r, &g, &b, &a);
+        SDL_GetRenderDrawColor(renderer, &r, &g, &b, &a);
         SDL_Vertex quad[4];
         for (int i = 0; i < 4; ++i) {
             quad[i].position.x = verts[i].x;
@@ -623,7 +619,7 @@ namespace SDLCore::Render {
         }
 
         int indices[6] = { 0, 1, 2, 2, 3, 0 };
-        if (!SDL_RenderGeometry(renderer.get(), nullptr, quad, 4, indices, 6)) {
+        if (!SDL_RenderGeometry(renderer, nullptr, quad, 4, indices, 6)) {
             Log::Error("SDLCore::Renderer::Line: Failed to draw thick line ({}, {}, {}, {}): {}", x1, y1, x2, y2, SDL_GetError());
         }
     }
@@ -651,7 +647,7 @@ namespace SDLCore::Render {
         if (!renderer)
             return;
 
-        if (!SDL_RenderPoint(renderer.get(), x, y)) {
+        if (!SDL_RenderPoint(renderer, x, y)) {
             Log::Error("SDLCore::Renderer::Point: Failed to draw point ({}, {}): {}", x, y, SDL_GetError());
         }
     }
@@ -702,7 +698,7 @@ namespace SDLCore::Render {
         const int* idx = (indexCount > 0) ? indices : nullptr;
 
         // Submit geometry to SDL
-        if (!SDL_RenderGeometry(renderer.get(),
+        if (!SDL_RenderGeometry(renderer,
             tex,
             out,
             static_cast<int>(vertexCount),
@@ -937,7 +933,7 @@ namespace SDLCore::Render {
             auto renderer = GetActiveRenderer("PreRenderText");
             if (renderer) {
                 ct.preRenderedTexture = SDL_CreateTexture(
-                    renderer.get(),
+                    renderer,
                     SDL_PIXELFORMAT_RGBA8888,
                     SDL_TEXTUREACCESS_TARGET,
                     static_cast<int>(ct.blockWidth),
@@ -946,10 +942,10 @@ namespace SDLCore::Render {
 
                 if (ct.preRenderedTexture) {
                     // Save old render target
-                    SDL_Texture* oldTarget = SDL_GetRenderTarget(renderer.get());
-                    SDL_SetRenderTarget(renderer.get(), ct.preRenderedTexture);
-                    SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 0);
-                    SDL_RenderClear(renderer.get());
+                    SDL_Texture* oldTarget = SDL_GetRenderTarget(renderer);
+                    SDL_SetRenderTarget(renderer, ct.preRenderedTexture);
+                    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+                    SDL_RenderClear(renderer);
 
                     float lineH = GetLineHeight();
                     float penY = 0.0f;
@@ -982,7 +978,7 @@ namespace SDLCore::Render {
                                 static_cast<float>(m->atlasHeight)
                             };
                             
-                            SDL_RenderTexture(renderer.get(), s_font->GetFontAsset()->GetGlyphAtlasTexture(s_winID), &src, &dst);
+                            SDL_RenderTexture(renderer, s_font->GetFontAsset()->GetGlyphAtlasTexture(s_winID), &src, &dst);
                             penX += m->advance;
                         }
 
@@ -990,7 +986,7 @@ namespace SDLCore::Render {
                     }
 
                     // Restore old render target
-                    SDL_SetRenderTarget(renderer.get(), oldTarget);
+                    SDL_SetRenderTarget(renderer, oldTarget);
                 }
             }
         }
@@ -1043,7 +1039,7 @@ namespace SDLCore::Render {
             ct->color = s_activeColor;
         }
 
-        SDL_RenderTexture(renderer.get(), ct->preRenderedTexture, nullptr, &dst);
+        SDL_RenderTexture(renderer, ct->preRenderedTexture, nullptr, &dst);
     }
 
     static inline void EvictOldTextCache(uint64_t currentFrame) {
@@ -1130,7 +1126,7 @@ namespace SDLCore::Render {
                     static_cast<float>(m->atlasHeight)
                 };
 
-                SDL_RenderTexture(renderer.get(), atlas, &src, &dst);
+                SDL_RenderTexture(renderer, atlas, &src, &dst);
                 penX += m->advance;
             }
 

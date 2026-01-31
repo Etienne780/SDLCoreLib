@@ -332,7 +332,7 @@ namespace SDLCore {
 		WindowCallbackID m_cursorLockResizeCallbackID;
 		WindowCallbackID m_cursorLockFocusGainCallbackID;
 		WindowCallbackID m_cursorLockFocusLostCallbackID;
-		std::weak_ptr<SDL_Window> m_cursorLockSDLWin;
+		SDL_Window* m_cursorLockSDLWin;
 		bool m_cursorLockWinActive = false;
 		bool m_cursorLockLastWinCursorGrab = false;// stores the last state of cursor grab before window was locked
 		float m_cursorLockPosX = 0;

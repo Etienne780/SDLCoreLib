@@ -124,16 +124,16 @@ namespace SDLCore {
 		SDL_WindowID GetSDLID() const;
 
 		/**
-		* @brief Gets the SDL window
-		* @return SDL_Window weak_ptr pointer
+		* @brief Returns the underlying SDL window.
+		* @return Non-owning raw pointer to the SDL_Window, or nullptr if not created.
 		*/
-		std::weak_ptr<SDL_Window> GetSDLWindow();
+		SDL_Window* GetSDLWindow();
 
 		/**
-		* @brief Gets the SDL Renderer of this window
-		* @return SDL_Renderer weak_ptr pointer
+		* @brief Returns the SDL renderer associated with this window.
+		* @return Non-owning raw pointer to the SDL_Renderer, or nullptr if not created.
 		*/
-		std::weak_ptr<SDL_Renderer> GetSDLRenderer();
+		SDL_Renderer* GetSDLRenderer();
 
 		/**
 		* @brief Gets the name/title of this window
@@ -672,8 +672,8 @@ namespace SDLCore {
 
 		// ======= Renderer properties =======
 		int m_vsync = 0;
-		std::shared_ptr<SDL_Window> m_sdlWindow = nullptr;
-		std::shared_ptr<SDL_Renderer> m_sdlRenderer = nullptr;
+		std::unique_ptr<SDL_Window, void(*)(SDL_Window*)> m_sdlWindow{ nullptr, SDL_DestroyWindow };
+		std::unique_ptr<SDL_Renderer, void(*)(SDL_Renderer*)> m_sdlRenderer{ nullptr, SDL_DestroyRenderer };
 
 		// Adds a callback of arbitrary type CBType
 		// CBType must match the type stored in the corresponding vector

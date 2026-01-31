@@ -455,8 +455,8 @@ namespace SDLCore {
         m_cursorLastTime = Time::GetTimeSecF();
 
         if (!m_cursorLockWinID.IsInvalid()) {
-            if(auto win = m_cursorLockSDLWin.lock())
-                SDL_WarpMouseInWindow(win.get(), m_cursorLockPosX, m_cursorLockPosY);
+            if(auto win = m_cursorLockSDLWin)
+                SDL_WarpMouseInWindow(win, m_cursorLockPosX, m_cursorLockPosY);
         }
         else {
             ResetCursorLockParams();
@@ -476,7 +476,7 @@ namespace SDLCore {
         m_cursorLockResizeCallbackID.SetInvalid();
         m_cursorLockFocusGainCallbackID.SetInvalid();
         m_cursorLockFocusLostCallbackID.SetInvalid();
-        m_cursorLockSDLWin.reset();
+        m_cursorLockSDLWin = nullptr;
     }
 
 }

@@ -20,7 +20,6 @@ namespace SDLCore {
 
 	Window::~Window() {
 		// DestroyWindow gets called in Application::DeleteWindow before this destructor gets called
-		// DestroyWindow();
 		CallOnDestroy();
 	}
 
@@ -80,13 +79,11 @@ namespace SDLCore {
 		if (m_height < 0) 
 			m_height = 0;
 
-		SDL_Window* rawWindow = SDL_CreateWindow(m_name.c_str(), m_width, m_height, GetWindowFlags());
-		if (!rawWindow) {
+		m_sdlWindow.reset(SDL_CreateWindow(m_name.c_str(), m_width, m_height, GetWindowFlags()));
+		if (!m_sdlWindow) {
 			SetErrorF("SDLCore::Window::CreateWindow: Failed to create window '{}': {}", m_name, SDL_GetError());
 			return false;
 		}
-
-		m_sdlWindow = std::shared_ptr<SDL_Window>(rawWindow, [](SDL_Window*) {});
 
 		if (!SetWindowProperties()) {
 			AddErrorF("\nSDLCore::Window::CreateWindow: Failed to set window properties for '{}'", m_name);
@@ -99,7 +96,6 @@ namespace SDLCore {
 		CallOnSDLWindowClose();
 		DestroyRenderer();
 		if (m_sdlWindow) {
-			SDL_DestroyWindow(m_sdlWindow.get());
 			m_sdlWindow.reset();
 		}
 	}
@@ -117,13 +113,12 @@ namespace SDLCore {
 		Application* app = Application::GetInstance();
 		std::string renderDriver = (app) ? app->GetCurrentRenderDriver() : "";
 		const char* cStr = (renderDriver.empty()) ? nullptr : renderDriver.c_str();
-		SDL_Renderer* rawRenderer = SDL_CreateRenderer(m_sdlWindow.get(), cStr);
-		if (!rawRenderer) {
+
+		m_sdlRenderer.reset(SDL_CreateRenderer(m_sdlWindow.get(), cStr));
+		if (!m_sdlRenderer) {
 			SetErrorF("SDLCore::Window::CreateRenderer: Renderer creation failed on window '{}': {}", m_name, SDL_GetError());
 			return false;
 		}
-
-		m_sdlRenderer = std::shared_ptr<SDL_Renderer>(rawRenderer, [](SDL_Renderer*) {});
 
 		if (!SetVsync(m_vsync)) {
 			AddErrorF("\nSDLCore::Window::CreateRenderer: Failed to set VSync for window '{}'", m_name);
@@ -136,8 +131,7 @@ namespace SDLCore {
 	void Window::DestroyRenderer() {
 		if (m_sdlRenderer) {
 			CallOnSDLRendererDestroy();
-			SDL_DestroyRenderer(m_sdlRenderer.get());
-			m_sdlRenderer = nullptr;
+			m_sdlRenderer.reset();
 		}
 	}
 
@@ -195,12 +189,12 @@ namespace SDLCore {
 		return m_isFocused;
 	}
 
-	std::weak_ptr<SDL_Window> Window::GetSDLWindow() {
-		return m_sdlWindow;
+	SDL_Window* Window::GetSDLWindow() {
+		return m_sdlWindow.get();
 	}
 
-	std::weak_ptr<SDL_Renderer> Window::GetSDLRenderer() {
-		return m_sdlRenderer;
+	SDL_Renderer* Window::GetSDLRenderer() {
+		return m_sdlRenderer.get();
 	}
 
 	void Window::CallOnDestroy() {

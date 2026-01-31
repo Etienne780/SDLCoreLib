@@ -390,11 +390,11 @@ namespace SDLCore {
         if (!win)
             return nullptr;
 
-        auto renderer = win->GetSDLRenderer().lock();
+        auto renderer = win->GetSDLRenderer();
         if (!renderer)
             return nullptr;
 
-        return renderer.get();
+        return renderer;
     }
 
     void Texture::Cleanup() {

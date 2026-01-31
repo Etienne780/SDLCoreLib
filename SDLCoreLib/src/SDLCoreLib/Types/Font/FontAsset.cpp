@@ -251,11 +251,11 @@ namespace SDLCore {
         if (!win)
             return nullptr;
 
-        auto renderer = win->GetSDLRenderer().lock();
+        auto renderer = win->GetSDLRenderer();
         if (!renderer)
             return nullptr;
 
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer.get(), m_glyphAtlasSurf);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, m_glyphAtlasSurf);
         if (texture) {
             m_winIDToGlyphAtlasTexture[winID] = texture;
             m_winIDToWinCallbackID[winID] = win->AddOnSDLRendererDestroy([this, winID]() { FreeTextureForWindow(winID); });
