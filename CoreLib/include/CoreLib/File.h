@@ -122,22 +122,29 @@ public:
 
     /**
     * @brief Gets the Data that was previously read with ReadAll()
-    * @return a copy of the data string
+    * @return A copy of the data string
     */
     std::string GetData() const;
 
     /**
     * @brief Gets the Data that was previously read with ReadAll()
-    * @return a Ref to the data string
+    * @return A Ref to the data string
     */
-    const std::string& GetDataRef();
+    const std::string& GetDataRef() const;
 
     /**
     * @brief Returns the binary data previously read with ReadAllRaw().
     *
-    * @return Const reference to the internal binary data buffer `m_binaryData`.
+    * @return Const reference to the internal binary data buffer.
     */
     const std::vector<unsigned char>& GetRawData() const;
+
+    /**
+    * @brief Returns the binary data previously read with ReadAllRaw().
+    *
+    * @return A copy of binary data buffer.
+    */
+    std::vector<unsigned char> GetRawData();
 
     /**
     * @brief Gets the size of the file in bytes.
@@ -177,6 +184,9 @@ public:
     */
     File& SetFilePath(const SystemFilePath& path);
 
+    /*
+    * @brief Converts this file object to string like 'fileName (0 bytes)'
+    */
     std::string ToString() const;
 
     /*
@@ -201,17 +211,17 @@ public:
     static bool Exists(const SystemFilePath& path);
 
     /**
-     * @brief Deletes a file at the given path
-     * @param path File path to delete.
-     * @return True if file was deleted successfully, false otherwise.
-     */
+    * @brief Deletes a file at the given path
+    * @param path File path to delete.
+    * @return True if file was deleted successfully, false otherwise.
+    */
     static bool DeleteFile(const SystemFilePath& path);
 
     /**
-     * @brief Creates a directory (and any missing parent directories).
-     * @param dir Directory path to create.
-     * @return True if directory was created or already exists, false on error.
-     */
+    * @brief Creates a directory (and any missing parent directories).
+    * @param dir Directory path to create.
+    * @return True if directory was created or already exists, false on error.
+    */
     static bool CreateDir(const SystemFilePath& dir);
 
     /**
@@ -302,11 +312,11 @@ public:
     static std::string ConvertFilterString(const std::string& extensions);
 
     /**
-     * @brief Returns the directory path where the application executable resides.
-     *
-     * This function works across Windows, Linux, and macOS.
-     * @return Absolute path to the executable's directory, without a trailing slash.
-     */
+    * @brief Returns the directory path where the application executable resides.
+    *
+    * This function works across Windows, Linux, and macOS.
+    * @return Absolute path to the executable's directory, without a trailing slash.
+    */
     static SystemFilePath GetExecutableDir();
 
 private:
