@@ -1,4 +1,5 @@
 ﻿#include "App.h"
+#include "Wordle.h"
 
 App::App()
     : Application("Wordle", SDLCore::Version(1, 0)) {

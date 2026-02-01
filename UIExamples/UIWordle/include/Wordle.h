@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <CoreLib/FormatUtils.h>
 
 enum class Wordle_LetterStatus {
 	UNKNOWN,
@@ -14,7 +15,7 @@ enum class Wordle_LetterStatus {
 *
 * Each value indicates the outcome of a guess attempt.
 */
-enum class GuessResult {
+enum class Wordle_Result {
 	VALID = 0,          /**< The guess was valid and recorded */
 	INVALID_LENGTH = 1,  /**< The word length is not 5 */
 	INVALID_CHARS = 2,   /**< The word contains non-alphabetic characters */
@@ -87,22 +88,28 @@ public:
 	* @param word The word to guess.
 	* @return A GuessResult value indicating the outcome of the guess
 	*/
-	GuessResult GuessWord(const std::string& word);
+	Wordle_Result GuessWord(const std::string& word);
 
 	bool IsGameEnd(bool& outWon);
 
 	Wordle& SetWord(const std::string& word);
-	Wordle& SetMaxTrys(size_t trys);
+	Wordle& SetMaxAttampts(size_t attampts);
+
+	bool IsGameStart() const;
+	const std::string& GetCurrentWord() const;
+	size_t GetMaxGuessAttempts() const;
+	size_t GetCurrentGuessAttempt() const;
+	const std::vector<WordData>& GetCurrentWordData() const;
 
 private:
 	bool m_isGameStart = false;
 	bool m_wordManualSet = false;
 
 	std::string m_currentWord;
-	size_t m_maxGuessTrys = 0;
-	size_t m_currentGuessCount = 0;
+	size_t m_maxGuessAttempts = 0;
+	size_t m_currentGuessAttampt = 0;
 
-	std::vector<WordData> m_guessedWords;
+	std::vector<WordData> m_guessedWordData;
 
 	/**
 	* @brief Checks whether a given word is valid for the Wordle game.
@@ -118,6 +125,29 @@ private:
 	* @param word The word to validate.
 	* @return A GuessResult value indicating the validation result
 	*/
-	GuessResult IsValidWord(const std::string& word);
+	Wordle_Result IsValidWord(const std::string& word);
 	std::string GetRandomWord();
 };
+
+template<>
+static inline std::string FormatUtils::toString<Wordle_LetterStatus>(Wordle_LetterStatus status) {
+	switch (status) {
+	case Wordle_LetterStatus::PRESENT:	return "Present";
+	case Wordle_LetterStatus::CORRECT:	return "Correct";
+	case Wordle_LetterStatus::ABSENT:	return "Absent";
+	default:
+	case Wordle_LetterStatus::UNKNOWN:	return "UKNOWN";
+	}
+}
+
+template<>
+static inline std::string FormatUtils::toString<Wordle_Result>(Wordle_Result result) {
+	switch (result) {
+	case Wordle_Result::VALID:					return "Valid";
+	case Wordle_Result::INVALID_LENGTH:		return "InvalidLength";
+	case Wordle_Result::INVALID_CHARS:			return "InvalidChars";
+	case Wordle_Result::NOT_IN_WORD_LIST:		return "NotInWordList";
+	case Wordle_Result::MAX_GUESSES_REACHED:	return "MaxGuessesReached";
+	default:										return "UKNOWN";
+	}
+}
