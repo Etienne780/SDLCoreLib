@@ -247,6 +247,10 @@ namespace OTN {
 		OTNObjectRef(const std::string& _objName, int _index) 
 			: refObjectName(_objName), index(_index) {
 		}
+		
+		bool operator==(const OTNObjectRef& other) const {
+			return index == other.index && refObjectName == other.refObjectName;
+		}
 	};
 
 	/**
@@ -364,6 +368,32 @@ namespace OTN {
 		explicit OTNValue(OTNValueVariant v)
 			: value(std::move(v)),
 			type(GetTypeFromVariant(value)) {
+		}
+
+		bool operator==(const OTNValue& other) const {
+			if (type != other.type)
+				return false;
+
+			return std::visit(
+				[](const auto& a, const auto& b) -> bool {
+					using T = std::decay_t<decltype(a)>;
+
+					if constexpr (!std::is_same_v<T, std::decay_t<decltype(b)>>) {
+						return false;
+					}
+					else if constexpr (
+						std::is_same_v<T, OTNObjectPtr> ||
+						std::is_same_v<T, OTNArrayPtr>) 
+					{
+						return a.get() == b.get();
+					}
+					else {
+						return a == b;
+					}
+				},
+				value,
+				other.value
+			);
 		}
 	};
 
