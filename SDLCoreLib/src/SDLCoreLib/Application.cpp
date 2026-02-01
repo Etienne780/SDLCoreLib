@@ -183,6 +183,29 @@ namespace SDLCore {
         }
     }
 
+    void Application::RecreateRendererForWindow(WindowID id) {
+        auto it = std::find_if(m_windows.begin(), m_windows.end(),
+            [id](const std::unique_ptr<Window>& win) { return win->GetID() == id; });
+
+        if (it == m_windows.end())
+            return;
+
+        Window& win = *(*it);
+        if (!win.HasWindow())
+            return;
+
+        win.CreateRenderer();
+    }
+
+    void Application::RecreateRenderersForAllWindows() {
+        for (auto& win : m_windows) {
+            if (!win->HasWindow())
+                continue;
+
+            win->CreateRenderer();
+        }
+    }
+
     bool Application::IsCursorLocked() const {
         return !m_cursorLockWinID.IsInvalid();
     }
@@ -248,6 +271,53 @@ namespace SDLCore {
 
     const std::string& Application::GetCurrentRenderDriver() const {
         return m_renderDriver;
+    }
+
+    std::string Application::GetClipboardText() const {
+        char* text = SDL_GetClipboardText();
+        if (!text) {
+            return {};
+        }
+
+        std::string result{ text };
+        SDL_free(text);
+        return result;
+    }
+
+    std::vector<std::string> Application::GetClipboardMimeTypes() const {
+        std::vector<std::string> result;
+
+        size_t count = 0;
+        char** types = SDL_GetClipboardMimeTypes(&count);
+        if (!types || count <= 0) {
+            return result;
+        }
+
+        result.reserve(static_cast<std::size_t>(count));
+        for (int i = 0; i < count; ++i) {
+            if (types[i]) {
+                result.emplace_back(types[i]);
+            }
+        }
+
+        SDL_free(types);
+        return result;
+    }
+
+    const void* Application::GetClipboardData(
+        const std::string& mimeType,
+        std::size_t& outSize
+    ) const {
+        outSize = 0;
+
+        std::size_t size = 0;
+        const void* data = SDL_GetClipboardData(mimeType.c_str(), &size);
+        if (!data) {
+            return nullptr;
+        }
+
+        outSize = size;
+        return data;
     }
 
     void Application::SetFPSCap(int value) {
@@ -353,6 +423,35 @@ namespace SDLCore {
     void Application::SetRenderDriver(const std::string& driver) {
         m_renderDriver = driver;
     }
+    
+    bool Application::SetClipboardText(const std::string& text) const {
+        return SDL_SetClipboardText(text.c_str());
+    }
+
+    bool Application::SetClipboardData(
+        SDL_ClipboardDataCallback callback,
+        SDL_ClipboardCleanupCallback cleanup,
+        void* userdata,
+        const std::vector<std::string>& mimeTypes
+    ) const {
+        if (mimeTypes.empty()) {
+            return false;
+        }
+
+        std::vector<const char*> cMimeTypes;
+        cMimeTypes.reserve(mimeTypes.size());
+        for (const auto& type : mimeTypes) {
+            cMimeTypes.push_back(type.c_str());
+        }
+
+        return SDL_SetClipboardData(
+            callback,
+            cleanup,
+            userdata,
+            cMimeTypes.data(),
+            static_cast<int>(cMimeTypes.size())
+        );
+    }
 
     void Application::SetVsyncOnWindows(int value) {
         for (auto& window : m_windows) {
@@ -432,8 +531,8 @@ namespace SDLCore {
         m_cursorLastTime = Time::GetTimeSecF();
 
         if (!m_cursorLockWinID.IsInvalid()) {
-            if(auto win = m_cursorLockSDLWin.lock())
-                SDL_WarpMouseInWindow(win.get(), m_cursorLockPosX, m_cursorLockPosY);
+            if(auto win = m_cursorLockSDLWin)
+                SDL_WarpMouseInWindow(win, m_cursorLockPosX, m_cursorLockPosY);
         }
         else {
             ResetCursorLockParams();
@@ -453,7 +552,7 @@ namespace SDLCore {
         m_cursorLockResizeCallbackID.SetInvalid();
         m_cursorLockFocusGainCallbackID.SetInvalid();
         m_cursorLockFocusLostCallbackID.SetInvalid();
-        m_cursorLockSDLWin.reset();
+        m_cursorLockSDLWin = nullptr;
     }
 
 }
