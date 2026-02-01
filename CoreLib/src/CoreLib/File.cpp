@@ -215,11 +215,15 @@ std::string File::GetData() const {
     return m_data;
 }
 
-const std::string& File::GetDataRef() {
+const std::string& File::GetDataRef() const {
     return m_data;
 }
 
 const std::vector<unsigned char>& File::GetRawData() const {
+    return m_binaryData;
+}
+
+std::vector<unsigned char> File::GetRawData() {
     return m_binaryData;
 }
 
