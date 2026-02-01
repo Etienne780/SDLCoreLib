@@ -10,7 +10,7 @@ void App::OnStart() {
 
 void App::OnUpdate() {
 
-    // Quit if no windows remain
+    // Quit if no windows remain 
     if (GetWindowCount() <= 0)
         Quit();
 
