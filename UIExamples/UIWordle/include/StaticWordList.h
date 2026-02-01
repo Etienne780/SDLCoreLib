@@ -3109,6 +3109,8 @@ static const char* WORD_LIST[] = {
 	"zones"
 };
 
+static size_t WORD_LIST_COUNT = sizeof(WORD_LIST) / sizeof(WORD_LIST[0]);
+
 static const std::unordered_set<std::string> WORD_LIST_SET(
-    WORD_LIST, WORD_LIST + sizeof(WORD_LIST)/sizeof(WORD_LIST[0])
+    WORD_LIST, WORD_LIST + WORD_LIST_COUNT
 );
