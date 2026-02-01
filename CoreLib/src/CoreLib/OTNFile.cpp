@@ -856,7 +856,13 @@ namespace OTN {
 
 		auto it = rowIndexByHash.find(hash);
 		if (it != rowIndexByHash.end()) {
-			return it->second;
+			size_t existingIndex = it->second;
+			auto& currentRow = rows[existingIndex];
+
+			if (currentRow.size() == row.size() && 
+				currentRow == row) {
+				return existingIndex;
+			}
 		}
 
 		size_t index = rows.size();
@@ -867,7 +873,7 @@ namespace OTN {
 
 	size_t OTNWriter::SerializedObject::CreateRowHash(const std::vector<OTNTypeDesc>& columnTypes, const Row& row) {
 		size_t hash = 0;
-		
+
 #ifndef NDEBUG
 		if (columnTypes.size() != row.size()) {
 			assert(false && "CreateRowHash: columnTypes and row size mismatch");
