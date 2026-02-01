@@ -65,6 +65,7 @@ void App::SetupUI() {
 void App::RenderUI(SDLCore::WindowID winID) {
     using namespace SDLCore;
     namespace Prop = SDLCore::UI::Properties;
+
     UI::SetContextWindow(context, winID);
     UI::BindContext(context);
 
