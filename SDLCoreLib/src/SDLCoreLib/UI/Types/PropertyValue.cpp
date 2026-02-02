@@ -221,7 +221,7 @@ namespace SDLCore::UI {
 				return false;
 
 			return LerpInternalVector<Vector4>(
-				*this, a, b, t, Vector4::Lerp
+				*this, aColor, bColor, t, Vector4::Lerp
 			);
 
 			return true;
@@ -284,6 +284,7 @@ namespace SDLCore::UI {
 		case Type::FLOAT:
 		case Type::DOUBLE:
 		case Type::NUMBER_ID:
+		case Type::COLOR_ID:
 		case Type::VECTOR2:
 		case Type::VECTOR4:
 			return PropertyTypeClass::Numeric;

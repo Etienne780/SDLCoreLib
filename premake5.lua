@@ -76,6 +76,7 @@ group "Examples"
 
 group "UIExamples"
     include "UIExamples/UITemplate"
+    include "UIExamples/UIWordle"
 
 -- Restore default group
 group ""
