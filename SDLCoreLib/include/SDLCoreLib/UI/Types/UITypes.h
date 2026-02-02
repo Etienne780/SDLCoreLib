@@ -52,7 +52,7 @@ namespace SDLCore::UI {
 		SECONDS
 	};
 
-	enum class UIEasing : uint16_t {
+	enum UIEasing : uint16_t {
 		// Linear
 		Linear = 0,        // constant speed
 

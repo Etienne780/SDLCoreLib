@@ -516,20 +516,13 @@ namespace SDLCore::UI {
 			return;
 		}
 
+		// Always start from current rendered state
 		m_transitionFrom = m_renderedStyleState;
 		m_transitionTo = target;
 
-		// interrupt old transition
-		if (m_transitionActive) {
-			m_currentTransitionEnd = m_currentTransition;
-			m_currentTransition = 0.0f;
-		}
-		else {
-			// start new transition
-			m_currentTransition = 0.0f;
-			m_currentTransitionEnd = m_transitionDuration;
-		}
-
+		// Reset transition timer
+		m_currentTransition = 0.0f;
+		m_currentTransitionEnd = m_transitionDuration;
 		m_transitionActive = true;
 	}
 	
@@ -543,22 +536,24 @@ namespace SDLCore::UI {
 			OnStyleStateChanged();
 			ApplyStyle(ctx);
 		}
-		
-		if (!m_transitionActive)	
+
+		if (!m_transitionActive)
 			return;
 
 		m_currentTransition += dt;
 		float time = std::clamp(m_currentTransition / m_currentTransitionEnd, 0.0f, 1.0f);
+
 		if (time >= 1.0f) {
 			m_renderedStyleState = m_transitionTo;
 			m_transitionActive = false;
 		}
 		else {
 			m_renderedStyleState = UIStyleState::Interpolate(
-				m_transitionFrom, 
-				m_transitionTo, 
-				time, 
-				m_transitionEasing);
+				m_transitionFrom,
+				m_transitionTo,
+				time,
+				m_transitionEasing
+			);
 		}
 
 		ApplyStyle(ctx);
