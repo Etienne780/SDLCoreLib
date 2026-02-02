@@ -135,105 +135,59 @@ namespace SDLCore::UI {
 		return *this;
 	}
 
-	template<typename T>
-	constexpr T Lerp(T a, T b, float t) {
-		return a + (b - a) * static_cast<T>(t);
-	}
+	bool PropertyValue::InterpolateInternal(const PropertyValue& a, const PropertyValue& b, float t) {
+		switch (a.m_valueType) {
+		case Type::INT:    return LerpInternalNumber<int>(*this, a, b, t);
+		case Type::FLOAT:  return LerpInternalNumber<float>(*this, a, b, t);
+		case Type::DOUBLE: return LerpInternalNumber<double>(*this, a, b, t);
 
-	template<typename T>
-	bool LerpInternalNumber(PropertyValue& out, const PropertyValue& a, const PropertyValue& b, float t) {
-		if (!std::holds_alternative<T>(a.GetVariant()) ||
-			!std::holds_alternative<T>(b.GetVariant())) {
+		case Type::VECTOR2:
+			if (!std::holds_alternative<Vector2>(a.m_value) || !std::holds_alternative<Vector2>(b.m_value))
+				return false;
+			return LerpInternalVector<Vector2>(*this,
+				std::get<Vector2>(a.m_value),
+				std::get<Vector2>(b.m_value),
+				t,
+				Vector2::Lerp);
+
+		case Type::VECTOR4:
+		case Type::COLOR_ID:
+			return LerpColorOrVector4(*this, a, b, t);
+
+		case Type::NUMBER_ID:
+			return LerpInternalNumber<double>(*this, a, b, t);
+
+		case Type::BOOL:
+		case Type::TEXTURE:
+		case Type::TEXTURE_ID:
+		case Type::FONT:
+		case Type::FONT_ID:
+			*this = (t < 1.0f) ? a : b;
+			return true;
+
+		default:
 			return false;
 		}
+	}
 
-		T result = Lerp<T>(
-			std::get<T>(a.GetVariant()),
-			std::get<T>(b.GetVariant()),
-			t
-		);
+	bool PropertyValue::LerpColorOrVector4(PropertyValue& out, const PropertyValue& a, const PropertyValue& b, float t) {
+		Vector4 va, vb;
+		if (!ResolveColorToVector4(a, va) || !ResolveColorToVector4(b, vb))
+			return false;
 
+		Vector4 result = Vector4::Lerp(va, vb, t);
 		out.SetValue(result);
 		return true;
 	}
 
-	template<typename T, typename LerpFunc>
-	bool LerpInternalVector(PropertyValue& out, const PropertyValue& a, const PropertyValue& b, float t, LerpFunc lerpFn) {
-		if (!std::holds_alternative<T>(a.GetVariant()) ||
-			!std::holds_alternative<T>(b.GetVariant())) {
-			return false;
-		}
-
-		out.SetValue(
-			lerpFn(
-				std::get<T>(a.GetVariant()),
-				std::get<T>(b.GetVariant()),
-				t
-			)
-		);
-		return true;
-	}
-
-	bool PropertyValue::InterpolateInternal(const PropertyValue& a, const PropertyValue& b, float t) {
-		switch (a.m_valueType) {
-		case Type::INT: {
-			return LerpInternalNumber<int>(*this, a, b, t);
-		}
-		case Type::FLOAT:
-			return LerpInternalNumber<float>(*this, a, b, t);
-
-		case Type::DOUBLE:
-			return LerpInternalNumber<double>(*this, a, b, t);
-
-		case Type::VECTOR2:
-			return LerpInternalVector<Vector2>(
-				*this, a, b, t, Vector2::Lerp
-			);
-
+	bool PropertyValue::ResolveColorToVector4(const PropertyValue& a, Vector4& outValue) {
+		switch (a.GetType())
+		{
+		case Type::COLOR_ID:
+			return UIRegistry::TryResolve(std::get<UIColorID>(a.m_value), outValue);
 		case Type::VECTOR4:
-			return LerpInternalVector<Vector4>(
-				*this, a, b, t, Vector4::Lerp
-			);
-		case Type::NUMBER_ID: {
-			double aNum, bNum;
-			if (!UIRegistry::TryResolve(std::get<UINumberID>(a.m_value), aNum) ||
-				!UIRegistry::TryResolve(std::get<UINumberID>(b.m_value), bNum))
-				return false;
-
-			switch (m_valueType) {
-			case Type::INT:
-				SetValue(static_cast<int>(std::round(Lerp(aNum, bNum, t))));
-				return true;
-			case Type::FLOAT:
-				SetValue(static_cast<float>(Lerp<double>(aNum, bNum, t)));
-				return true;
-			case Type::DOUBLE:
-				SetValue(Lerp<double>(aNum, bNum, t));
-				return true;
-			default:
-				return false;
-			}
-		}
-		case Type::COLOR_ID: {
-			Vector4 aColor, bColor;
-			if (!UIRegistry::TryResolve(std::get<UIColorID>(a.m_value), aColor) ||
-				!UIRegistry::TryResolve(std::get<UIColorID>(b.m_value), bColor))
-				return false;
-
-			return LerpInternalVector<Vector4>(
-				*this, a, b, t, Vector4::Lerp
-			);
-
+			outValue = std::get<Vector4>(a.m_value);
 			return true;
-		}
-		case Type::BOOL:
-		case Type::TEXTURE:
-		case Type::FONT:
-		case Type::FONT_ID:
-		case Type::TEXTURE_ID:
-			*this = (t < 1.0f) ? a : b;
-			return true;
-
 		default:
 			return false;
 		}
@@ -284,6 +238,7 @@ namespace SDLCore::UI {
 		case Type::FLOAT:
 		case Type::DOUBLE:
 		case Type::NUMBER_ID:
+		case Type::COLOR_ID:
 		case Type::VECTOR2:
 		case Type::VECTOR4:
 			return PropertyTypeClass::Numeric;

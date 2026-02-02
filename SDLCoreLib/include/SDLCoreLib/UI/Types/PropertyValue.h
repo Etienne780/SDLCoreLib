@@ -165,6 +165,55 @@ namespace SDLCore::UI {
 
 		PropertyValue& SetIsSet(bool value);
 		bool InterpolateInternal(const PropertyValue& a, const PropertyValue& b, float t);
+		bool LerpColorOrVector4(PropertyValue& out, const PropertyValue& a, const PropertyValue& b, float t);
+
+		template<typename T>
+		constexpr T Lerp(T a, T b, float t) {
+			return a + (b - a) * static_cast<T>(t);
+		}
+
+		template<typename T>
+		bool LerpInternalNumber(PropertyValue& out, const PropertyValue& a, const PropertyValue& b, float t) {
+			T av, bv;
+			if (!ResolveNumber<T>(a, av) || !ResolveNumber<T>(b, bv))
+				return false;
+
+			T result = Lerp<T>(av, bv, t);
+			out.SetValue(result);
+			return true;
+		}
+
+		template<typename T, typename LerpFunc>
+		bool LerpInternalVector(PropertyValue& out, const T& a, const T& b, float t, LerpFunc lerpFn) {
+			out.SetValue(lerpFn(a, b, t));
+			return true;
+		}
+
+		template<typename T>
+		bool ResolveNumber(const PropertyValue& a, T& outValue) {
+			switch (a.GetType()) {
+			case PropertyValue::Type::INT:
+				outValue = static_cast<T>(std::get<int>(a.GetVariant()));
+				return true;
+			case PropertyValue::Type::FLOAT:
+				outValue = static_cast<T>(std::get<float>(a.GetVariant()));
+				return true;
+			case PropertyValue::Type::DOUBLE:
+				outValue = static_cast<T>(std::get<double>(a.GetVariant()));
+				return true;
+			case PropertyValue::Type::NUMBER_ID: {
+				double val;
+				if (!UIRegistry::TryResolve(std::get<UINumberID>(a.GetVariant()), val))
+					return false;
+				outValue = static_cast<T>(val);
+				return true;
+			}
+			default:
+				return false;
+			}
+		}
+
+		bool ResolveColorToVector4(const PropertyValue& a, Vector4& outValue);
 		float ResolveEasing(float time, UIEasing easing);
 
 		static PropertyTypeClass GetTypeClass(PropertyValue::Type t);
