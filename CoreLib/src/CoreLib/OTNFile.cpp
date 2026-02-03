@@ -244,7 +244,7 @@ namespace OTN {
 		}
 		DebugValidateNamesDistinct();
 #else
-		m_names = names;
+		m_columnNames = names;
 #endif
 		return *this;
 	}
