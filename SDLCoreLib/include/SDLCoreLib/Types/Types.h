@@ -15,7 +15,7 @@ inline constexpr int APPLICATION_FPS_VSYNC_ADAPTIVE_ON = -2;
 
 namespace SDLCore {
 
-	typedef int SDLResult;
+	typedef int ApplicationResult;
 	typedef SDL_Rect Rect;/**< Rect with int components (SDL_Rect) */
 	typedef SDL_FRect FRect;/**< Rect with float components (SDL_FRect) */
 	typedef SDL_Color Color;/**< Color with uint8 components (SDL_Color) */
@@ -36,7 +36,7 @@ namespace SDLCore {
 	struct AudioClipTag {};
 	struct AudioTrackTag {};
 	struct TextureTag {};
-
+	struct FontTag {};
 	
 	template<typename Tag>
 	using SDLCoreID = CoreID<uint32_t, SDLCORE_INVALID_ID, Tag>;
@@ -72,10 +72,16 @@ namespace SDLCore {
 	using AudioTrackID = SDLCoreID<AudioTrackTag>;
 
 	/**
-	* @brief Identifier for a texture (used internally).
+	* @brief Identifier for a texture 'SDL_Surface' (used internally).
 	*        Internally stored as an uint32_t
 	*/
 	using TextureID = SDLCoreID<TextureTag>;
+
+	/**
+	* @brief Identifier for a font 'TTF_Font' (used internally).
+	*        Internally stored as an uint32_t
+	*/
+	using FontID = SDLCoreID<FontTag>;
 
 	enum class TextureParams : int {
 		NONE		= 0,
@@ -144,6 +150,11 @@ static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::Audi
 
 template<>
 static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::TextureTag>>(SDLCore::TextureID id) {
+	return id.ToString();
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::FontTag>>(SDLCore::FontID id) {
 	return id.ToString();
 }
 

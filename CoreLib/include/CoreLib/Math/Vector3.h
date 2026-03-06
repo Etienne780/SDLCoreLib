@@ -30,22 +30,25 @@ public:
     explicit Vector3(float value);
     explicit Vector3(float x, float y, float z);
     explicit Vector3(const Vector2& vec, float z);
+    explicit Vector3(float x, const Vector2& vec);
     explicit Vector3(const Vector4& vec);
 
     /**
-     * @brief Converts the vector to a string representation.
-     * @return String in the format "(x, y, z)".
-     */
+    * @brief Converts the vector to a string representation.
+    * @return String in the format "(x, y, z)".
+    */
     std::string ToString() const;
+
     /**
     * @brief Converts this vector to a 3x1 column matrix.
     * @return A Matrix with 3 rows and 1 column representing this vector.
     */
     Matrix ToMatrix3x1() const;
+
     /**
-     * @brief Converts this vector to a 1x3 row matrix.
-     * @return A Matrix with 1 row and 3 columns representing this vector.
-     */
+    * @brief Converts this vector to a 1x3 row matrix.
+    * @return A Matrix with 1 row and 3 columns representing this vector.
+    */
     Matrix ToMatrix1x3() const;
 
     /**
@@ -74,6 +77,34 @@ public:
     Vector3& Set(float fill);
 
     /**
+    * @brief Checks if all components of this vector are equal to the given value
+    *
+    * @param value The value to compare against
+    * @return true if all components are equal to the value, false otherwise
+    */
+    bool Equals(float value) const;
+
+    /**
+    * @brief Checks if this vector matches the given components
+    *
+    * @param x The x component to compare
+    * @param y The y component to compare
+    * @param z The z component to compare
+    * @return true if all components match, false otherwise
+    */
+    bool Equals(float x, float y, float z) const;
+
+    /**
+    * @brief Checks if this vector is equal to another Vector3
+    *
+    * This is equivalent to using the equality operator (`*this == other`).
+    * 
+    * @param other The vector to compare against
+    * @return true if all components are equal, false otherwise
+    */
+    bool Equals(const Vector3& other) const;
+
+    /**
     * @brief Normalizes the vector to have length 1.
     * Modifies the vector in place.
     *
@@ -95,23 +126,23 @@ public:
     static Vector3 Normalize(const Vector3& vec);
 
     /**
-     * @brief Calculates the magnitude (length) of the vector.
-     * @return Length as a float.
-     */
+    * @brief Calculates the magnitude (length) of the vector.
+    * @return Length as a float.
+    */
     float Magnitude() const;
 
     /**
-     * @brief Calculates the squared magnitude of the vector.
-     * Avoids costly square root operation.
-     * @return Squared length as a float.
-     */
+    * @brief Calculates the squared magnitude of the vector.
+    * Avoids costly square root operation.
+    * @return Squared length as a float.
+    */
     float SquaredMagnitude() const;
 
     /**
-     * @brief Computes the dot product with another vector.
-     * @param other The other vector.
-     * @return Scalar dot product result.
-     */
+    * @brief Computes the dot product with another vector.
+    * @param other The other vector.
+    * @return Scalar dot product result.
+    */
     float Dot(const Vector3& other) const;
 
     /**
@@ -188,19 +219,19 @@ public:
     bool operator!=(const Vector3& other) const;
 
     /**
-     * @brief Index operator for accessing vector components.
-     * @param index Component index (0 = x, 1 = y, 2 = z).
-     * @return Reference to the component.
-     * @throws std::out_of_range if index is invalid.
-     */
+    * @brief Index operator for accessing vector components.
+    * @param index Component index (0 = x, 1 = y, 2 = z).
+    * @return Reference to the component.
+    * @throws std::out_of_range if index is invalid.
+    */
     float& operator[](int index);
 
     /**
-     * @brief Const index operator for accessing components.
-     * @param index Component index.
-     * @return Const reference to component.
-     * @throws std::out_of_range if index is invalid.
-     */
+    * @brief Const index operator for accessing components.
+    * @param index Component index.
+    * @return Const reference to component.
+    * @throws std::out_of_range if index is invalid.
+    */
     const float& operator[](int index) const;
 };
 
@@ -216,6 +247,6 @@ Vector3 operator/(float scalar, const Vector3& other);
 #pragma endregion
 
 template<>
-static inline std::string FormatUtils::toString<Vector3>(Vector3 value) {
+inline std::string FormatUtils::toString<Vector3>(Vector3 value) {
     return value.ToString();
 }

@@ -43,7 +43,7 @@ namespace SDLCore {
 
 	uint32_t Version::GetMinor() const {
 		if (m_versionType != VersionType::SEMANTIC && m_versionType != VersionType::DUAL_COMPONENT)
-			Log::Warn("Version::GetMajor: called on non-semantic or non-dual component version type: {}", m_versionType);
+			Log::Warn("Version::GetMinor: called on non-semantic or non-dual component version type: {}", m_versionType);
 		return m_minor;
 	}
 

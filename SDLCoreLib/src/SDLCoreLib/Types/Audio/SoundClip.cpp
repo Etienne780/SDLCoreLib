@@ -211,7 +211,8 @@ namespace SDLCore {
     }
 
     bool SoundClip::LoadSound(const SystemFilePath& path, SoundType type) {
-        if (!File::Exists(path)) {
+        File file{ path };
+        if (!file.Exists()) {
             SetErrorF("SDLCore::SoundClip::LoadSound: Failed to load audio, file '{}' dose not exist!", 
                 path);
             return false;

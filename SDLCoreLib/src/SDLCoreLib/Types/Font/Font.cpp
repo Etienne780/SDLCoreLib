@@ -49,7 +49,7 @@ namespace SDLCore {
 
 	Font* Font::SelectSize(float size) {
 		if (size <= 0) {
-			Log::Warn("SDLCore::Font::SelectSize: Cant select font size '{}', font path is empty!", size);
+			Log::Warn("SDLCore::Font::SelectSize: Cant select font size '{}', size must be > 0!", size);
 			return this;
 		}
 
@@ -227,7 +227,8 @@ namespace SDLCore {
 	}
 
 	void Font::CheckFilePath(const SystemFilePath& path) {
-		m_isFilePathInvalidValid = (path.empty()|| !File::Exists(path));
+		File file{ path };
+		m_isFilePathInvalidValid = (path.empty()|| !file.Exists());
 	}
 
 	bool Font::MarkAsInvalid() {

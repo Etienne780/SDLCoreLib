@@ -36,6 +36,26 @@ namespace SDLCore {
 		static WindowID GetWindowID();
 
 		/**
+		* @brief Retrieves all confirmed text input for the current frame.
+		*
+		* This includes only the text confirmed by the user (SDL_EVENT_TEXT_INPUT). The buffer
+		* is cleared at the end of the frame by calling ClearTextInput().
+		*
+		* @return std::string The accumulated text input for this frame.
+		*/
+		static std::string GetTextInputBuffer();
+
+		/**
+		* @brief Retrieves the current composition text for IME input.
+		*
+		* This text represents characters that are being composed but not yet confirmed.
+		* Useful for rendering text composition UI. Does not include confirmed characters.
+		*
+		* @return std::string The current composition text.
+		*/
+		static std::string GetCompositionText();
+
+		/**
 		* @brief Resets the currently active window state to no window.
 		*/
 		static void DropWindow();
@@ -136,6 +156,35 @@ namespace SDLCore {
 		* @return True if any key was just released.
 		*/
 		static bool AnyKeyJustReleased(KeyCode& keyOut);
+
+		/**
+		* @brief Activates text input for the currently active window.
+		*
+		* Internally calls SDL_StartTextInput and registers a callback to stop text input
+		* if the window is closed. Multiple calls have no effect if text input is already active.
+		*
+		* @return True if text input was successfully started or already active, false otherwise.
+		*/
+		static bool StartTextInput();
+
+		/**
+		* @brief Deactivates text input for the currently active window.
+		*
+		* Internally calls SDL_StopTextInput and removes any registered window close callbacks.
+		* Multiple calls have no effect if text input is not active.
+		*
+		* @return True if text input was successfully stopped or already inactive, false otherwise.
+		*/
+		static bool StopTextInput();
+
+		/**
+		* @brief Checks whether text input is currently active for the active window.
+		*
+		* With SDL's actual text input status.
+		*
+		* @return True if text input is active, false otherwise.
+		*/
+		static bool IsTextInputActive();
 
 		// =========================================================
 		// Mouse
@@ -292,6 +341,8 @@ namespace SDLCore {
 		*/
 		struct WindowInputState {
 			SDL_WindowID sdlWinID = 0;
+			WindowID winID;
+			WindowCallbackID onCloseCBID;
 			bool focused = false;
 			std::unordered_map<int, KeyState> keyStates;
 			std::unordered_map<int, KeyState> mouseButtonStates;
@@ -303,9 +354,15 @@ namespace SDLCore {
 			Vector2 lastMousePos{ 0, 0 };
 			Vector2 relativeMousePos{ 0, 0 };
 			int scrollDir = 0;
+			bool textInputActive = false;
 
-			WindowInputState(SDL_WindowID _sdlWinID)
-				: sdlWinID(_sdlWinID) {
+			std::string textInputBuffer;
+			std::string compositionText;
+			int compositionCursor = 0;
+			int compositionLength = 0;
+
+			WindowInputState(WindowID _winID, SDL_WindowID _sdlWinID)
+				: winID(_winID), sdlWinID(_sdlWinID) {
 			}
 		};
 
@@ -324,6 +381,8 @@ namespace SDLCore {
 			std::unordered_map<int, float> axisValues;
 		};
 		static inline std::vector<GamepadState> s_gamepads;
+
+		static void Quit();
 
 		/**
 		* @brief Updates all input states after event processing.
@@ -349,6 +408,14 @@ namespace SDLCore {
 		* @return Pointer to the WindowInputState, or nullptr if not found.
 		*/
 		static WindowInputState* GetWindowState(SDL_WindowID sdlWinID);
+
+		/**
+		* @brief Clears the text input and composition buffers for the active window.
+		*
+		* Should be called at the end of each frame after text input has been consumed.
+		* Resets textInputBuffer, compositionText, and composition cursor/length.
+		*/
+		static void ClearTextInput(WindowInputState& state);
 
 		/**
 		* @brief Checks a specific key state across all registered windows.

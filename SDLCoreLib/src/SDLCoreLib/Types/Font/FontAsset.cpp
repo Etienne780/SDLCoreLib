@@ -10,13 +10,13 @@
 namespace SDLCore {
 
 	FontAsset::FontAsset(TTF_Font* font, float size)
-		: m_ttfFont(font), m_fontSize(size) {
+		: m_font(font), m_fontSize(size) {
         if (font) {
             m_ascent = TTF_GetFontAscent(font);
             m_descent = TTF_GetFontDescent(font);
             m_lineSkip = TTF_GetFontLineSkip(font);
             m_glyphAtlasSurf = GenerateGlypeAtlas(font, size);
-            if (!m_glyphAtlasSurf) {
+            if (m_glyphAtlasSurf.IsInvalid()) {
                 Log::Error("SDLCore::FontAsset: Font asset of font '{}' with size '{}' can not be used, glyph atlas was not generated",
                     TTF_GetFontFamilyName(font), size);
             }
@@ -27,9 +27,17 @@ namespace SDLCore {
 	}
 
 	FontAsset::~FontAsset() {
-        if(!Application::IsQuit())
-		    Cleanup();
-	};
+        Cleanup();
+	}
+
+    FontAsset::FontAsset(const FontAsset& other) noexcept {
+        CopyFrom(other);
+    }
+
+    FontAsset& FontAsset::operator=(const FontAsset& other) noexcept {
+        CopyFrom(other);
+        return *this;
+    }
 
 	FontAsset::FontAsset(FontAsset&& other) noexcept {
 		MoveFrom(std::move(other));
@@ -60,26 +68,43 @@ namespace SDLCore {
                 auto* win = app->GetWindow(winID);
                 if (win) {
                     Log::Error("SDLCore::FontAsset::GetGlyphAtlasTexture: Could not create texture for window '{} ({})', Font: '{}' size: '{}'", 
-                        win->GetName(), winID, TTF_GetFontFamilyName(m_ttfFont), m_fontSize);
+                        win->GetName(), winID, TTF_GetFontFamilyName(m_font.GetFont()), m_fontSize);
                     return tex;
                 }
             }
 
             Log::Error("SDLCore::FontAsset::GetGlyphAtlasTexture: Could not create texture for window '{}', Font: '{}' size: '{}'",
-                winID, TTF_GetFontFamilyName(m_ttfFont), m_fontSize);
+                winID, TTF_GetFontFamilyName(m_font.GetFont()), m_fontSize);
         }
         return tex;
     }
 
+    void FontAsset::CopyFrom(const FontAsset& other) noexcept {
+        auto& obj = *this;
+        obj.m_fontSize = other.m_fontSize;
+        obj.m_lastUseTick = other.m_lastUseTick;
+        obj.m_ascent = other.m_ascent;
+        obj.m_descent = other.m_descent;
+        obj.m_lineSkip = other.m_lineSkip;
+
+        obj.m_font = other.m_font;
+        obj.m_glyphAtlasSurf = other.m_glyphAtlasSurf;
+
+        obj.m_asciiGlyphs = other.m_asciiGlyphs;
+        obj.m_asciiPresent = other.m_asciiPresent;
+        obj.m_charToGlyphMetrics = other.m_charToGlyphMetrics;
+    }
+
     void FontAsset::MoveFrom(FontAsset&& other) noexcept {
-        if (this == &other) return;
+        if (this == &other) 
+            return;
 
         Cleanup();
 
         m_fontSize = other.m_fontSize;
         m_lastUseTick = other.m_lastUseTick;
-        m_ttfFont = other.m_ttfFont;
-        m_glyphAtlasSurf = other.m_glyphAtlasSurf;
+        m_font = std::move(other.m_font);
+        m_glyphAtlasSurf = std::move(other.m_glyphAtlasSurf);
         m_ascent = other.m_ascent;
         m_descent = other.m_descent;
         m_lineSkip = other.m_lineSkip;
@@ -102,8 +127,8 @@ namespace SDLCore {
 
         other.m_fontSize = 0;
         other.m_lastUseTick = 0;
-        other.m_ttfFont = nullptr;
-        other.m_glyphAtlasSurf = nullptr;
+        other.m_font = FontResource();
+        other.m_glyphAtlasSurf = TextureSurface();
         other.m_ascent = 0;
         other.m_descent = 0;
         other.m_lineSkip = 0;
@@ -115,26 +140,24 @@ namespace SDLCore {
     }
 
 	void FontAsset::Cleanup() {
-        for (auto& [_, tex] : m_winIDToGlyphAtlasTexture)
-            SDL_DestroyTexture(tex);
+        if (!IsSDLQuit()) {
+            for (auto& [_, tex] : m_winIDToGlyphAtlasTexture)
+                SDL_DestroyTexture(tex);
+        }
 
         RemoveAllWindowCloseCB();
 
         m_charToGlyphMetrics.clear();
         m_winIDToGlyphAtlasTexture.clear();
 
-		if (m_glyphAtlasSurf)
-			SDL_DestroySurface(m_glyphAtlasSurf);
-		if (m_ttfFont)
-			TTF_CloseFont(m_ttfFont);
-		m_glyphAtlasSurf = nullptr;
-		m_ttfFont = nullptr;
+        m_glyphAtlasSurf = TextureSurface();
+        m_font = FontResource();
 
 		m_lastUseTick = 0;
 		m_fontSize = 0;
 	}
 
-    SDL_Surface* FontAsset::GenerateGlypeAtlas(TTF_Font* font, float size) {
+    TextureSurface FontAsset::GenerateGlypeAtlas(TTF_Font* font, float size) {
         if (TTF_GetFontDirection(font) != TTF_DIRECTION_LTR && TTF_GetFontDirection(font) != TTF_DIRECTION_INVALID) {
             Log::Error("SDLCore::FontAsset::GenerateGlypeAtlas: Could not generate glyph atlas of font '{}', current font system only supports left-to-right fonts!",
                 TTF_GetFontFamilyName(font));
@@ -239,10 +262,13 @@ namespace SDLCore {
             g.surf = nullptr;
         }
 
-        return atlas;
+        return TextureSurface(atlas);
     }
 
     SDL_Texture* FontAsset::CreateTextureForWindow(WindowID winID) {
+        if (m_glyphAtlasSurf.IsInvalid())
+            return nullptr;
+        
         auto* app = Application::GetInstance();
         if (!app)
             return nullptr;
@@ -255,7 +281,7 @@ namespace SDLCore {
         if (!renderer)
             return nullptr;
 
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, m_glyphAtlasSurf);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, m_glyphAtlasSurf.GetSurface());
         if (texture) {
             m_winIDToGlyphAtlasTexture[winID] = texture;
             m_winIDToWinCallbackID[winID] = win->AddOnSDLRendererDestroy([this, winID]() { FreeTextureForWindow(winID); });
@@ -266,7 +292,7 @@ namespace SDLCore {
 
     void FontAsset::FreeTextureForWindow(WindowID winID) {
         // prevents from calling sdl funcs if app is closing
-        if (Application::IsQuit())
+        if (IsSDLQuit())
             return;
 
         auto* app = Application::GetInstance();
@@ -297,7 +323,7 @@ namespace SDLCore {
             return;
         }
 
-        for (auto [winID, cbID] : m_winIDToWinCallbackID) {
+        for (auto& [winID, cbID] : m_winIDToWinCallbackID) {
             if (auto* win = app->GetWindow(winID))
                 win->RemoveOnSDLRendererDestroy(cbID);
         }

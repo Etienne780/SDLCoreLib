@@ -2,12 +2,12 @@
 #include <sstream>
 #include <algorithm>
 
-#include "CoreLib\ColorUtils.h"
+#include "CoreLib/ColorUtils.h"
 
-#include "CoreLib\Math\Vector3.h"
-#include "CoreLib\Math\Vector4.h"
-#include "CoreLib\ConversionUtils.h"
-#include "CoreLib\Log.h"
+#include "CoreLib/Math/Vector3.h"
+#include "CoreLib/Math/Vector4.h"
+#include "CoreLib/ConversionUtils.h"
+#include "CoreLib/Log.h"
 
 Vector3 ColorUtils::HSVToRGB(const Vector3& color) {
     return HSVToRGB(color.x, color.y, color.z);

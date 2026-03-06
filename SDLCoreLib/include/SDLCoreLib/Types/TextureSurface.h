@@ -41,7 +41,6 @@ namespace SDLCore {
 
 	private:
 		TextureID m_id;
-		SDL_Surface* m_surface = nullptr;
 	};
 
 }

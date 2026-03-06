@@ -8,7 +8,7 @@ namespace SDLCore {
 
 	static std::string s_errorMsg;
 
-	std::string GetError(SDLResult result) {
+	std::string GetError(ApplicationResult result) {
 		std::string msg;
 		switch (result)
 		{
@@ -26,6 +26,9 @@ namespace SDLCore {
 			break;
 		case 4:
 			msg = "Application SoundManager error!\n" + s_errorMsg;
+			break;
+		case 5:
+			msg = "Application SDL3_Net error!\n" + s_errorMsg;
 			break;
 		default:
 			msg = "Result '" + FormatUtils::toString(result) + "' is Unknon!";

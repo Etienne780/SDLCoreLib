@@ -1,10 +1,13 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_net/SDL_net.h>
 #include <CoreLib/Log.h>
 #include <CoreLib/Algorithm.h>
 
 #include "Types/Audio/SoundManager.h"
+#include "Internal/TextureManager.h"
+#include "Internal/FontManager.h"
 #include "Application.h"
 
 namespace SDLCore {
@@ -15,35 +18,42 @@ namespace SDLCore {
     static inline constexpr char* platformStrIOS = "iOS";
     static inline constexpr char* platformStrAndroid = "Android";
 
-    static Application* m_application = nullptr;
+    static Application* s_application = nullptr;
 
+    static bool s_closeApplication = false;
+    static bool s_sdlQuit = false;
+
+    bool IsApplicationQuit() {
+        return s_closeApplication;
+    }
+
+    bool IsSDLQuit() {
+        return s_sdlQuit;
+    }
 
     Application::Application(std::string& name, const Version& version)
         : m_name(name), m_version(version) {
-        Init();
-        m_application = this;
+        InitInternal();
+        s_application = this;
     }
         
     Application::Application(std::string&& name, const Version& version)
         : m_name(std::move(name)), m_version(version) {
-        Init();
-        m_application = this;
+        InitInternal();
+        s_application = this;
+    }
+
+    Application::~Application() {
+        QuitInternal();
     }
 
     Application* Application::GetInstance() {
 #ifndef NDEBUG
-        if (!m_application) {
+        if (!s_application) {
             Log::Error("SDLCore::Application::GetInstance: called without an exesting instance!");
         }
 #endif
-        return m_application;
-    }
-
-    bool Application::IsQuit() {
-        if (m_application) {
-            return m_application->m_closeApplication;
-        }
-        return true;
+        return s_application;
     }
 
     Platform Application::GetPlatform() {
@@ -72,20 +82,20 @@ namespace SDLCore {
         return platform;
     }
 
-    void Application::Init() {
-        if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+    void Application::InitInternal() {
+        if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS)) {
             SetError(Log::GetFormattedString("SDLCore::Application: {}", SDL_GetError()));
             cancelStart = 1;
         }
         SDL_SetAppMetadata(m_name.c_str(), m_version.ToString().c_str(), nullptr);
 
         if (!TTF_Init()) {
-            SetError(Log::GetFormattedString("SDLCore::Application: {}", SDL_GetError()));
+            SetErrorF("SDLCore::Application(SDL_TTF): {}", SDL_GetError());
             cancelStart = 2;
         }
 
         if (!MIX_Init()) {
-            SetError(Log::GetFormattedString("SDLCore::Application: {}", SDL_GetError()));
+            SetErrorF("SDLCore::Application(SDL_Mixer): {}", SDL_GetError());
             cancelStart = 3;
         }
 
@@ -93,47 +103,71 @@ namespace SDLCore {
             // SetError(GetError()); error is already set
             cancelStart = 4;
         }
+
+        if (!NET_Init()) {
+            SetErrorF("SDLCore::Application(SDL_Net): {}", SDL_GetError());
+            cancelStart = 5;
+        }
+    }
+
+    void Application::QuitInternal() {
+        if (s_sdlQuit)
+            return;
+
+        TextureManager::GetInstance().ClearAllTexturesEntries();
+        FontManager::GetInstance().ClearAllFontEntries();
+  
+        DeleteAllWindows();
+
+        Input::Quit();
+        SoundManager::Quit();
+
+        s_sdlQuit = true;
+        NET_Quit();
+        MIX_Quit();
+        TTF_Quit();
+        SDL_Quit();
     }
 
     int Application::Start() {
         if (cancelStart != 0) {
-            MIX_Quit();
-            TTF_Quit();
-            SDL_Quit();
+            QuitInternal();
+            s_closeApplication = true;
             return cancelStart;
         }
 
         uint64_t frameStart = 0;
         OnStart();
-        while(!m_closeApplication) {
+        while(!s_closeApplication) {
             frameStart = Time::GetTimeMS();
             Time::Update();
 
             ProcessSDLPollEvents();
-            if (m_closeApplication)
+            if (s_closeApplication)
                 break;
 
             OnUpdate();
             Input::LateUpdate();
+            SoundManager::Flush();
+
             LockCursor();
             FPSCapDelay(frameStart);
+
+            ProcessWindowClosureRequests();
         }
+        s_closeApplication = true;
         OnQuit();
 
         ResetCursorLockParams();
         Render::SetWindowRenderer();
-        DeleteAllWindows();
 
-        SoundManager::Quit();
-        MIX_Quit();
-        TTF_Quit();
-        SDL_Quit();
+        QuitInternal();
 
         return 0;
     }
 
     void Application::Quit() {
-        m_closeApplication = true;
+        s_closeApplication = true;
     }
 
     Window* Application::AddWindow(WindowID* idPtr, std::string name, int width, int height) {
@@ -165,12 +199,18 @@ namespace SDLCore {
         return win;
     }
 
-    bool Application::DeleteWindow(WindowID id) {
+    bool Application::DeleteWindow(WindowID& id) {
+        if (id.IsInvalid())
+            return false;
+
         auto it = std::find_if(m_windows.begin(), m_windows.end(),
             [id](const std::unique_ptr<Window>& win) { return win->GetID() == id; });
 
         if (it == m_windows.end())
             return false;
+
+        // invalidates the id
+        id.SetInvalid();
 
         (*it)->DestroyWindow();
         m_windows.erase(it);
@@ -465,25 +505,19 @@ namespace SDLCore {
                 ProcessSDLPollEventWindow(window);
             }
         }
-
-        for (auto& id : m_windowsToClose) {
-            auto* win = GetWindow(id);
-            if (win)
-                win->DestroyWindow();
-            DeleteWindow(id);
-        }
-        m_windowsToClose.clear();
     }
 
     void Application::ProcessSDLPollEventWindow(const std::unique_ptr<Window>& window) {
         SDL_WindowID sdlWindowID = window->GetSDLID();
+        /*if (m_sdlEvent.type == SDL_EVENT_QUIT) {
+            Quit(); 
+            return; 
+        }*/
+        
         if (m_sdlEvent.window.windowID != sdlWindowID || sdlWindowID == SDLCORE_INVALID_ID)
             return;
 
         switch (m_sdlEvent.type) {
-        case SDL_EVENT_QUIT:
-            Quit();
-            break;
         case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
             m_windowsToClose.push_back(window->GetID());
             break;
@@ -501,6 +535,10 @@ namespace SDLCore {
         case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
         case SDL_EVENT_WINDOW_DISPLAY_CHANGED:
         case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
+        case SDL_EVENT_DISPLAY_ORIENTATION:
+        case SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED:
+        case SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED:
+        case SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED:
             window->UpdateWindowEvents(m_sdlEvent.type);
             break;
         default:
@@ -508,6 +546,18 @@ namespace SDLCore {
         }
 
         Input::ProcessEvent(m_sdlEvent);
+    }
+
+    void Application::ProcessWindowClosureRequests() {
+        if (m_windowsToClose.empty())
+            return;
+
+        for (auto& id : m_windowsToClose) {
+            auto* win = GetWindow(id);
+            if (win)
+                DeleteWindow(id);
+        }
+        m_windowsToClose.clear();
     }
 
     void Application::FPSCapDelay(uint64_t frameStartTime) const {

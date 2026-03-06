@@ -34,11 +34,13 @@ public:
     * @return String in the format "(x, y)".
     */
     std::string ToString() const;
+
     /**
     * @brief Converts this vector to a 2x1 column matrix.
     * @return A Matrix with 2 rows and 1 column representing this vector.
     */
     Matrix ToMatrix2x1() const;
+
     /**
     * @brief Converts this vector to a 1x2 row matrix.
     * @return A Matrix with 1 row and 2 columns representing this vector.
@@ -68,6 +70,33 @@ public:
     * @return this vector
     */
     Vector2& Set(float fill);
+
+    /**
+    * @brief Checks if both components of the vector are equal to the given value
+    *
+    * @param value The value to compare against
+    * @return true if both components are equal to the value, false otherwise
+    */
+    bool Equals(float value) const;
+
+    /**
+    * @brief Checks if the vector matches the given components
+    *
+    * @param x The x component to compare
+    * @param y The y component to compare
+    * @return true if both components match, false otherwise
+    */
+    bool Equals(float x, float y) const;
+
+    /**
+    * @brief Checks if this vector is equal to another vector
+    *
+    * This is equivalent to using the equality operator (`*this == other`).
+    * 
+    * @param other The vector to compare against
+    * @return true if both vectors have the same components, false otherwise
+    */
+    bool Equals(const Vector2& other) const;
 
     /**
     * @brief Normalizes the vector to have length 1.
@@ -185,19 +214,19 @@ public:
     bool operator!=(const Vector2& other) const;
 
     /**
-     * @brief Index operator for accessing vector components.
-     * @param index Component index (0 = x, 1 = y).
-     * @return Reference to the component.
-     * @throws std::out_of_range if index is invalid.
-     */
+    * @brief Index operator for accessing vector components.
+    * @param index Component index (0 = x, 1 = y).
+    * @return Reference to the component.
+    * @throws std::out_of_range if index is invalid.
+    */
     float& operator[](int index);
 
     /**
-     * @brief Const index operator for accessing components.
-     * @param index Component index.
-     * @return Const reference to component.
-     * @throws std::out_of_range if index is invalid.
-     */
+    * @brief Const index operator for accessing components.
+    * @param index Component index.
+    * @return Const reference to component.
+    * @throws std::out_of_range if index is invalid.
+    */
     const float& operator[](int index) const;
 };
 
@@ -213,6 +242,6 @@ Vector2 operator/(float scalar, const Vector2& other);
 #pragma endregion
 
 template<>
-static inline std::string FormatUtils::toString<Vector2>(Vector2 value) {
+inline std::string FormatUtils::toString<Vector2>(Vector2 value) {
     return value.ToString();
 }

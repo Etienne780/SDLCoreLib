@@ -8,8 +8,8 @@
 #include "FormatUtils.h"
 
 /**
- * @brief Invalid ID value for random devices
- */
+* @brief Invalid ID value for random devices
+*/
 const uint32_t RANDOM_DEVICE_INVALID_ID = std::numeric_limits<uint32_t>::max();
 
 /**
@@ -18,19 +18,19 @@ const uint32_t RANDOM_DEVICE_INVALID_ID = std::numeric_limits<uint32_t>::max();
 struct RandomDeviceTag {};
 
 /**
- * @brief Strongly typed ID for identifying random number generator devices
- */
+* @brief Strongly typed ID for identifying random number generator devices
+*/
 using RandomDeviceID = CoreID<uint32_t, RANDOM_DEVICE_INVALID_ID, RandomDeviceTag>;
 
 /**
- * @brief Static random number utility class
- *
- * Provides a default random device as well as support for multiple
- * independent random devices identified by RandomDeviceID.
- *
- * The class supports integral and floating-point number generation,
- * including ranged and positive-only values.
- */
+* @brief Static random number utility class
+*
+* Provides a default random device as well as support for multiple
+* independent random devices identified by RandomDeviceID.
+*
+* The class supports integral and floating-point number generation,
+* including ranged and positive-only values.
+*/
 class Random {
 public:
     Random() = delete;
@@ -178,12 +178,7 @@ private:
     };
 };
 
-/**
-* @brief String conversion for RandomDeviceID
-* @param id Random device identifier
-* @return String representation of the ID
-*/
 template<>
-static inline std::string FormatUtils::toString<RandomDeviceID>(RandomDeviceID id) {
+inline std::string FormatUtils::toString<RandomDeviceID>(RandomDeviceID id) {
     return id.ToString();
 }

@@ -338,9 +338,8 @@ private:
 };
 
 template<>
-static inline std::string FormatUtils::toString<Log::Level>(Log::Level level) {
-    switch (level)
-    {
+inline std::string FormatUtils::toString<Log::Level>(Log::Level level) {
+    switch (level) {
     case Log::levelError:   return "Error";
     case Log::levelWarning: return "Warning";
     case Log::levelInfo:    return "Info";

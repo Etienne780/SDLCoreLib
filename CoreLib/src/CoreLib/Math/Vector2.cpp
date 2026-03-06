@@ -1,13 +1,13 @@
 #include <sstream>
 #include <cmath>
 
-#include "CoreLib\Math\Matrix.h"
-#include "CoreLib\Math\MathUtil.h"
-#include "CoreLib\FormatUtils.h"
-#include "CoreLib\Math\Vector3.h"
-#include "CoreLib\Math\Vector4.h"
+#include "CoreLib/Math/Matrix.h"
+#include "CoreLib/Math/MathUtil.h"
+#include "CoreLib/FormatUtils.h"
+#include "CoreLib/Math/Vector3.h"
+#include "CoreLib/Math/Vector4.h"
 
-#include "CoreLib\Math\Vector2.h"
+#include "CoreLib/Math/Vector2.h"
 
 const Vector2 Vector2::up(0, 1);
 const Vector2 Vector2::down(0, -1);
@@ -69,6 +69,18 @@ Vector2& Vector2::Set(float fill) {
     return *this;
 }
 
+bool Vector2::Equals(float value) const {
+    return x == value && y == value;
+}
+
+bool Vector2::Equals(float _x, float _y) const {
+    return x == _x && y == _y;
+}
+
+bool Vector2::Equals(const Vector2& other) const {
+    return *this == other;
+}
+
 Vector2& Vector2::Normalize() {
     float len = Magnitude();
     if (len > 0) {
@@ -103,17 +115,16 @@ float Vector2::Dot(const Vector2& other) const {
     return (x * other.x) + (y * other.y);
 }
 
+float Vector2::Dot(const Vector2& a, const Vector2& b) {
+    return a.Dot(b);
+}
+
 float Vector2::Cross(const Vector2& other) const {
     return x * other.y - y * other.x;
 }
 
-
-float Vector2::Dot(const Vector2& a, const Vector2& b) {
-    return (a.x * b.x) + (a.y * b.y);
-}
-
 float Vector2::Cross(const Vector2& a, const Vector2& b) {
-    return a.x * b.y - a.y * b.x;
+    return a.Cross(b);
 }
 
 Vector2 Vector2::Lerp(const Vector2& a, const Vector2& b, float t) {

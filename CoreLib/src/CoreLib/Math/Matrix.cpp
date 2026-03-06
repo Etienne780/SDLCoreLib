@@ -1,10 +1,10 @@
-#include "CoreLib\Math\Matrix.h"
+#include "CoreLib/Math/Matrix.h"
 
-#include "CoreLib\Math\Vector2.h"
-#include "CoreLib\Math\Vector3.h"
-#include "CoreLib\Math\Vector4.h"
+#include "CoreLib/Math/Vector2.h"
+#include "CoreLib/Math/Vector3.h"
+#include "CoreLib/Math/Vector4.h"
 
-#include "CoreLib\FormatUtils.h"
+#include "CoreLib/FormatUtils.h"
 
 Matrix::Matrix() {
 }
@@ -102,7 +102,6 @@ float* Matrix::GetData() {
 }
 
 const float* Matrix::GetData() const {
-    m_isDataDirty = true;
     return m_data.data();
 }
 
@@ -257,32 +256,26 @@ Vector4 Matrix::ToVector4() const {
 }
 
 int Matrix::ToIndex(int row, int col) const {
-    #ifndef NDEBUG
     if (row < 0 || col < 0 || row >= m_rows || col >= m_cols) {
         throw std::runtime_error("Matrix index out of bounds");
     }
-    #endif
     return row * m_cols + col; // row-major layout
 }
 
 #pragma endregion
 
 float& Matrix::operator()(int row, int col) {
-    #ifndef NDEBUG
     if (row < 0 || col < 0 || row >= m_rows || col >= m_cols) {
         throw std::runtime_error("Matrix index out of bounds");
     }
-    #endif
     m_isDataDirty = true;
     return m_data[ToIndex(row, col)];
 }
 
 const float& Matrix::operator()(int row, int col) const {
-    #ifndef NDEBUG
     if (row < 0 || col < 0 || row >= m_rows || col >= m_cols) {
         throw std::runtime_error("Matrix index out of bounds");
     }
-    #endif
     return m_data[ToIndex(row, col)];
 }
 
@@ -304,11 +297,9 @@ Matrix & Matrix::operator+=(const Matrix& other) {
 }
 
 Matrix& Matrix::operator-=(const Matrix& other) {
-#ifndef NDEBUG
     if (m_rows != other.m_rows || m_cols != other.m_cols) {
         throw std::runtime_error("Matrix dimensions do not match for subtraction.");
     }
-#endif
 
     m_isDataDirty = true;
     const float* b = other.GetData();
@@ -321,11 +312,9 @@ Matrix& Matrix::operator-=(const Matrix& other) {
 }
 
 Matrix& Matrix::operator*=(const Matrix& other) {
-    #ifndef NDEBUG
     if (m_cols != other.m_rows) {
         throw std::runtime_error("Matrix dimensions invalid for multiplication.");
     }
-    #endif
 
     m_isDataDirty = true;
 
@@ -361,10 +350,8 @@ Matrix& Matrix::operator*=(float scalar) {
 }
 
 Matrix& Matrix::operator/=(float scalar) {
-#ifndef NDEBUG
     if (scalar == 0)
         throw std::runtime_error("Matrix division by zero is not allowed");
-#endif
     m_isDataDirty = true;
 
     for (float& element : m_data) {
@@ -523,11 +510,8 @@ Matrix operator/(float scalar, const Matrix& matrix) {
 
     const size_t totalElements = rows * cols;
     for (size_t i = 0; i < totalElements; ++i) {
-        #ifndef NDEBUG
-        if (a[i] == 0.0f) {
+        if (a[i] == 0.0f)
             throw std::runtime_error("Division by zero in matrix element");
-        }
-        #endif
         r[i] = scalar / a[i];
     }
 

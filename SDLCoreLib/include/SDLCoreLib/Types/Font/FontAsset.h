@@ -3,6 +3,8 @@
 #include <unordered_map>
 
 #include "Types/Types.h"
+#include "Types/TextureSurface.h"
+#include "FontResource.h"
 #include "FontGlyphMetrics.h"
 
 struct SDL_Surface;
@@ -16,16 +18,16 @@ namespace SDLCore {
 		FontAsset(TTF_Font* font, float size);
 		~FontAsset();
 
-		FontAsset(const FontAsset&) = delete;
-		FontAsset& operator=(const FontAsset&) = delete;
+		FontAsset(const FontAsset&) noexcept;
+		FontAsset& operator=(const FontAsset&) noexcept;
 
 		FontAsset(FontAsset&& other) noexcept;
 		FontAsset& operator=(FontAsset&& other) noexcept;
 
 		float m_fontSize = -1;
 		size_t m_lastUseTick = 0;
-		TTF_Font* m_ttfFont = nullptr;
-		SDL_Surface* m_glyphAtlasSurf = nullptr;
+		FontResource m_font;
+		TextureSurface m_glyphAtlasSurf;
 		int m_ascent = 0;
 		int m_descent = 0;
 		int m_lineSkip = 0;
@@ -41,10 +43,11 @@ namespace SDLCore {
 		std::unordered_map<WindowID, SDL_Texture*> m_winIDToGlyphAtlasTexture;
 		std::unordered_map<WindowID, WindowCallbackID> m_winIDToWinCallbackID;
 
+		void CopyFrom(const FontAsset& other) noexcept;
 		void MoveFrom(FontAsset&& other) noexcept;
 		void Cleanup();
 
-		SDL_Surface* GenerateGlypeAtlas(TTF_Font* font, float size);
+		TextureSurface GenerateGlypeAtlas(TTF_Font* font, float size);
 		SDL_Texture* CreateTextureForWindow(WindowID winID);
 		void FreeTextureForWindow(WindowID winID);
 

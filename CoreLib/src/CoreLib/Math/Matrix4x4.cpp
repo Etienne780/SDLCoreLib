@@ -1,11 +1,11 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "CoreLib\Math\Vector2.h"
-#include "CoreLib\Math\Vector3.h"
-#include "CoreLib\Math\Vector4.h"
-#include "CoreLib\FormatUtils.h"
-#include "CoreLib\Math\Matrix4x4.h"
+#include "CoreLib/Math/Vector2.h"
+#include "CoreLib/Math/Vector3.h"
+#include "CoreLib/Math/Vector4.h"
+#include "CoreLib/FormatUtils.h"
+#include "CoreLib/Math/Matrix4x4.h"
 
 Matrix4x4::Matrix4x4() {
     std::memset(m_data, 0, sizeof(m_data));
@@ -74,6 +74,15 @@ Matrix4x4& Matrix4x4::operator=(Matrix4x4&& other) noexcept {
     return *this;
 }
 
+float* Matrix4x4::GetData() {
+    m_isColMajorCacheDirty = true;
+    return m_data;
+}
+
+const float* Matrix4x4::GetData() const {
+    return m_data; 
+}
+
 Vector3 Matrix4x4::GetTranslation() const {
     return Vector3(m_data[3], m_data[7], m_data[11]);
 }
@@ -122,6 +131,11 @@ Matrix4x4& Matrix4x4::SetData(float value) {
     return *this;
 }
 
+Matrix4x4& Matrix4x4::SetDataDirty() {
+    m_isColMajorCacheDirty = true;
+    return *this;
+}
+
 void Matrix4x4::UpdateColMajorCache() const {
     if (m_isColMajorCacheDirty) {
         // Convert from row-major to column-major
@@ -162,22 +176,22 @@ std::string Matrix4x4::ToString(const std::string& prefix) const {
     return oss.str();
 }
 
+inline int Matrix4x4::ToIndex(int row, int col) const {
+    return row * 4 + col;
+}
+
 float& Matrix4x4::operator()(int row, int col) {
-#ifndef NDEBUG
     if (row < 0 || row >= 4 || col < 0 || col >= 4) {
         throw std::runtime_error("Matrix4x4 index out of bounds");
     }
-#endif
     m_isColMajorCacheDirty = true;
     return m_data[ToIndex(row, col)];
 }
 
 const float& Matrix4x4::operator()(int row, int col) const {
-#ifndef NDEBUG
     if (row < 0 || row >= 4 || col < 0 || col >= 4) {
         throw std::runtime_error("Matrix4x4 index out of bounds");
     }
-#endif
     return m_data[ToIndex(row, col)];
 }
 
@@ -227,11 +241,10 @@ Matrix4x4& Matrix4x4::operator*=(float scalar) {
 }
 
 Matrix4x4& Matrix4x4::operator/=(float scalar) {
-#ifndef NDEBUG
     if (scalar == 0.0f) {
         throw std::runtime_error("Division by zero");
     }
-#endif
+
     for (int i = 0; i < 16; ++i) {
         m_data[i] /= scalar;
     }
@@ -305,11 +318,10 @@ Matrix4x4 Matrix4x4::operator*(float scalar) const {
 }
 
 Matrix4x4 Matrix4x4::operator/(float scalar) const {
-#ifndef NDEBUG
     if (scalar == 0.0f) {
         throw std::runtime_error("Division by zero");
     }
-#endif
+
     Matrix4x4 result;
     for (int i = 0; i < 16; ++i) {
         result.m_data[i] = m_data[i] / scalar;
@@ -340,11 +352,9 @@ Matrix4x4 operator/(float scalar, const Matrix4x4& matrix) {
     float* resultData = result.GetData();
 
     for (int i = 0; i < 16; ++i) {
-#ifndef NDEBUG
         if (data[i] == 0.0f) {
             throw std::runtime_error("Division by zero in matrix element");
         }
-#endif
         resultData[i] = scalar / data[i];
     }
     return result;

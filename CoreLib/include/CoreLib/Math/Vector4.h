@@ -24,19 +24,23 @@ public:
     explicit Vector4(float value);
     explicit Vector4(float x, float y, float z, float w);
     explicit Vector4(const Vector2& vec, float z, float w);
+    explicit Vector4(float x, float y, const Vector2& vec);
     explicit Vector4(const Vector2& a, const Vector2& b);
     explicit Vector4(const Vector3& vec, float w);
+    explicit Vector4(float x, const Vector3& vec);
 
     /**
-     * @brief Converts the vector to a string representation.
-     * @return String in the format "(x, y, z, w)".
-     */
+    * @brief Converts the vector to a string representation.
+    * @return String in the format "(x, y, z, w)".
+    */
     std::string ToString() const;
+
     /**
     * @brief Converts this vector to a 4x1 column matrix.
     * @return A Matrix with 4 rows and 1 column representing this vector.
     */
     Matrix ToMatrix4x1() const;
+
     /**
     * @brief Converts this vector to a 1x4 row matrix.
     * @return A Matrix with 1 row and 4 columns representing this vector.
@@ -68,6 +72,35 @@ public:
     * @return this vector
     */
     Vector4& Set(float fill);
+
+    /**
+    * @brief Checks if all components of this vector are equal to the given value
+    *
+    * @param value The value to compare against
+    * @return true if all components are equal, false otherwise
+    */
+    bool Equals(float value) const;
+
+    /**
+    * @brief Checks if this vector matches the given components
+    *
+    * @param x The x component to compare
+    * @param y The y component to compare
+    * @param z The z component to compare
+    * @param w The w component to compare
+    * @return true if all components match, false otherwise
+    */
+    bool Equals(float x, float y, float z, float w) const;
+
+    /**
+    * @brief Checks if this vector is equal to another Vector4
+    *
+    * This is equivalent to using the equality operator (`*this == other`).
+    * 
+    * @param other The vector to compare against
+    * @return true if all components are equal, false otherwise
+    */
+    bool Equals(const Vector4& other) const;
 
     /**
     * @brief Normalizes the vector to have length 1.
@@ -169,19 +202,19 @@ public:
     bool operator!=(const Vector4& other) const;
 
     /**
-     * @brief Index operator for accessing vector components.
-     * @param index Component index (0 = x, 1 = y, 2 = z, 3 = w).
-     * @return Reference to the component.
-     * @throws std::out_of_range if index is invalid.
-     */
+    * @brief Index operator for accessing vector components.
+    * @param index Component index (0 = x, 1 = y, 2 = z, 3 = w).
+    * @return Reference to the component.
+    * @throws std::out_of_range if index is invalid.
+    */
     float& operator[](int index);
 
     /**
-     * @brief Const index operator for accessing components.
-     * @param index Component index.
-     * @return Const reference to component.
-     * @throws std::out_of_range if index is invalid.
-     */
+    * @brief Const index operator for accessing components.
+    * @param index Component index.
+    * @return Const reference to component.
+    * @throws std::out_of_range if index is invalid.
+    */
     const float& operator[](int index) const;
 };
 
@@ -197,6 +230,6 @@ Vector4 operator/(float scalar, const Vector4& other);
 #pragma endregion
 
 template<>
-static inline std::string FormatUtils::toString<Vector4>(Vector4 value) {
+inline std::string FormatUtils::toString<Vector4>(Vector4 value) {
     return value.ToString();
 }

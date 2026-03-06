@@ -13,7 +13,7 @@ namespace SDLCore {
     * @param result The result value to translate.
     * @return A descriptive message for the specified result.
     */
-    std::string GetError(SDLResult result);
+    std::string GetError(ApplicationResult result);
 
     /**
     * @brief Retrieve the most recent error message.

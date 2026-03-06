@@ -1,7 +1,7 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
-#include "CoreLib\TimeUtils.h"
+#include "CoreLib/TimeUtils.h"
 
 std::string TimeUtils::GetCurrentDateString() {
     auto t = std::time(nullptr);

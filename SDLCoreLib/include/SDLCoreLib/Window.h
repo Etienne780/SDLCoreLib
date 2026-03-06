@@ -167,27 +167,32 @@ namespace SDLCore {
 		int GetVerticalPos() const;
 
 		/**
+		* @brief Returns the current display bounds of the window.
+		*
+		* Provides the position and size of the window's client area
+		* in pixels.
+		*
+		* Layout: [x, y, w, h]
+		*
+		* @return Vector4 containing the display bounds in pixels
+		*/
+		Vector4 GetDisplayBounds() const;
+
+		/**
 		* @brief Retrieves the current size of the window
 		* @return Vector2 containing the width and height in pixels
-		*
-		* This function will poll the window size from SDL if it has not been fetched yet this frame.
-		* Otherwise, it returns the cached size.
 		*/
 		Vector2 GetSize() const;
 
 		/**
 		* @brief Gets the current width of the window.
 		* @return Width in pixels.
-		*
-		* Will poll the window size if it has not been updated this frame.
 		*/
 		int GetWidth() const;
 
 		/**
 		* @brief Gets the current height of the window.
 		* @return Height in pixels.
-		*
-		* Will poll the window size if it has not been updated this frame.
 		*/
 		int GetHeight() const;
 
@@ -514,6 +519,31 @@ namespace SDLCore {
 		Window* RemoveOnSDLRendererDestroy(WindowCallbackID id);
 
 		/**
+		* @brief Subscribes a callback triggered when the window is moved.
+		*
+		* The callback is invoked whenever the window position changes.
+		* This can be used to react to layout updates or display transitions.
+		*
+		* Multiple callbacks can be registered.
+		*
+		* @param cb The function or lambda to execute when the window moves.
+		* @return A unique WindowCallbackID used to remove the callback later.
+		*/
+		WindowCallbackID AddOnWindowMoved(WinCallback&& cb);
+
+		/**
+		* @brief Removes a previously registered window-moved callback.
+		*
+		* Use the WindowCallbackID returned from AddOnWindowMoved
+		* to remove a specific entry. If the ID is invalid or already removed,
+		* the function performs no action.
+		*
+		* @param id The unique identifier of the callback to remove.
+		* @return Pointer to this Window for method chaining.
+		*/
+		Window* RemoveOnWindowMoved(WindowCallbackID id);
+
+		/**
 		* @brief Subscribes a callback triggered when the window is resized.
 		*
 		* The callback is called whenever the window's size changes, providing the ability
@@ -535,6 +565,32 @@ namespace SDLCore {
 		* @return Pointer to this Window for method chaining.
 		*/
 		Window* RemoveOnWindowResize(WindowCallbackID id);
+
+		/**
+		* @brief Subscribes a callback triggered when the window display changes.
+		*
+		* The callback is invoked when the window is moved to a different display,
+		* when the display scale changes, or when the pixel size changes.
+		* This is typically used to update DPI-dependent resources or layout scaling.
+		*
+		* Multiple callbacks can be registered.
+		*
+		* @param cb The function or lambda to execute on display change.
+		* @return A unique WindowCallbackID used to remove the callback later.
+		*/
+		WindowCallbackID AddOnWindowDisplayChanged(WinCallback&& cb);
+
+		/**
+		* @brief Removes a previously registered window-display-changed callback.
+		*
+		* Use the WindowCallbackID returned from AddOnWindowDisplayChanged
+		* to remove a specific entry. If the ID is invalid or already removed,
+		* the function performs no action.
+		*
+		* @param id The unique identifier of the callback to remove.
+		* @return Pointer to this Window for method chaining.
+		*/
+		Window* RemoveOnWindowDisplayChanged(WindowCallbackID id);
 
 		/**
 		* @brief Subscribes a callback triggered when the window gains input focus.
@@ -639,12 +695,14 @@ namespace SDLCore {
 		SDL_DisplayID m_sdlDisplayID = 0;
 		TextureSurface m_icon;
 		std::string m_name = "Untitled";
+		SDL_Rect m_displayBounds{ 0, 0, 0, 0 };
 		mutable int m_positionX = -1;	// < dosent get update automaticly
 		mutable int m_positionY = -1;	// < dosent get update automaticly
 		mutable int m_width = 1;		// < dosent get update automaticly
 		mutable int m_height = 1;		// < dosent get update automaticly
 		mutable uint64_t m_positionFetchedTime = 0;
 		mutable uint64_t m_sizeFetchedTime = 0;
+		mutable uint64_t m_displayPropsFetchedTime = 0;
 
 		WindowState m_state = WindowState::NORMAL;
 		bool m_isFocused = false;
@@ -666,14 +724,16 @@ namespace SDLCore {
 		std::vector<WindowCallback<VoidCallback>> m_onDestroyCallbacks;
 		std::vector<WindowCallback<VoidCallback>> m_onSDLWindowCloseCallbacks;
 		std::vector<WindowCallback<VoidCallback>> m_onSDLRendererDestroyCallbacks;
+		std::vector<WindowCallback<WinCallback>> m_onWinMovedCallbacks;
 		std::vector<WindowCallback<WinCallback>> m_onWinResizeCallbacks;
+		std::vector<WindowCallback<WinCallback>> m_onWinDisplayChangedCallbacks;
 		std::vector<WindowCallback<WinCallback>> m_onWinFocusGainCallbacks;
 		std::vector<WindowCallback<WinCallback>> m_onWinFocusLostCallbacks;
 
 		// ======= Renderer properties =======
 		int m_vsync = 0;
-		std::unique_ptr<SDL_Window, void(*)(SDL_Window*)> m_sdlWindow{ nullptr, SDL_DestroyWindow };
-		std::unique_ptr<SDL_Renderer, void(*)(SDL_Renderer*)> m_sdlRenderer{ nullptr, SDL_DestroyRenderer };
+		SDL_Window* m_sdlWindow = nullptr;
+		SDL_Renderer* m_sdlRenderer = nullptr;
 
 		// Adds a callback of arbitrary type CBType
 		// CBType must match the type stored in the corresponding vector
@@ -707,10 +767,9 @@ namespace SDLCore {
 		// Calls all callbacks and forwards arbitrary arguments to them
 		template<typename CBType, typename... Args>
 		void CallCallbacks(const std::vector<WindowCallback<CBType>>& callbacks, Args&&... args) {
-			for (auto& windowCallback : callbacks) {
-				// Check that the callback is valid
+			auto callbacksCopy = callbacks;
+			for (auto& windowCallback : callbacksCopy) {
 				if (windowCallback.cb) {
-					// Forward all parameters to the callback
 					windowCallback.cb(std::forward<Args>(args)...);
 				}
 			}
@@ -719,7 +778,9 @@ namespace SDLCore {
 		void CallOnDestroy();
 		void CallOnSDLWindowClose();
 		void CallOnSDLRendererDestroy();
+		void CallOnWindowMoved();
 		void CallOnWindowResize();
+		void CallOnWindowDisplayChanged();
 		void CallOnWindowFocusGain();
 		void CallOnWindowFocusLost();
 		
@@ -736,6 +797,26 @@ namespace SDLCore {
 		* Only queries SDL_GetWindowSize if the size has not been fetched this frame.
 		*/
 		void PollSize() const;
+
+		/**
+		* @brief Polls and updates cached display-related properties for the current frame.
+		*
+		* Retrieves and caches display information associated with the window,
+		* including:
+		* 
+		* - The current SDL display ID
+		* 
+		* - The display content scale (DPI scaling factor)
+		* 
+		* - The display bounds in pixels
+		*
+		* The function ensures that SDL queries are performed at most once per frame.
+		* If the properties have already been fetched during the current frame,
+		* no additional SDL calls are made.
+		*
+		* Does nothing if the window is not currently associated with a valid display.
+		*/
+		void PollDisplayProps();
 
 		/*
 		* @brief called in application class

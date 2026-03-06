@@ -14,19 +14,34 @@ namespace SDLCore {
 
 	class Window;
 
+	/**
+	* @brief Checks whether the application has been requested to quit.
+	*
+	* This reflects the internal flag `m_closeApplication` and indicates
+	* if the main loop should terminate.
+	*
+	* @return true if the application shutdown has been requested, false otherwise
+	*/
+	bool IsApplicationQuit();
+
+	/**
+	* @brief Checks whether SDL has been fully shut down.
+	*
+	* This reflects the internal flag `m_sdlQuit` and indicates whether
+	* `SDL_Quit()` has been called and completed.
+	*
+	* @return true if SDL has been quit, false otherwise
+	*/
+	bool IsSDLQuit();
+
 	class Application {
-	friend class Window;
+		friend class Window;
 	public:
 		Application(std::string& name, const Version& version);
 		Application(std::string&& name, const Version& version);
+		virtual ~Application();
 
 		static Application* GetInstance();
-
-		/**
-		* @brief Returns whether the entire application is scheduled to quit.
-		* @return true if the application shutdown has been requested, false otherwise
-		*/
-		static bool IsQuit();
 
 		/**
 		* @brief Returns the platform on which the application is currently running.
@@ -43,7 +58,7 @@ namespace SDLCore {
 		* @brief Starts the main loop of the application
 		* @return returns an error code or 0
 		*/
-		SDLResult Start();
+		ApplicationResult Start();
 
 		/**
 		* @brief Quits the application
@@ -90,10 +105,10 @@ namespace SDLCore {
 		* This function destroys the specified window, including its underlying SDL window
 		* and renderer, and removes it from the application's window list.
 		*
-		* @param id Unique identifier of the window to delete.
-		* @return true if the window was found and deleted successfully, false otherwise.
+		* @param id Reference to the unique identifier of the window to delete. After deletion, the ID is invalidated.
+		* @return true if a window with the given ID existed and was deleted; false if no such window was found.
 		*/
-		bool DeleteWindow(WindowID id);
+		bool DeleteWindow(WindowID& id);
 
 		/**
 		* @brief Deletes all windows managed by the application.
@@ -630,7 +645,6 @@ namespace SDLCore {
 		SDLCoreIDManager m_windowIDManager;
 		std::string m_renderDriver;
 
-		bool m_closeApplication = false;
 		int m_vsync = 0;
 		int m_fpsCap = 0;
 
@@ -646,9 +660,18 @@ namespace SDLCore {
 		float m_cursorLastTime = 0;
 		const float m_cursorTick = 0.1f;// intervall speed of the cursorLock (in sec)
 
-		void Init();
+		void InitInternal();
+		void QuitInternal();
 		void ProcessSDLPollEvents();
 		void ProcessSDLPollEventWindow(const std::unique_ptr<Window>& window);
+		/**
+		* @brief Processes and removes windows that were marked for closure.
+		* Should be called after the complete render cycle to ensure no rendering
+		* happens on deleted windows.
+		*
+		* Called at the end of each frame in the main loop.
+		*/
+		void ProcessWindowClosureRequests();
 		void FPSCapDelay(uint64_t frameStartTime) const;
 		void LockCursor();
 		/*

@@ -17,15 +17,12 @@ class Vector4;
  */
 class Matrix4x4 {
 public:
-    // Constructors
     Matrix4x4();
     Matrix4x4(const float* values);
     Matrix4x4(std::initializer_list<std::initializer_list<float>> values);
 
-    // Copy constructor - optimized with memcpy
     Matrix4x4(const Matrix4x4& other);
 
-    // Move constructor - optimized
     Matrix4x4(Matrix4x4&& other) noexcept;
 
     // Assignment operators
@@ -33,75 +30,69 @@ public:
     Matrix4x4& operator=(Matrix4x4&& other) noexcept;
 
     /**
-     * @brief Provides mutable access to the raw matrix data (row-major order).
-     * @return Pointer to the internal float array representing the matrix data.
-     */
-    float* GetData() {
-        m_isColMajorCacheDirty = true;
-        return m_data;
-    }
+    * @brief Provides mutable access to the raw matrix data (row-major order).
+    * @return Pointer to the internal float array representing the matrix data.
+    */
+    float* GetData();
 
     /**
-     * @brief Provides read-only access to the raw matrix data (row-major order).
-     * @return Const pointer to the internal float array representing the matrix data.
-     */
-    const float* GetData() const { return m_data; }
+    * @brief Provides read-only access to the raw matrix data (row-major order).
+    * @return Const pointer to the internal float array representing the matrix data.
+    */
+    const float* GetData() const;
 
     /**
-     * @brief Gets the translation component from the transformation matrix.
-     * @return Vector3 containing the X, Y, Z translation values.
-     */
+    * @brief Gets the translation component from the transformation matrix.
+    * @return Vector3 containing the X, Y, Z translation values.
+    */
     Vector3 GetTranslation() const;
 
     /**
-     * @brief Extracts the rotation component from the transformation matrix.
-     * @return Vector3 containing rotation angles around X, Y, Z axes (Euler angles in radians).
-     */
+    * @brief Extracts the rotation component from the transformation matrix.
+    * @return Vector3 containing rotation angles around X, Y, Z axes (Euler angles in radians).
+    */
     Vector3 GetRotation() const;
 
     /**
-     * @brief Extracts the scale component from the transformation matrix.
-     * @return Vector3 containing the scale factors along X, Y, Z axes.
-     */
+    * @brief Extracts the scale component from the transformation matrix.
+    * @return Vector3 containing the scale factors along X, Y, Z axes.
+    */
     Vector3 GetScale() const;
 
     /**
-     * @brief Sets all matrix elements to the specified value.
-     * @param value The value to set all elements to.
-     * @return Reference to this matrix for chaining.
-     */
+    * @brief Sets all matrix elements to the specified value.
+    * @param value The value to set all elements to.
+    * @return Reference to this matrix for chaining.
+    */
     Matrix4x4& SetData(float value);
 
     /**
-     * @brief Marks the column-major cache as dirty (for internal use).
-     * @return Reference to this matrix for chaining.
-     */
-    Matrix4x4& SetDataDirty() {
-        m_isColMajorCacheDirty = true;
-        return *this;
-    }
+    * @brief Marks the column-major cache as dirty (for internal use).
+    * @return Reference to this matrix for chaining.
+    */
+    Matrix4x4& SetDataDirty();
 
     /**
-     * @brief Converts the matrix to a flat float array suitable for OpenGL.
-     *
-     * Returns a pointer to column-major data that OpenGL expects.
-     * Uses caching for performance - only recalculates when matrix changes.
-     *
-     * @return A const float* containing the matrix elements in column-major layout.
-     */
+    * @brief Converts the matrix to a flat float array suitable for OpenGL.
+    *
+    * Returns a pointer to column-major data that OpenGL expects.
+    * Uses caching for performance - only recalculates when matrix changes.
+    *
+    * @return A const float* containing the matrix elements in column-major layout.
+    */
     const float* ToOpenGLData() const;
 
     /**
-     * @brief Converts the matrix to a readable string.
-     * @return A string representing the matrix content.
-     */
+    * @brief Converts the matrix to a readable string.
+    * @return A string representing the matrix content.
+    */
     std::string ToString() const;
 
     /**
-     * @brief Converts the matrix to a readable string with prefix.
-     * @param prefix Prefix that gets written before every row.
-     * @return A string representing the matrix content.
-     */
+    * @brief Converts the matrix to a readable string with prefix.
+    * @param prefix Prefix that gets written before every row.
+    * @return A string representing the matrix content.
+    */
     std::string ToString(const std::string& prefix) const;
 
     // Element access operators
@@ -133,12 +124,10 @@ private:
 
     // Cached column-major data for OpenGL - only calculated when needed
     mutable bool m_isColMajorCacheDirty = true;
-    mutable alignas(16) float m_cachedColMajorData[16];
+    alignas(16) mutable float m_cachedColMajorData[16];
 
     // Inline helper for index calculation (row-major)
-    inline int ToIndex(int row, int col) const {
-        return row * 4 + col;
-    }
+    inline int ToIndex(int row, int col) const;
 
     // Internal method to update column-major cache
     void UpdateColMajorCache() const;
@@ -215,6 +204,6 @@ namespace GLTransform4x4 {
 }
 
 template<>
-static inline std::string FormatUtils::toString<Matrix4x4>(Matrix4x4 value) {
+inline std::string FormatUtils::toString<Matrix4x4>(Matrix4x4 value) {
     return value.ToString();
 }

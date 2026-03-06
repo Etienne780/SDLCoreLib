@@ -11,9 +11,9 @@
 #include <algorithm>
 #include <fstream>
 
-#include "CoreLib\tinyfiledialogs.h"
-#include <CoreLib\Log.h>
-#include "CoreLib\File.h" 
+#include "CoreLib/tinyfiledialogs.h"
+#include <CoreLib/Log.h>
+#include "CoreLib/File.h" 
 
 
 File::File(const SystemFilePath& path)
@@ -24,41 +24,58 @@ File::~File() {
     Close();
 }
 
-bool File::Open(FileState fileState, bool append) {
+void File::AddError(const std::string& msg) {
+    if (!m_error.empty()) m_error += "\n";
+    m_error += msg;
+}
+
+void File::AddWarning(const std::string& msg) {
+    if (!m_warning.empty()) m_warning += "\n";
+    m_warning += msg;
+}
+
+bool File::Open(FileState fileState, FileFlags flags) {
     if (fileState == FileState::FILE_CLOSE) {
-        Log::Warn("File: File was not opend, because FileState was set to FILE_CLOSE");
+        AddError("Open: FileState was set to FILE_CLOSE");
         return false;
     }
-    
+
     if (m_path.empty()) {
-        Log::Error("File: Path was empty!");
+        AddError("Open: Path was empty!");
         return false;
     }
 
     Close();
 
     m_fileState = fileState;
+    m_flags = flags;
 
     if (fileState == FileState::FILE_WRITE) {
         std::ios_base::openmode mode = std::ios::out;
-        if (append)
+        if (flags & FileFlags::BINARY)
+            mode |= std::ios::binary;
+        if (flags & FileFlags::APPEND)
             mode |= std::ios::app;
+
         m_ofstream.open(m_path, mode);
         if (!m_ofstream.is_open()) {
             std::filesystem::create_directories(std::filesystem::path(m_path).parent_path());
             m_ofstream.open(m_path, mode);
 
             if (!m_ofstream.is_open()) {
-                Log::Error("File: Could not open file '{}' for writing!", m_path);
+                AddError("Open: Could not open '" + m_path.string() + "' for writing!");
                 m_fileState = FileState::FILE_CLOSE;
                 return false;
             }
         }
     }
     else {
-        m_ifstream.open(m_path, std::ios::in);
+        std::ios_base::openmode mode = std::ios::in;
+        if (flags & FileFlags::BINARY)
+            mode |= std::ios::binary;
+        m_ifstream.open(m_path, mode);
         if (!m_ifstream.is_open()) {
-            Log::Error("File: Could not open file '{}' for reading!", m_path);
+            AddError("Open: Could not open '" + m_path.string() + "' for reading!");
             m_fileState = FileState::FILE_CLOSE;
             return false;
         }
@@ -83,14 +100,14 @@ void File::Close() {
 
 bool File::Write(const std::string& data) {
     if (m_fileState != FileState::FILE_WRITE || !m_ofstream.is_open()) {
-        Log::Error("File: Cannot write, file '{}' not open for writing!", m_path);
+        AddError("Write: File '" + m_path.string() + "' not open for writing!");
         return false;
     }
 
     m_ofstream << data;
 
     if (m_ofstream.fail()) {
-        Log::Error("File: Write operation failed on file '{}'!", m_path);
+        AddError("Write: Write operation failed on '" + m_path.string() + "'!");
         return false;
     }
 
@@ -99,24 +116,23 @@ bool File::Write(const std::string& data) {
 
 bool File::Write(const void* data, size_t size) {
     if (m_fileState != FileState::FILE_WRITE || !m_ofstream.is_open()) {
-        Log::Error("File: Cannot write, file '{}' not open for writing!", m_path);
+        AddError("Write: File '" + m_path.string() + "' not open for writing!");
         return false;
     }
 
     m_ofstream.write(reinterpret_cast<const char*>(data), size);
 
     if (m_ofstream.fail()) {
-        Log::Error("File: Write operation failed on file '{}'!", m_path);
+        AddError("Write: Write operation failed on '" + m_path.string() + "'!");
         return false;
     }
 
     return true;
 }
 
-
 bool File::ReadAll(std::string& outContent) {
     if (m_fileState != FileState::FILE_READ || !m_ifstream.is_open()) {
-        Log::Error("File: Cannot read, file '{}' not open for reading!", m_path);
+        AddError("ReadAll: File '" + m_path.string() + "' not open for reading!");
         return false;
     }
 
@@ -131,7 +147,7 @@ bool File::ReadAll(std::string& outContent) {
 
 bool File::ReadAll() {
     if (m_fileState != FileState::FILE_READ || !m_ifstream.is_open()) {
-        Log::Error("File: Cannot read, file '{}' not open for reading!", m_path);
+        AddError("ReadAll: File '" + m_path.string() + "' not open for reading!");
         return false;
     }
 
@@ -146,15 +162,19 @@ bool File::ReadAll() {
 
 bool File::ReadAllRaw(std::vector<unsigned char>& outData) {
     if (m_fileState != FileState::FILE_READ || !m_ifstream.is_open()) {
-        Log::Error("File: Cannot read binary, file '{}' not open for reading!", m_path);
+        AddError("ReadAllRaw: File '" + m_path.string() + "' not open for reading!");
         return false;
+    }
+
+    if (!(m_flags & FileFlags::BINARY)) {
+        AddWarning("ReadAllRaw: File '" + m_path.string() + "' was not opened with FileFlags::BINARY!");
     }
 
     // Jump to end to get file size
     m_ifstream.seekg(0, std::ios::end);
     std::streamsize size = m_ifstream.tellg();
     if (size <= 0) {
-        Log::Error("File: Binary read failed, file '{}' has invalid size!", m_path);
+        AddError("ReadAllRaw: File '" + m_path.string() + "' has invalid size!");
         return false;
     }
 
@@ -162,7 +182,7 @@ bool File::ReadAllRaw(std::vector<unsigned char>& outData) {
     outData.resize(static_cast<size_t>(size));
     m_ifstream.seekg(0, std::ios::beg);
     if (!m_ifstream.read(reinterpret_cast<char*>(outData.data()), size)) {
-        Log::Error("File: Binary read failed for file '{}'", m_path);
+        AddError("ReadAllRaw: Read failed for '" + m_path.string() + "'");
         return false;
     }
 
@@ -170,26 +190,7 @@ bool File::ReadAllRaw(std::vector<unsigned char>& outData) {
 }
 
 bool File::ReadAllRaw() {
-    if (m_fileState != FileState::FILE_READ || !m_ifstream.is_open()) {
-        Log::Error("File: Cannot read binary, file '{}' not open for reading!", m_path);
-        return false;
-    }
-
-    m_ifstream.seekg(0, std::ios::end);
-    std::streamsize size = m_ifstream.tellg();
-    if (size <= 0) {
-        Log::Error("File: Binary read failed, file '{}' has invalid size!", m_path);
-        return false;
-    }
-
-    m_binaryData.resize(static_cast<size_t>(size));
-    m_ifstream.seekg(0, std::ios::beg);
-    if (!m_ifstream.read(reinterpret_cast<char*>(m_binaryData.data()), size)) {
-        Log::Error("File: Binary read failed for file '{}'", m_path);
-        return false;
-    }
-
-    return true;
+    return ReadAllRaw(m_binaryData);
 }
 
 bool File::Exists() const {
@@ -207,8 +208,20 @@ bool File::IsFileOpen() const {
     return false;
 }
 
+bool File::HasWarning() const {
+    return !m_warning.empty();
+}
+
+bool File::IsValid() const {
+    return m_error.empty();
+}
+
 FileState File::GetFileState() const {
     return m_fileState;
+}
+
+FileFlags File::GetFileFlags() const {
+    return m_flags;
 }
 
 std::string File::GetData() const {
@@ -229,10 +242,8 @@ std::vector<unsigned char> File::GetRawData() {
 
 size_t File::GetFileSize() const {
     std::ifstream file(m_path, std::ios::binary | std::ios::ate);
-    if (!file.is_open()) {
-        Log::Error("File: Could not open file '{}' to get size!", m_path);
+    if (!file.is_open())
         return 0;
-    }
     return static_cast<size_t>(file.tellg());
 }
 
@@ -241,15 +252,27 @@ SystemFilePath File::GetFilePath() const {
 }
 
 SystemFilePath File::GetParentPath() const {
-    return m_path.parent_path(); 
+    return m_path.parent_path();
 }
 
 std::string File::GetFileExtension() const {
-    return File::GetFileExtension(m_path);
+    if (!m_path.has_extension())
+        return "";
+    std::string ext = m_path.extension().string().substr(1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    return ext;
 }
 
 std::string File::GetFileName() const {
-    return File::GetFileName(m_path);
+    return m_path.has_filename() ? m_path.filename().string() : "";
+}
+
+std::string File::GetError() const {
+    return m_error;
+}
+
+std::string File::GetWarning() const {
+    return m_warning;
 }
 
 File& File::SetFilePath(const SystemFilePath& path) {
@@ -258,78 +281,38 @@ File& File::SetFilePath(const SystemFilePath& path) {
 }
 
 std::string File::ToString() const {
-    return FormatUtils::formatString("{} ({} bytes)", GetFileName(), GetFileSize());
+    return GetFileName() + " (" + std::to_string(GetFileSize()) + " bytes)";
 }
 
-std::filesystem::path File::GetExecutablePath() {
-#ifdef _WIN32
-    char buffer[MAX_PATH];
-    DWORD size = GetModuleFileNameA(NULL, buffer, MAX_PATH);
-    return std::string(buffer, size);
-#elif __linux__
-    char buffer[PATH_MAX];
-    ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
-    if (len != -1) {
-        buffer[len] = '\0';
-        return std::string(buffer);
-    }
-#elif __APPLE__
-    char buffer[PATH_MAX];
-    uint32_t size = sizeof(buffer);
-    if (_NSGetExecutablePath(buffer, &size) == 0) {
-        return std::string(buffer);
-    }
-#endif
-    return {};
-}
-
-#pragma region static
-
-std::string File::GetFileExtension(const SystemFilePath& path) {
-    if (!path.has_extension()) return "";
-    std::string ext = path.extension().string().substr(1);
-    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-    return ext;
-}
-
-std::string File::GetFileName(const SystemFilePath& path) {
-    return path.has_filename() ? path.filename().string() : "";
-}
-
-
-bool File::Exists(const SystemFilePath& path) {
-    return std::filesystem::exists(path);
-}
-
-bool File::DeleteFile(const SystemFilePath& path) {
+bool File::DeleteFile() {
     try {
-        if (!std::filesystem::exists(path)) {
-            Log::Warn("File::DeleteFile: File '{}' does not exist", path.string());
+        if (!std::filesystem::exists(m_path)) {
+            AddWarning("DeleteFile: '" + m_path.string() + "' does not exist");
             return false;
         }
 
-        if (!std::filesystem::is_regular_file(path)) {
-            Log::Warn("File::DeleteFile: '{}' is not a regular file", path.string());
+        if (!std::filesystem::is_regular_file(m_path)) {
+            AddWarning("DeleteFile: '" + m_path.string() + "' is not a regular file");
             return false;
         }
 
-        return std::filesystem::remove(path);
+        return std::filesystem::remove(m_path);
     }
     catch (const std::filesystem::filesystem_error& e) {
-        Log::Error("File::DeleteFile: Failed to delete '{}': {}", path.string(), e.what());
+        AddError("DeleteFile: Failed to delete '" + m_path.string() + "': " + e.what());
         return false;
     }
 }
 
-bool File::CreateDir(const SystemFilePath& dir) {
+bool File::CreateDir() {
     try {
-        if (std::filesystem::exists(dir))
-            return std::filesystem::is_directory(dir);
+        if (std::filesystem::exists(m_path))
+            return std::filesystem::is_directory(m_path);
 
-        return std::filesystem::create_directories(dir);
+        return std::filesystem::create_directories(m_path);
     }
     catch (const std::filesystem::filesystem_error& e) {
-        Log::Error("File::CreateDir: Failed to create directory '{}': {}", dir.string(), e.what());
+        AddError("CreateDir: Failed to create '" + m_path.string() + "': " + e.what());
         return false;
     }
 }
@@ -426,7 +409,33 @@ std::string File::ConvertFilterString(const std::string& extensions) {
 }
 
 std::filesystem::path File::GetExecutableDir() {
-    return std::filesystem::path(GetExecutablePath()).parent_path().string() + "\\";
+    return std::filesystem::path(GetExecutablePathInternal()).parent_path() / "";
 }
 
-#pragma endregion
+std::filesystem::path File::GetExecutablePathInternal() {
+#ifdef _WIN32
+    char buffer[MAX_PATH];
+    DWORD size = GetModuleFileNameA(NULL, buffer, MAX_PATH);
+    if (size == 0 || size == MAX_PATH)
+        return {};
+    return std::string(buffer, size);
+#elif __linux__
+    char buffer[PATH_MAX];
+    ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+    if (len != -1) {
+        buffer[len] = '\0';
+        return std::string(buffer);
+    }
+#elif __APPLE__
+    char buffer[PATH_MAX];
+    uint32_t size = sizeof(buffer);
+    if (_NSGetExecutablePath(buffer, &size) == 0)
+        return std::string(buffer);
+
+    std::vector<char> dynBuffer(size);
+    if (_NSGetExecutablePath(dynBuffer.data(), &size) == 0)
+        return std::string(dynBuffer.data());
+    return {};
+#endif
+    return {};
+}

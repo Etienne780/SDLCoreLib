@@ -2,7 +2,6 @@ project "SDLCoreLib"
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
-    staticruntime "On"
 
     SetTargetAndObjDirs("%{prj.name}")
 
@@ -16,7 +15,7 @@ project "SDLCoreLib"
     includedirs {
         "include",
         "include/%{prj.name}",
-        "%{wks.location}/CoreLib/include",
+        "%{wks.location}/Game/CoreLib/include",
         "%{wks.location}/vendor/SDL3/include",
         "%{wks.location}/vendor/SDL3_image/include",
         "%{wks.location}/vendor/SDL3_mixer/include",
@@ -48,22 +47,12 @@ project "SDLCoreLib"
         systemversion "latest"
         defines { "SDL_MAIN_HANDLED" }
 
-    filter "configurations:Debug"
-        defines { "DEBUG" }
-        runtime "Debug"
-        symbols "On"
-        buildoptions { "/MTd" }
-
-    filter "configurations:Release"
-        defines { "NDEBUG" }
-        runtime "Release"
-        optimize "On"
-        buildoptions { "/MT" }
+    ApplyCommonConfigs();
 
 function IncludeSDLCoreLib()
     includedirs {
-        "%{wks.location}/SDLCoreLib/include",
-        "%{wks.location}/CoreLib/include",
+        "%{wks.location}/Game/SDLCoreLib/include",
+        "%{wks.location}/Game/CoreLib/include",
         "%{wks.location}/vendor/SDL3/include",
         "%{wks.location}/vendor/SDL3_image/include",
         "%{wks.location}/vendor/SDL3_mixer/include",

@@ -14,14 +14,6 @@ namespace SDLCore {
     */
     class GlyphMetrics {
     public:
-        GlyphMetrics() = default;
-
-        /**
-        * @brief Constructs glyph metrics for a specific codepoint.
-        * @param ch Character code stored as unsigned integer (UTF-32 scalar).
-        */
-        GlyphMetrics(char ch);
-
         char code = 'a';          /**< Character code associated with this glyph. */
 
         // --- Font metrics (baseline-relative) ---
@@ -36,6 +28,14 @@ namespace SDLCore {
         int atlasY = 0;     /**< Y coordinate inside the glyph atlas texture. */
         int atlasWidth = 0; /**< Actual rendered glyph width in atlas. */
         int atlasHeight = 0;/**< Actual rendered glyph height in atlas. */
+
+        GlyphMetrics() = default;
+
+        /**
+        * @brief Constructs glyph metrics for a specific codepoint.
+        * @param ch Character code stored as unsigned integer (UTF-32 scalar).
+        */
+        GlyphMetrics(char ch);
 
         /**
         * @brief Returns the glyph width based on metrics (maxX - minX).

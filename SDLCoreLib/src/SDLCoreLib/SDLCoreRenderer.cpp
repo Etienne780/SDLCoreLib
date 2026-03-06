@@ -12,34 +12,8 @@
 
 namespace SDLCore::Render {
 
-    static SDL_Renderer* s_renderer = nullptr;
-    static WindowID s_winID { SDLCORE_INVALID_ID };
-
-    // ========== Primitives ========== 
-    static constexpr bool SET_COLOR = true;
-    static SDL_Color s_activeColor { 255, 255, 255, 255 };
-    static float s_strokeWidth = 1;
-    static bool s_innerStroke = true;
-
-    // ========== Text ==========
-    std::shared_ptr<SDLCore::Font> s_font = std::make_shared<SDLCore::Font>(true);// loads the default font
-    float s_textSize = s_font->GetSelectedSize();
-    static Align s_textHorAlign = Align::START;
-    static Align s_textVerAlign = Align::START;
-    float s_textLineHeightMultiplier = 0.4f;
-
-    size_t s_textMaxLines = 0;// < 0 = no limits
-    UnitType s_textLimitType = UnitType::NONE;
-    size_t s_textMaxLimit = 0;          // max characters or Pixel
-    std::string s_textEllipsisDefault = "...";
-    std::string s_textEllipsis = s_textEllipsisDefault;
-    float s_textClipWidth = -1.0f;
-    bool s_textCacheEnabled = false;
-    bool s_isCalculatingTextCache = false;
-
-    constexpr bool CREATE_ON_NOT_FOUND = true;
-    constexpr uint64_t TEXT_CACHE_TTL_FRAMES = 600; // ~10 sec
     struct TextCacheKey {
+        SDL_Renderer* renderer;
         const Font* font;
         std::string text;// final text after truncation
         float fontSize;
@@ -50,7 +24,8 @@ namespace SDLCore::Render {
         float lineHeightMultiplier;
 
         bool operator==(const TextCacheKey& o) const {
-            return font == o.font &&
+            return renderer == o.renderer &&
+                font == o.font &&
                 text == o.text &&
                 fontSize == o.fontSize &&
                 clipWidth == o.clipWidth &&
@@ -85,6 +60,7 @@ namespace SDLCore::Render {
         size_t operator()(const TextCacheKey& k) const noexcept {
             size_t h = 0;
 
+            hashCombine(h, std::hash<SDL_Renderer*>{}(k.renderer));
             hashCombine(h, std::hash<const Font*>{}(k.font));
             hashCombine(h, std::hash<std::string>{}(k.text));
             hashCombine(h, std::hash<float>{}(k.fontSize));
@@ -98,7 +74,74 @@ namespace SDLCore::Render {
         }
     };
 
-    std::unordered_map<TextCacheKey, CachedText, TextCacheKeyHash> s_textCache;
+    namespace {
+
+        SDL_Renderer* s_renderer = nullptr;
+        WindowID s_winID{ SDLCORE_INVALID_ID };
+
+        // ========== Primitives ========== 
+        constexpr bool SET_COLOR = true;
+        SDL_Color s_activeColor{ 255, 255, 255, 255 };
+        float s_strokeWidth = 1;
+        bool s_innerStroke = true;
+        bool s_isClipRectEnabled = false;
+
+        // ========== Text ==========
+        SDLCore::Font s_font(true);// loads the default font
+        float s_textSize = s_font.GetSelectedSize();
+        Align s_textHorAlign = Align::START;
+        Align s_textVerAlign = Align::START;
+        float s_textLineHeightMultiplier = 0.4f;
+
+        size_t s_textMaxLines = 0;// < 0 = no limits
+        UnitType s_textLimitType = UnitType::NONE;
+        size_t s_textMaxLimit = 0;          // max characters or Pixel
+        std::string s_textEllipsisDefault = "...";
+        std::string s_textEllipsis = s_textEllipsisDefault;
+        float s_textClipWidth = -1.0f;
+        bool s_textCacheEnabled = false;
+        bool s_isCalculatingTextCache = false;
+
+        constexpr bool CREATE_ON_NOT_FOUND = true;
+        constexpr uint64_t TEXT_CACHE_TTL_FRAMES = 600; // ~10 sec
+
+        std::unordered_map<TextCacheKey, CachedText, TextCacheKeyHash> s_textCache;
+        std::unordered_map<WindowID, WindowCallbackID> s_onRendererDestroyCallbacks;
+
+    }
+
+    static inline void EvictOldTextCache(uint64_t currentFrame) {
+        for (auto it = s_textCache.begin(); it != s_textCache.end(); ) {
+            if (currentFrame - it->second.lastUseFrame > TEXT_CACHE_TTL_FRAMES) {
+                if (it->second.preRenderedTexture) {
+                    SDL_DestroyTexture(it->second.preRenderedTexture);
+                    it->second.preRenderedTexture = nullptr;
+                }
+                it = s_textCache.erase(it);
+            }
+            else {
+                ++it;
+            }
+        }
+    }
+
+    static void ClearTextCacheForRenderer(SDL_Renderer* renderer) {
+        if (!renderer)
+            return;
+
+        for (auto it = s_textCache.begin(); it != s_textCache.end(); ) {
+            if (it->first.renderer == renderer) {
+                if (it->second.preRenderedTexture) {
+                    SDL_DestroyTexture(it->second.preRenderedTexture);
+                    it->second.preRenderedTexture = nullptr;
+                }
+                it = s_textCache.erase(it);
+            }
+            else {
+                ++it;
+            }
+        }
+    }
 
     SDL_Renderer* GetActiveRenderer() {
         return s_renderer;
@@ -134,16 +177,10 @@ namespace SDLCore::Render {
                 v.color.r /= 255.0f;
                 v.color.g /= 255.0f;
                 v.color.b /= 255.0f;
+                v.color.a /= 255.0f;
             }
             dst[i] = v;
         }
-    }
-
-    static SDL_Renderer* GetActiveRenderer(const char* func) {
-        if (!s_renderer) {
-            SetErrorF("SDLCore::Renderer::{}: Current renderer is null", func);
-        }
-        return s_renderer;
     }
 
     void SetWindowRenderer(WindowID winID) {
@@ -154,8 +191,8 @@ namespace SDLCore::Render {
         }
 
         s_winID = winID;
-        auto app = Application::GetInstance();
-        auto win = app->GetWindow(winID);
+        Application* app = Application::GetInstance();
+        Window* win = app->GetWindow(winID);
 
         if (!win) {
             s_winID.value = SDLCORE_INVALID_ID;
@@ -177,12 +214,37 @@ namespace SDLCore::Render {
             s_renderer = nullptr;
             return;
         }
+       
+        if (s_onRendererDestroyCallbacks.find(winID) == s_onRendererDestroyCallbacks.end()) {
+            auto idPtr = std::make_shared<WindowCallbackID>();
 
+            *idPtr = win->AddOnSDLRendererDestroy(
+                [winID, idPtr]() {
+                    auto app = Application::GetInstance();
+                    auto win = app->GetWindow(winID);
+
+                    if (win) {
+                        win->RemoveOnSDLRendererDestroy(*idPtr);
+                        SDL_Renderer* renderer = win->GetSDLRenderer();
+                        if (renderer) {
+                            SDL_RenderClear(renderer);
+                            ClearTextCacheForRenderer(renderer);
+                        }
+                    }
+
+                    s_onRendererDestroyCallbacks.erase(winID);
+                });
+
+            s_onRendererDestroyCallbacks[winID] = *idPtr;
+            win->AddOnDestroy([winID]() {
+                s_onRendererDestroyCallbacks.erase(winID);
+            });
+        }
         s_renderer = rendererPtr;
     }
 
     void Clear() {
-        auto renderer = GetActiveRenderer("Clear");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
         if (!SDL_RenderClear(renderer)) {
@@ -191,7 +253,8 @@ namespace SDLCore::Render {
     }
 
     void Present() {
-        auto renderer = GetActiveRenderer("Present");
+        EvictOldTextCache(Time::GetFrameCount());
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
         if (!SDL_RenderPresent(renderer)) {
@@ -200,7 +263,7 @@ namespace SDLCore::Render {
     }
 
     void SetRenderScale(float scaleX, float scaleY) {
-        auto renderer = GetActiveRenderer("SetRenderScale");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
         if (!SDL_SetRenderScale(renderer,scaleX, scaleY)) {
@@ -218,7 +281,7 @@ namespace SDLCore::Render {
 
     Vector2 GetRenderScale() {
         Vector2 scale{ 0, 0 };
-        auto renderer = GetActiveRenderer("GetRenderScale");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return scale;
         if (!SDL_GetRenderScale(renderer, &scale.x, &scale.y)) {
@@ -229,7 +292,7 @@ namespace SDLCore::Render {
 
     SDLCore::Rect GetViewport() {
         SDL_Rect viewport{ 0, 0, 0, 0 };
-        auto renderer = GetActiveRenderer("GetViewport");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return viewport;
 
@@ -240,7 +303,7 @@ namespace SDLCore::Render {
     }
 
     void SetViewport(int x, int y, int w, int h) {
-        auto renderer = GetActiveRenderer("SetViewport");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
 
@@ -274,7 +337,7 @@ namespace SDLCore::Render {
     }
 
     void ResetViewport() {
-        auto renderer = GetActiveRenderer("ResetViewport");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
 
@@ -285,7 +348,7 @@ namespace SDLCore::Render {
 
     SDLCore::Rect GetClipRect() {
         SDL_Rect clipRect{ 0, 0, 0, 0 };
-        auto renderer = GetActiveRenderer("GetClipRect");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return clipRect;
 
@@ -295,11 +358,16 @@ namespace SDLCore::Render {
         return clipRect;
     }
 
+    bool IsClipRectEnabled() {
+        return s_isClipRectEnabled;
+    }
+
     void SetClipRect(int x, int y, int w, int h) {
-        auto renderer = GetActiveRenderer("SetClipRect");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
 
+        s_isClipRectEnabled = true;
         SDL_Rect clipRect{ x, y, w, h };
         if (!SDL_SetRenderClipRect(renderer, &clipRect)) {
             Log::Error("SDLCore::Renderer::SetClipRect: Failed to set clipRect ({}, {}, {}, {}): {}",
@@ -330,17 +398,18 @@ namespace SDLCore::Render {
     }
 
     void ResetClipRect() {
-        auto renderer = GetActiveRenderer("ResetClipRect");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
 
+        s_isClipRectEnabled = false;
         if (!SDL_SetRenderClipRect(renderer, nullptr)) {
             Log::Error("SDLCore::Renderer::ResetClipRect: Failed to reset clipRect: {}", SDL_GetError());
         }
     }
 
     void SetBlendMode(bool enabled) {
-        auto renderer = GetActiveRenderer("SetBlendMode");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
 
@@ -352,7 +421,7 @@ namespace SDLCore::Render {
     }
 
     void SetBlendMode(BlendMode mode) {
-        auto renderer = GetActiveRenderer("SetBlendMode");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
         if (!SDL_SetRenderDrawBlendMode(renderer, static_cast<SDL_BlendMode>(mode))) {
@@ -367,7 +436,7 @@ namespace SDLCore::Render {
     }
 
     void SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
-        auto renderer = GetActiveRenderer("SetColor");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
         s_activeColor = { r, g, b, a};
@@ -417,9 +486,10 @@ namespace SDLCore::Render {
     #pragma region Rectangle
 
     void FillRect(float x, float y, float w, float h) {
-        auto renderer = GetActiveRenderer("FillRect");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
+
         SDL_FRect rect{ x, y, w, h };
         if (!SDL_RenderFillRect(renderer, &rect)) {
             Log::Error("SDLCore::Renderer::FillRect: Failed to fill rect ({}, {}, {}, {}): {}", x, y, w, h, SDL_GetError());
@@ -443,7 +513,7 @@ namespace SDLCore::Render {
     }
 
     void FillRects(const Vector4* transforms, size_t count) {
-        auto renderer = GetActiveRenderer("FillRects");
+        auto renderer = GetActiveRenderer();
         if (!renderer || count == 0)
             return;
 
@@ -465,7 +535,7 @@ namespace SDLCore::Render {
     }
 
     void Rect(float x, float y, float w, float h) {
-        auto renderer = GetActiveRenderer("Rect");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
 
@@ -523,7 +593,7 @@ namespace SDLCore::Render {
     }
 
     void Rects(const Vector4* transforms, size_t count) {
-        auto renderer = GetActiveRenderer("Rects");
+        auto renderer = GetActiveRenderer();
         if (!renderer || count == 0)
             return;
 
@@ -577,7 +647,7 @@ namespace SDLCore::Render {
 #pragma region Line
 
     void Line(float x1, float y1, float x2, float y2) {
-        auto renderer = GetActiveRenderer("Line");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
 
@@ -643,7 +713,7 @@ namespace SDLCore::Render {
 #pragma endregion
 
     void Point(float x, float y) {
-        auto renderer = GetActiveRenderer("Point");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
 
@@ -662,7 +732,7 @@ namespace SDLCore::Render {
         float scaleX,
         float scaleY)
     {
-        auto renderer = GetActiveRenderer("Polygon");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return false;
 
@@ -798,10 +868,7 @@ namespace SDLCore::Render {
             return lines;
         }
 
-        if (!s_font)
-            return lines;
-
-        auto* asset = s_font->GetFontAsset();
+        auto* asset = s_font.GetFontAsset();
         if (!asset)
             return lines;
 
@@ -890,10 +957,44 @@ namespace SDLCore::Render {
         return lines;
     }
 
+    static inline void RenderLineGlyphs(
+        SDL_Renderer* renderer,
+        SDL_Texture* atlas,
+        FontAsset* asset,
+        const std::string& line,
+        float penX,
+        float penY)
+    {
+        const float ascent = static_cast<float>(asset->m_ascent);
+
+        for (char c : line) {
+            auto* m = asset->GetGlyphMetrics(static_cast<uint8_t>(c));
+            if (!m) continue;
+            
+            SDL_FRect dst{
+                penX,
+                penY,
+                static_cast<float>(m->atlasWidth),
+                static_cast<float>(m->atlasHeight)
+            };
+
+            SDL_FRect src{
+                static_cast<float>(m->atlasX),
+                static_cast<float>(m->atlasY),
+                static_cast<float>(m->atlasWidth),
+                static_cast<float>(m->atlasHeight)
+            };
+
+            SDL_RenderTexture(renderer, atlas, &src, &dst);
+            penX += m->advance;
+        }
+    }
+
     // text musst be in finale version. Truncated applyed, ...
     static inline CachedText* GetCachedText(const std::string& text, bool createOnNotFound = false) {
         TextCacheKey key{
-            s_font.get(),
+            s_renderer,
+            &s_font,
             text,
             s_textSize,
             s_textClipWidth,
@@ -930,7 +1031,7 @@ namespace SDLCore::Render {
                 ct.preRenderedTexture = nullptr;
             }
 
-            auto renderer = GetActiveRenderer("PreRenderText");
+            auto renderer = GetActiveRenderer();
             if (renderer) {
                 ct.preRenderedTexture = SDL_CreateTexture(
                     renderer,
@@ -941,51 +1042,33 @@ namespace SDLCore::Render {
                 );
 
                 if (ct.preRenderedTexture) {
-                    // Save old render target
                     SDL_Texture* oldTarget = SDL_GetRenderTarget(renderer);
                     SDL_SetRenderTarget(renderer, ct.preRenderedTexture);
                     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
                     SDL_RenderClear(renderer);
 
+                    SDL_Texture* atlas = s_font.GetFontAsset()->GetGlyphAtlasTexture(s_winID);
+                    SDL_SetTextureColorMod(atlas, 255, 255, 255);
+                    SDL_SetTextureAlphaMod(atlas, 255);
+
                     float lineH = GetLineHeight();
                     float penY = 0.0f;
+
                     for (size_t i = 0; i < ct.lines.size(); ++i) {
-                        float lineWidth = ct.lineWidths[i];
                         float penX = 0.0f;
-
                         switch (s_textHorAlign) {
-                        case Align::START:  penX = 0.0f; break;
-                        case Align::CENTER: penX = (ct.blockWidth - lineWidth) * 0.5f; break;
-                        case Align::END:    penX = ct.blockWidth - lineWidth; break;
-                        default:            penX = 0.0f; break;
+                        case Align::START:  penX = 0.0f;                                         break;
+                        case Align::CENTER: penX = (ct.blockWidth - ct.lineWidths[i]) * 0.5f;   break;
+                        case Align::END:    penX = ct.blockWidth - ct.lineWidths[i];            break;
+                        default:            penX = 0.0f;                                         break;
                         }
 
-                        for (char c : ct.lines[i]) {
-                            auto* m = s_font->GetFontAsset()->GetGlyphMetrics(c);
-                            if (!m) continue;
-
-                            SDL_FRect dst{
-                                penX,
-                                penY,
-                                static_cast<float>(m->atlasWidth),
-                                static_cast<float>(m->atlasHeight)
-                            };
-
-                            SDL_FRect src{
-                                static_cast<float>(m->atlasX),
-                                static_cast<float>(m->atlasY),
-                                static_cast<float>(m->atlasWidth),
-                                static_cast<float>(m->atlasHeight)
-                            };
-                            
-                            SDL_RenderTexture(renderer, s_font->GetFontAsset()->GetGlyphAtlasTexture(s_winID), &src, &dst);
-                            penX += m->advance;
-                        }
+                        RenderLineGlyphs(renderer, atlas, s_font.GetFontAsset(),
+                            ct.lines[i], penX, penY);
 
                         penY += lineH;
                     }
 
-                    // Restore old render target
                     SDL_SetRenderTarget(renderer, oldTarget);
                 }
             }
@@ -997,14 +1080,10 @@ namespace SDLCore::Render {
     }
 
     static inline void RenderCachedText(const std::string& text, float x, float y) {
-        auto renderer = GetActiveRenderer("RenderCachedText");
+        auto renderer = GetActiveRenderer();
         if (!renderer) return;
 
-        std::string currentText = (s_textMaxLimit != 0 && s_textLimitType != UnitType::NONE)
-            ? GetTruncatedText(text)
-            : text;
-
-        CachedText* ct = GetCachedText(currentText, CREATE_ON_NOT_FOUND);
+        CachedText* ct = GetCachedText(text, CREATE_ON_NOT_FOUND);
         if (!ct || !ct->preRenderedTexture)
             return;
 
@@ -1042,24 +1121,7 @@ namespace SDLCore::Render {
         SDL_RenderTexture(renderer, ct->preRenderedTexture, nullptr, &dst);
     }
 
-    static inline void EvictOldTextCache(uint64_t currentFrame) {
-        for (auto it = s_textCache.begin(); it != s_textCache.end(); ) {
-            if (currentFrame - it->second.lastUseFrame > TEXT_CACHE_TTL_FRAMES) {
-                if (it->second.preRenderedTexture) {
-                    SDL_DestroyTexture(it->second.preRenderedTexture);
-                    it->second.preRenderedTexture = nullptr;
-                }
-                it = s_textCache.erase(it);
-            }
-            else {
-                ++it;
-            }
-        }
-    }
-
     void Text(const std::string& text, float x, float y) {
-        EvictOldTextCache(Time::GetFrameCount());
-
         std::string finalText = (s_textMaxLimit != 0 && s_textLimitType != UnitType::NONE)
             ? GetTruncatedText(text)
             : text;
@@ -1070,16 +1132,11 @@ namespace SDLCore::Render {
             return;
         }
 
-        auto renderer = GetActiveRenderer("Text");
+        auto renderer = GetActiveRenderer();
         if (!renderer)
             return;
-
-        if (!s_font) {
-            Log::Error("SDLCore::Renderer::Text: Faild to render text for text'{}', no font was set", text);
-            return;
-        }
         
-        auto* asset = s_font->GetFontAsset();
+        auto* asset = s_font.GetFontAsset();
         if (!asset)
             return;
 
@@ -1094,44 +1151,23 @@ namespace SDLCore::Render {
         if (lines.empty())
             return;
 
-        float blockOffsetY = CalculateVerOffset(lines, s_textVerAlign);
+        const float lineH = static_cast<float>(asset->m_lineSkip)
+            + s_textLineHeightMultiplier * s_textSize;
+        const float blockH = GetTextBlockHeight(lines);
+        const float blockOffsetY = CalcOffsetCached(blockH, s_textVerAlign);
 
-        float penY = y;
-        float lineH = static_cast<float>(asset->m_lineSkip);
-        size_t currentLine = 0;
+        float penY = y - blockOffsetY;
 
-        for (const auto& line : lines) {
-            if (s_textMaxLines != 0 && currentLine >= s_textMaxLines)
-                break;
+        for (size_t i = 0; i < lines.size(); ++i) {
+            if (s_textMaxLines != 0 && i >= s_textMaxLines) break;
 
-            float blockOffsetX = CalculateHorOffset(line, s_textHorAlign);
-            float penX = x;
+            float lineWidth = GetTextWidth(lines[i]);
+            float blockOffsetX = CalcOffsetCached(lineWidth, s_textHorAlign);
+            float penX = x - blockOffsetX;
 
-            for (char c : line) {
-                auto* m = asset->GetGlyphMetrics(c);
-                if (!m)
-                    continue;
+            RenderLineGlyphs(renderer, atlas, asset, lines[i], penX, penY);
 
-                SDL_FRect dst{
-                    penX - blockOffsetX,
-                    penY - blockOffsetY,
-                    static_cast<float>(m->atlasWidth),
-                    static_cast<float>(m->atlasHeight)
-                };
-
-                SDL_FRect src{
-                    static_cast<float>(m->atlasX),
-                    static_cast<float>(m->atlasY),
-                    static_cast<float>(m->atlasWidth),
-                    static_cast<float>(m->atlasHeight)
-                };
-
-                SDL_RenderTexture(renderer, atlas, &src, &dst);
-                penX += m->advance;
-            }
-
-            penY += lineH + (s_textLineHeightMultiplier * s_textSize);
-            currentLine++;
+            penY += lineH;
         }
     }
 
@@ -1139,7 +1175,7 @@ namespace SDLCore::Render {
         Text(text, pos.x, pos.y);
     }
 
-    void CachText(bool value) {
+    void CacheText(bool value) {
         s_textCacheEnabled = value;
     }
 
@@ -1181,28 +1217,26 @@ namespace SDLCore::Render {
         SetTextClipWidth(-1);
     }
 
-    void SetFont(std::shared_ptr<Font> font) {
+    void SetFont(const Font& font) {
         s_font = font;
-        s_font->SelectSize(s_textSize);
+        s_font.SelectSize(s_textSize);
     }
 
     void SetFont(const SystemFilePath& path) {
-        s_font = std::make_shared<Font>(path);
-        s_font->SelectSize(s_textSize);
+        s_font = Font(path);
+        s_font.SelectSize(s_textSize);
     }
 
     void SetTextSize(float size) {
         s_textSize = std::max(size, 0.0f);
-        if (!s_font)
-            s_font = std::make_shared<SDLCore::Font>(true);// loads the default font
-        s_font->SelectSize(s_textSize);
+        s_font.SelectSize(s_textSize);
     }
 
-    float GetActiveFontSize() {
-        return (s_font) ? s_font->GetSelectedSize() : s_textSize;
+    float GetActiveTextSize() {
+        return s_font.GetSelectedSize();
     }
 
-    std::shared_ptr<Font> GetActiveFont() {
+    const Font& GetActiveFont() {
         return s_font;
     }
 
@@ -1281,12 +1315,7 @@ namespace SDLCore::Render {
         }
 
         case SDLCore::UnitType::PIXELS: {
-            if (!s_font) {
-                Log::Error("SDLCore::Renderer::GetTruncatedText: Failed to get truncated text for '{}', no font set", text);
-                return text;
-            }
-
-            auto* asset = s_font->GetFontAsset();
+            auto* asset = s_font.GetFontAsset();
             if (!asset)
                 return text;
 
@@ -1334,8 +1363,8 @@ namespace SDLCore::Render {
         s_textClipWidth = -1.0f;
     }
     
-    float CalculateFontSizeForBounds(const std::string& text, float targetW, float targetH) {
-        if (text.empty() || targetW <= 1.0f || targetH <= 1.0f)
+    float CalculateTextSizeForBounds(const std::string& text, float targetW, float targetH) {
+        if (text.empty())
             return 1.0f;
 
         float baseSize = (s_textSize > 0.0f) ? s_textSize : 16.0f;
@@ -1346,21 +1375,39 @@ namespace SDLCore::Render {
         if (baseW <= 0.0f || baseH <= 0.0f)
             return baseSize;
 
-        float scale = std::min(targetW / baseW, targetH / baseH);
+        float scaleW = -1.0f;
+        float scaleH = -1.0f;
+
+        if (targetW > 0.0f)
+            scaleW = targetW / baseW;
+
+        if (targetH > 0.0f)
+            scaleH = targetH / baseH;
+
+        float scale = 1.0f;
+
+        if (scaleW > 0.0f && scaleH > 0.0f) {
+            scale = std::min(scaleW, scaleH);
+        }
+        else if (scaleW > 0.0f) {
+            scale = scaleW;
+        }
+        else if (scaleH > 0.0f) {
+            scale = scaleH;
+        }
+        else {
+            return baseSize;
+        }
+
         return baseSize * scale;
     }
 
-    float CalculateFontSizeForBounds(const std::string& text, const Vector2& targetSize) {
-        return CalculateFontSizeForBounds(text, targetSize.x, targetSize.x);
+    float CalculateTextSizeForBounds(const std::string& text, const Vector2& targetSize) {
+        return CalculateTextSizeForBounds(text, targetSize.x, targetSize.y);
     }
 
     float GetCharWidth(char c) {
-        if (!s_font) {
-            Log::Error("SDLCore::Renderer::GetCharWidth: Faild to get char width for char'{}', no font was set", c);
-            return 0.0f;
-        }
-
-        auto* asset = s_font->GetFontAsset();
+        auto* asset = s_font.GetFontAsset();
         if (!asset)
             return 0.0f;
 
@@ -1373,13 +1420,8 @@ namespace SDLCore::Render {
             if (auto* ct = GetCachedText(text, false))
                 return ct->textWidth; // use cached width
 
-        if (!s_font) {
-            Log::Error("SDLCore::Renderer::GetTextWidth: Failed to get text width for text '{}', no font was set!", text);
-            return 0.0f;
-        }
-
         float width = 0.0f;
-        auto* asset = s_font->GetFontAsset();
+        auto* asset = s_font.GetFontAsset();
         if (!asset) 
             return 0.0f;
 
@@ -1391,12 +1433,7 @@ namespace SDLCore::Render {
     }
 
     float GetTextHeight() {
-        if (!s_font) {
-            Log::Error("SDLCore::Renderer::GetTextHeight: Faild to get text height, no font was set!");
-            return 0.0f;
-        }
-
-        auto* asset = s_font->GetFontAsset();
+        auto* asset = s_font.GetFontAsset();
         if (!asset)
             return 0.0f;
 
@@ -1406,7 +1443,7 @@ namespace SDLCore::Render {
     float GetTextBlockWidth(const std::string& text) {
         if (!s_isCalculatingTextCache)
             if (auto* ct = GetCachedText(text, false))
-            return ct->blockWidth; // cached block width
+                return ct->blockWidth; // cached block width
 
         auto lines = BuildLines(text);
         return GetTextBlockWidth(lines);
@@ -1416,11 +1453,6 @@ namespace SDLCore::Render {
         if (!s_isCalculatingTextCache)
             if (auto* ct = GetCachedText(lines.empty() ? "" : lines[0], false))
                 return ct->blockWidth; // approximate cache, fallback if lines are from a single text
-
-        if (!s_font) {
-            Log::Error("SDLCore::Renderer::GetTextBlockWidth: Faild to get block width for lines'{}', no font was set", lines);
-            return 0.0f;
-        }
 
         float maxWidth = 0.0f;
         for (const auto& line : lines)
@@ -1438,11 +1470,7 @@ namespace SDLCore::Render {
     }
 
     float GetTextBlockHeight(const std::vector<std::string>& lines) {
-        if (!s_font) {
-            Log::Error("SDLCore::Renderer::GetTextBlockHeight: Faild to get block height for lines'{}', no font was set", lines);
-            return 0.0f;
-        }
-        auto* asset = s_font->GetFontAsset();
+        auto* asset = s_font.GetFontAsset();
         if (!asset)
             return 0.0f;
 
@@ -1461,12 +1489,7 @@ namespace SDLCore::Render {
     }
 
     float GetLineHeight() {
-        if (!s_font) {
-            Log::Error("SDLCore::Renderer::GetLineHeight: Failed to get line height, no font was set!");
-            return 0.0f;
-        }
-
-        auto* asset = s_font->GetFontAsset();
+        auto* asset = s_font.GetFontAsset();
         if (!asset) 
             return 0.0f;
 

@@ -43,7 +43,7 @@ namespace SDLCore {
 			}
 		}
 		// if not found, added it
-		s_windowStates.emplace_back(s_activeSDLWindowID);
+		s_windowStates.emplace_back(winID, s_activeSDLWindowID);
 		s_activeWindowState = &s_windowStates.back();
 	}
 
@@ -55,7 +55,32 @@ namespace SDLCore {
 		s_activeWindowState = nullptr;
 		s_activeSDLWindowID = 0;
 	}
-	
+
+	void Input::Quit() {
+		auto* app = Application::GetInstance();
+		if (!app)
+			return;
+
+		for (auto& state : s_windowStates) {
+			auto* win = app->GetWindow(state.winID);
+			if (!win)
+				continue;
+
+			win->RemoveOnSDLWindowClose(state.onCloseCBID);
+
+			if (state.textInputActive && win->HasWindow()) {
+				SDL_StopTextInput(win->GetSDLWindow());
+			}
+
+			state.textInputActive = false;
+		}
+
+		s_windowStates.clear();
+		s_activeWindowState = nullptr;
+		s_activeSDLWindowID = 0;
+	}
+
+
 	void Input::LateUpdate() {
 		for (auto& state : s_windowStates) {
 			state.lastMousePos.Set(state.mousePos);
@@ -68,6 +93,8 @@ namespace SDLCore {
 			for (auto& [_, mb] : state.mouseButtonStates) {
 				mb.Update();
 			}
+
+			ClearTextInput(state);
 		}
 	}
 
@@ -84,6 +111,29 @@ namespace SDLCore {
 
 		if (state->focused) {
 			switch (e.type) {
+			case SDL_EVENT_TEXT_INPUT: {
+				state->textInputBuffer += e.text.text;
+
+				state->compositionText.clear();
+				state->compositionCursor = 0;
+				state->compositionLength = 0;
+				break;
+			}
+			case SDL_EVENT_TEXT_EDITING: {
+				state->compositionText = e.edit.text;
+				state->compositionCursor = e.edit.start;
+				state->compositionLength = e.edit.length;
+				break;
+			}
+			case SDL_EVENT_WINDOW_FOCUS_LOST:
+				if (state->textInputActive) {
+					SDL_Window* win = SDL_GetWindowFromID(state->sdlWinID);
+					if (win)
+						SDL_StopTextInput(win);
+
+					state->textInputActive = false;
+				}
+				break;
 			case SDL_EVENT_MOUSE_MOTION:
 				state->mousePos.Set(e.motion.x, e.motion.y);
 				state->relativeMousePos.Set(e.motion.xrel, e.motion.yrel);
@@ -126,7 +176,7 @@ namespace SDLCore {
 		}
 	}
 
-	#pragma region INPUT_ACTION_[ACTION]
+#pragma region INPUT_ACTION_[ACTION]
 
 	bool Input::ActionPressed(const InputAction& action) {
 		auto& keyActions = action.GetKeyActions();
@@ -212,9 +262,9 @@ namespace SDLCore {
 		return false;
 	}
 
-	#pragma endregion
+#pragma endregion
 
-	#pragma region KEY_[ACTION]
+#pragma region KEY_[ACTION]
 
 	bool Input::KeyPressed(KeyCode key) {
 		return CheckKeyAcrossWindows(key, INPUT_STATE_PRESSED);
@@ -228,7 +278,7 @@ namespace SDLCore {
 				return false;
 			return it->second.isRepeating;
 		}
-			
+
 
 		for (auto& state : s_windowStates) {
 			auto& map = state.keyStates;
@@ -282,6 +332,91 @@ namespace SDLCore {
 		if (result)
 			keyOut = ToKeyCode(tmp);
 		return result;
+	}
+
+	bool Input::StartTextInput() {
+		if (!IsWindowSet())
+			return false;
+
+		if (s_activeWindowState->textInputActive)
+			return true;
+
+		auto* app = Application::GetInstance();
+		if (!app)
+			return false;
+
+		Window* win = app->GetWindow(s_activeWinID);
+		if (!win || !win->HasWindow())
+			return false;
+
+		SDL_Window* sdlWin = win->GetSDLWindow();
+		if (!SDL_StartTextInput(sdlWin))
+			return false;
+
+		SDL_WindowID id = SDL_GetWindowID(sdlWin);
+		s_activeWindowState->onCloseCBID = win->AddOnSDLWindowClose(
+			[id]() {
+				SDL_Window* w = SDL_GetWindowFromID(id);
+				if (w)
+					SDL_StopTextInput(w);
+			});
+
+		s_activeWindowState->textInputActive = true;
+		return true;
+	}
+
+	bool Input::StopTextInput() {
+		if (!IsWindowSet())
+			return false;
+
+		if (!s_activeWindowState->textInputActive)
+			return true;
+
+		auto* app = Application::GetInstance();
+		if (!app)
+			return false;
+
+		Window* win = app->GetWindow(s_activeWinID);
+		if (!win)
+			return false;
+
+		win->RemoveOnSDLWindowClose(s_activeWindowState->onCloseCBID);
+
+		if (win->HasWindow())
+			SDL_StopTextInput(win->GetSDLWindow());
+
+		s_activeWindowState->textInputActive = false;
+		return true;
+	}
+
+	bool Input::IsTextInputActive() {
+		if (!IsWindowSet())
+			return false;
+
+		auto* app = Application::GetInstance();
+		if (!app)
+			return false;
+
+		Window* win = app->GetWindow(s_activeWinID);
+		if (!win)
+			return false;
+
+		if (!win->HasWindow())
+			return false;
+
+		return SDL_TextInputActive(win->GetSDLWindow());
+	}
+
+	std::string Input::GetTextInputBuffer() {
+		if (!IsWindowSet()) 
+			return {};
+		return s_activeWindowState->textInputBuffer;
+	}
+
+	std::string Input::GetCompositionText() {
+		if (!IsWindowSet()) 
+			return {};
+		return s_activeWindowState->compositionText;
 	}
 
 	#pragma endregion
@@ -464,6 +599,13 @@ namespace SDLCore {
 		if (it != s_windowStates.end())
 			return &(*it);
 		return nullptr;
+	}
+
+	void Input::ClearTextInput(WindowInputState& state) {
+		state.textInputBuffer.clear();
+		state.compositionText.clear();
+		state.compositionCursor = 0;
+		state.compositionLength = 0;
 	}
 
 	bool Input::CheckKeyAcrossWindows(KeyCode key, uint8_t stateMask) {

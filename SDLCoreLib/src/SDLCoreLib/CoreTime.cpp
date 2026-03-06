@@ -39,7 +39,7 @@ namespace SDLCore {
     }
 
     double Time::GetTimeSecD() {
-        return static_cast<double>(GetTimeMS()) / SDL_MS_PER_SECOND;
+        return static_cast<double>(GetTimeNS()) / SDL_NS_PER_SECOND;
     }
     
     double Time::GetDeltaTimeMSD() {

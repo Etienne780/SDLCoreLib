@@ -75,22 +75,22 @@ public:
     const float* GetData() const;
 
     /*
-     * @brief Gets the translation component from a 4x4 transformation matrix.
-     * @return Vector3 containing the X, Y, Z translation values.
-     */
+    * @brief Gets the translation component from a 4x4 transformation matrix.
+    * @return Vector3 containing the X, Y, Z translation values.
+    */
     Vector3 GetTranslation() const;
 
     /*
-     * @brief Extracts the rotation component from a 4x4 transformation matrix.
-     * @details The returned vector contains Euler angles (in radians)
-     * @return Vector3 containing rotation angles around X, Y, Z axes.
-     */
+    * @brief Extracts the rotation component from a 4x4 transformation matrix.
+    * @details The returned vector contains Euler angles (in radians)
+    * @return Vector3 containing rotation angles around X, Y, Z axes.
+    */
     Vector3 GetRotation() const;
 
     /*
-     * @brief Extracts the scale component from a 4x4 transformation matrix.
-     * @return Vector3 containing the scale factors along X, Y, Z axes.
-     */
+    * @brief Extracts the scale component from a 4x4 transformation matrix.
+    * @return Vector3 containing the scale factors along X, Y, Z axes.
+    */
     Vector3 GetScale() const;
 
     Matrix& SetData(float value);
@@ -100,19 +100,19 @@ public:
     #pragma region to_conversion
 
     /**
-     * @brief Converts the matrix to a flat float array in column-major order.
-     * @return A std::vector<float> containing the matrix elements in column-major layout.
-     */
+    * @brief Converts the matrix to a flat float array in column-major order.
+    * @return A std::vector<float> containing the matrix elements in column-major layout.
+    */
     std::vector<float> ToColMajorData() const;
 
     /**
-     * @brief Converts the matrix to a flat float array suitable for OpenGL.
-     *
-     * Internally returns the same data as ToColMajorData().data(), since OpenGL expects
-     * column-major layout for uniform matrices.
-     *
-     * @return A const float* containing the matrix elements in column-major layout.
-     */
+    * @brief Converts the matrix to a flat float array suitable for OpenGL.
+    *
+    * Internally returns the same data as ToColMajorData().data(), since OpenGL expects
+    * column-major layout for uniform matrices.
+    *
+    * @return A const float* containing the matrix elements in column-major layout.
+    */
     const float* ToOpenGLData() const;
 
     /**
@@ -224,6 +224,6 @@ Matrix operator/(float scalar, const Matrix& matrix);
 #pragma endregion
 
 template<>
-static inline std::string FormatUtils::toString<Matrix>(Matrix value) {
+inline std::string FormatUtils::toString<Matrix>(Matrix value) {
     return value.ToString();
 }

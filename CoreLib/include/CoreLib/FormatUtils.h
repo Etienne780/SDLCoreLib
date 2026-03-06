@@ -25,7 +25,7 @@ public:
 
     Example:
     template<>
-    static inline std::string FormatUtils::toString<Vector2>(Vector2 vec) {
+    std::string FormatUtils::toString<Vector2>(Vector2 vec) {
         return vec.ToString();
     }
     */
@@ -121,6 +121,9 @@ public:
     static std::string toString(T value) {
         if constexpr (std::is_same_v<T, bool>) {
             return (value) ? "true" : "false";
+        }
+        else if constexpr (std::is_same_v<T, char>) {
+            return std::string(1, value);
         }
         else if constexpr (std::is_arithmetic_v<T>) {
             return trimTrailingZeros(value);

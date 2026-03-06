@@ -164,6 +164,12 @@ namespace SDLCore::Render {
 	*/
 	SDLCore::Rect GetClipRect();
 
+	/*
+	* @brief Returns the current state of the clipping rect
+	* @return true if clip rect is enabled
+	*/
+	bool IsClipRectEnabled();
+
 	/**
 	* @brief Sets the clipping rectangle.
 	* @param x Position X in pixels.
@@ -617,7 +623,7 @@ namespace SDLCore::Render {
 	*
 	* @param value True to enable caching, false to disable.
 	*/
-	void CachText(bool value);
+	void CacheText(bool value);
 
 	/**
 	* @brief Clears all cached text entries and frees their textures.
@@ -643,15 +649,16 @@ namespace SDLCore::Render {
 	* @brief Resets all text rendering parameters to their default values.
 	*
 	* Default values include font size 16, text alignment START, ellipsis "...", no maximum line count,
+	* 
 	* no truncation limits, and no clip width.
 	*/
 	void ResetTextParams();
 
 	/**
 	* @brief Sets the active font.
-	* @param font Shared pointer to the font to use.
+	* @param the font to use.
 	*/
-	void SetFont(std::shared_ptr<Font> font);
+	void SetFont(const Font& font);
 
 	/**
 	* @brief Sets the active font by loading it from a file path.
@@ -666,16 +673,16 @@ namespace SDLCore::Render {
 	void SetTextSize(float size);
 
 	/**
-	* @brief Returns the currently active font size in pixels.
-	* @return Font size in pixels.
+	* @brief Returns the currently active text size in pixels.
+	* @return Text size in pixels.
 	*/
-	float GetActiveFontSize();
+	float GetActiveTextSize();
 
 	/**
 	* @brief Returns the currently active font object.
-	* @return Shared pointer to the active font.
+	* @return The active font.
 	*/
-	std::shared_ptr<Font> GetActiveFont();
+	const Font& GetActiveFont();
 
 	/**
 	* @brief Sets the horizontal text alignment mode.
@@ -794,21 +801,39 @@ namespace SDLCore::Render {
 	void ResetTextClipWidth();
 
 	/**
-	* @brief Estimates a font size to fit text within a given width and height.
-	* @param text Text to fit.
-	* @param targetW Maximum width in pixels.
-	* @param targetH Maximum height in pixels.
-	* @return Suggested font size in pixels.
+	* @brief Calculates a font size so that the text fits within the given bounds.
+	*
+	* The text is scaled uniformly so that it does not exceed the specified
+	* width and/or height. If one of the target dimensions is set to -1,
+	* that axis is ignored during scaling.
+	*
+	* @param text The text that should fit into the bounds.
+	* @param targetW Maximum allowed width in pixels.
+	*                Set to -1 to ignore width constraint.
+	* @param targetH Maximum allowed height in pixels.
+	*                Set to -1 to ignore height constraint.
+	*
+	* @return Calculated font size in pixels. Returns a fallback size if
+	*         text is empty or no valid constraints are provided.
 	*/
-	float CalculateFontSizeForBounds(const std::string& text, float targetW, float targetH);
+	float CalculateTextSizeForBounds(const std::string& text, float targetW, float targetH);
 
 	/**
-	* @brief Estimates a font size to fit text within a given size.
-	* @param text Text to fit.
-	* @param targetSize Maximum width and height in pixels.
-	* @return Suggested font size in pixels.
+	* @brief Calculates a font size so that the text fits within the given size.
+	*
+	* Equivalent to calling the width/height overload with:
+	* targetW = targetSize.x and targetH = targetSize.y.
+	* If one component of targetSize is -1, the corresponding axis
+	* is ignored during scaling.
+	*
+	* @param text The text that should fit into the bounds.
+	* @param targetSize Maximum allowed size in pixels.
+	*                   Use -1 for a component to ignore that axis.
+	*
+	* @return Calculated font size in pixels. Returns a fallback size if
+	*         text is empty or no valid constraints are provided.
 	*/
-	float CalculateFontSizeForBounds(const std::string& text, const Vector2& targetSize);
+	float CalculateTextSizeForBounds(const std::string& text, const Vector2& targetSize);
 
 	/**
 	* @brief Returns the advance width of a single character.

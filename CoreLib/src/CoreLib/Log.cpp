@@ -10,8 +10,8 @@
 #include <windows.h>
 #endif
 
-#include "CoreLib\Log.h"
-#include "CoreLib\TimeUtils.h"
+#include "CoreLib/Log.h"
+#include "CoreLib/TimeUtils.h"
 
 std::vector<Log::Subscriber> Log::m_subscribers;
 Log::SubscriberID Log::m_nextId = 0;
