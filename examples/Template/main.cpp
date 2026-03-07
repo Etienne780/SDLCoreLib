@@ -132,7 +132,7 @@ struct BenchResult {
 
 static std::vector<BenchResult> s_benchResults;
 
-static constexpr size_t            BENCH_ROWS = 1'000'000;
+static constexpr size_t            BENCH_ROWS = 100'000;
 static const std::filesystem::path BENCH_DIR = "otn_bench_tmp";
 static const std::filesystem::path BENCH_FILE = BENCH_DIR / "bench.otn";
 

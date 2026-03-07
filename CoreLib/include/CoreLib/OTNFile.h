@@ -8,6 +8,7 @@
 #include <optional>
 #include <filesystem>
 #include <cstdint>
+#include <charconv>
 #include <string_view>
 #include <unordered_map>
 #include <sstream>
@@ -329,10 +330,12 @@ namespace OTN {
 		std::string type;
 
 		OTNColumnDef(std::string n, std::string t)
-			: name(std::move(n)), type(std::move(t)) {}
+			: name(std::move(n)), type(std::move(t)) {
+		}
 
 		OTNColumnDef(const char* n, const char* t)
-			: name(n), type(t) {}
+			: name(n), type(t) {
+		}
 	};
 
 	/**
@@ -615,6 +618,7 @@ namespace OTN {
 				};
 
 			constexpr size_t ArgCount = sizeof...(Args);
+			m_columnIndexCache.clear();
 			m_columnNames.clear();
 			m_columnNames.reserve(ArgCount);
 
@@ -947,7 +951,7 @@ namespace OTN {
 		* @brief Get a typed value by row and column name
 		* @tparam T Expected value type
 		* @param row Row index (0-based)
-		* @param columnName Name of the column
+		* @param columnName Name of the column (column to index name will be cached)
 		* @return Deserialized value of type T
 		* @throws std::out_of_range if row or column doesn't exist
 		* @throws std::bad_cast if type conversion fails
@@ -1080,6 +1084,7 @@ namespace OTN {
 		std::vector<std::string> m_columnNames;
 		std::vector<OTNTypeDesc> m_columnTypes;
 		std::vector<OTNRow> m_dataRows;
+		mutable std::unordered_map<std::string, size_t> m_columnIndexCache;
 
 		/**
 		* @brief Returns the column index for a given column name.
@@ -2131,195 +2136,6 @@ namespace OTN {
 
 #pragma endregion
 
-
-#pragma region OTNStreamReader
-
-	/**
-	* @brief Streaming reader for large OTN files — reads objects and rows one at a time.
-	*
-	* Unlike OTNReader, the whole file is never loaded into RAM.
-	* Navigate sequentially with NextObject() / ReadRow().
-	* O(1) RAM per row regardless of file size.
-	*
-	* Usage:
-	* @code
-	* OTN::OTNStreamReader r;
-	* if (r.Open("model.otn")) {
-	*     while (r.NextObject()) {
-	*         std::cout << r.GetCurrentObjectName() << "\n";
-	*         OTN::OTNRow row;
-	*         while (r.ReadRow(row)) {
-	*             // process row …
-	*         }
-	*     }
-	* }
-	* @endcode
-	*
-	* notes:
-	* - Objects must be read sequentially (no random access).
-	* - Calling NextObject() without reading all rows auto-skips remaining rows.
-	* - Object references are returned as OTNObjectRef (unresolved).
-	*/
-	class OTNStreamReader {
-	public:
-		OTNStreamReader() = default;
-		~OTNStreamReader() = default;
-
-		/**
-		* @brief Open an OTN file for streaming reads.
-		* @param path File path (extension .otn added automatically if missing).
-		* @return True on success.
-		*/
-		bool Open(const OTNFilePath& path);
-
-		/**
-		* @brief Advance to the next object in the file.
-		* @return True if an object was found, false at end-of-file or on error.
-		*/
-		bool NextObject();
-
-		/**
-		* @brief Returns true if there is at least one more unread object in the stream.
-		*/
-		bool HasMoreObjects() const;
-
-		/** @return Name of the currently loaded object (valid after NextObject()). */
-		const std::string& GetCurrentObjectName() const;
-
-		/** @return Column names for the current object. */
-		const std::vector<std::string>& GetColumnNames() const;
-
-		/** @return Column type descriptors for the current object. */
-		const std::vector<OTNTypeDesc>& GetColumnTypes() const;
-
-		/** @return Number of rows still to be read in the current object. */
-		size_t GetRemainingRowCount() const;
-
-		/**
-		* @brief Read the next row of the current object.
-		* @param outRow Output row.
-		* @return True if a row was read, false when all rows are consumed.
-		*/
-		bool ReadRow(OTNRow& outRow);
-
-		/**
-		* @brief Returns true while there are unread rows in the current object.
-		*/
-		bool HasMoreRows() const;
-
-		/**
-		* @brief Skip all remaining rows of the current object.
-		* After this call, NextObject() may be called immediately.
-		* @return True on success.
-		*/
-		bool SkipCurrentObject();
-
-		/** @return OTN format version (available after Open()). */
-		uint8_t GetVersion() const;
-
-		bool IsValid() const;
-		std::string GetError() const;
-		bool TryGetError(std::string& outError) const;
-
-	private:
-		// ---- token types reused inside the streaming reader ----
-		enum class SRTok {
-			UNKNOWN = 0,
-			IDENTIFIER, NUMBER, STRING,
-			MINUS, COLON, EQUALS, COMMA, SLASH, SEMICOLON,
-			KEYWORD_PREFIX,
-			BLOCK_BEGIN, BLOCK_END,
-			LIST_BEGIN, LIST_END,
-			REF_BEGIN, REF_END,
-			END_OF_FILE
-		};
-
-		struct SRToken {
-			SRTok type = SRTok::UNKNOWN;
-			std::string text;
-			uint32_t line = 0, column = 0;
-			SRToken() = default;
-			SRToken(SRTok t, std::string s, uint32_t l, uint32_t c)
-				: type(t), text(std::move(s)), line(l), column(c) {}
-		};
-
-		// Incremental tokenizer — returns one token at a time from the file stream.
-		class StreamTokenizer {
-		public:
-			explicit StreamTokenizer(std::ifstream& stream) : m_stream(stream) {}
-
-			SRToken Next();
-			const SRToken& Peek();
-			bool NextIf(SRTok type);
-			bool IsValid() const { return m_valid; }
-			std::string GetError() const { return m_error; }
-
-		private:
-			std::ifstream& m_stream;
-			std::optional<SRToken> m_peeked;
-			bool m_valid = true;
-			std::string m_error;
-			uint32_t m_line = 1, m_column = 1;
-
-			SRToken ReadNextRaw();
-			SRToken ReadString();
-			SRToken ReadNumber();
-			SRToken ReadIdentifier();
-			void SkipWhitespace();
-			void Advance(char c);
-			void AddError(const std::string& msg);
-		};
-
-		std::ifstream m_file;
-		std::unique_ptr<StreamTokenizer> m_tok;
-
-		bool m_valid = true;
-		bool m_atEnd = false;
-		uint8_t m_version = 0;
-		std::string m_error;
-
-		std::string              m_currentName;
-		std::vector<std::string> m_columnNames;
-		std::vector<OTNTypeDesc> m_columnTypes;
-		size_t                   m_remainingRows = 0;
-
-		std::unordered_map<uint32_t, std::string> m_defType;
-		std::unordered_map<uint32_t, std::string> m_defName;
-
-		// ---- parsing helpers ----
-		bool ParseFileHeader();
-		bool ParseVersion();
-		bool ParseDefType();
-		bool ParseDefName();
-		bool EnterObjectBlock();
-
-		bool ParseObjectHeader();
-
-		OTNValue ReadValue(const OTNTypeDesc& typeDesc);
-		OTNValue ReadAnyValue();
-		OTNValue ReadList(const OTNTypeDesc& elemTypeDesc);
-		OTNValue ReadPrimitive(OTNBaseType baseType);
-
-		bool SkipUntilSemicolon();
-
-		SRToken NextTok() { return m_tok->Next(); }
-		const SRToken& PeekTok() { return m_tok->Peek(); }
-		bool NextIfTok(SRTok t) { return m_tok->NextIf(t); }
-		bool ExpectTok(SRTok t, SRToken& out);
-		bool ExpectIdentifier(const std::string& text);
-
-		OTNTypeDesc ParseTypeString(const std::string& typeName, uint32_t listDepth) const;
-
-		template<typename T>
-		T ParseNumericSR(const SRToken& tok);
-
-		void AddError(const std::string& msg);
-		void AddTokenError(const SRToken& tok, const std::string& msg);
-	};
-
-#pragma endregion
-
-
 #pragma region OTNReader
 
 	/**
@@ -2461,15 +2277,18 @@ namespace OTN {
 
 		class Token {
 		public:
-			Token() = default;
-			Token(TokenType t, const std::string& str, uint32_t l, uint32_t c)
-				: type(t), text(str), line(l), column(c) {
-			}
-
 			TokenType type = TokenType::UNKNOWN;
 			std::string text;
 			uint32_t line = 0;
 			uint32_t column = 0;
+
+			Token() = default;
+			Token(TokenType t, std::string str, uint32_t l, uint32_t c)
+				: type(t), text(std::move(str)), line(l), column(c) {
+			}
+			Token(TokenType t, uint32_t l, uint32_t c)
+				: type(t), line(l), column(c) {
+			}
 		};
 
 		class OTNTokenizer {
@@ -2493,8 +2312,9 @@ namespace OTN {
 
 			bool ProcessChar(char c);
 
-			bool AddToken(TokenType type, char c);
+			bool AddToken(TokenType type);
 			bool AddToken(TokenType type, const std::string& text);
+			bool AddToken(TokenType type, uint32_t line, uint32_t column);
 			bool AddToken(TokenType type, const std::string& text, uint32_t line, uint32_t column);
 
 			bool ReadString();
@@ -2567,47 +2387,34 @@ namespace OTN {
 					return T{};
 				}
 
-				std::string text = token.text;
-				T value = T{};
-
-				try {
-					// Handle leading minus
-					if (token.type == TokenType::MINUS) {
-						// Expect next token to be a number
-						Token next = Next();
-						if (next.type != TokenType::NUMBER) {
-							reader->AddError(next, "Expected number after minus");
-							return T{};
-						}
-						text = "-" + next.text;
-					}
-
-					if constexpr (std::is_same_v<T, int>) {
-						value = std::stoi(text);
-					}
-					else if constexpr (std::is_same_v<T, int64_t>) {
-						value = std::stoll(text);
-					}
-					else if constexpr (std::is_same_v<T, uint64_t>) {
-						value = std::stoull(text);
-					}
-					else if constexpr (std::is_same_v<T, float>) {
-						value = std::stof(text);
-					}
-					else if constexpr (std::is_same_v<T, double>) {
-						value = std::stod(text);
-					}
-					else {
-						reader->AddError(token, "Unsupported numeric type");
+				// Handle leading minus
+				std::string text;
+				if (token.type == TokenType::MINUS) {
+					Token next = Next();
+					if (next.type != TokenType::NUMBER) {
+						reader->AddError(next, "Expected number after minus");
 						return T{};
 					}
-
-					return T(value);
+					text = "-" + next.text;
 				}
-				catch (const std::exception& e) {
-					reader->AddError(token, std::string("Invalid numeric literal: ") + e.what());
+				else {
+					text = token.text;
+				}
+
+				T value{};
+				const char* first = text.data();
+				const char* last = first + text.size();
+				std::from_chars_result r;
+				if constexpr (std::is_floating_point_v<T>)
+					r = std::from_chars(first, last, value, std::chars_format::general);
+				else
+					r = std::from_chars(first, last, value);
+
+				if (r.ec != std::errc{}) {
+					reader->AddError(token, "Invalid numeric literal: " + text);
 					return T{};
 				}
+				return value;
 			}
 
 			TokenKeyword ResolveKeyword(const Token& token);
@@ -2627,6 +2434,199 @@ namespace OTN {
 		bool SetDataVersion(const std::vector<Token>& tokens, ReaderData& data);
 
 		void AddError(const std::string& error);
+	};
+
+#pragma endregion
+
+
+#pragma region OTNStreamReader
+
+	/**
+	* @brief Streaming reader for large OTN files — reads objects and rows one at a time.
+	*
+	* Unlike OTNReader, the whole file is never loaded into RAM.
+	* Navigate sequentially with NextObject() / ReadRow().
+	* O(1) RAM per row regardless of file size.
+	*
+	* Usage:
+	* @code
+	* OTN::OTNStreamReader r;
+	* if (r.Open("model.otn")) {
+	*     while (r.NextObject()) {
+	*         std::cout << r.GetCurrentObjectName() << "\n";
+	*         OTN::OTNRow row;
+	*         while (r.ReadRow(row)) {
+	*             // process row …
+	*         }
+	*     }
+	* }
+	* @endcode
+	*
+	* notes:
+	* - Objects must be read sequentially (no random access).
+	* - Calling NextObject() without reading all rows auto-skips remaining rows.
+	* - Object references are returned as OTNObjectRef (unresolved).
+	*/
+	class OTNStreamReader {
+	public:
+		OTNStreamReader() = default;
+		~OTNStreamReader() = default;
+
+		/**
+		* @brief Open an OTN file for streaming reads.
+		* @param path File path (extension .otn added automatically if missing).
+		* @return True on success.
+		*/
+		bool Open(const OTNFilePath& path);
+
+		/**
+		* @brief Advance to the next object in the file.
+		* @return True if an object was found, false at end-of-file or on error.
+		*/
+		bool NextObject();
+
+		/**
+		* @brief Returns true if there is at least one more unread object in the stream.
+		*/
+		bool HasMoreObjects() const;
+
+		/** @return Name of the currently loaded object (valid after NextObject()). */
+		const std::string& GetCurrentObjectName() const;
+
+		/** @return Column names for the current object. */
+		const std::vector<std::string>& GetColumnNames() const;
+
+		/** @return Column type descriptors for the current object. */
+		const std::vector<OTNTypeDesc>& GetColumnTypes() const;
+
+		/** @return Number of rows still to be read in the current object. */
+		size_t GetRemainingRowCount() const;
+
+		/**
+		* @brief Read the next row of the current object.
+		* @param outRow Output row.
+		* @return True if a row was read, false when all rows are consumed.
+		*/
+		bool ReadRow(OTNRow& outRow);
+
+		/**
+		* @brief Returns true while there are unread rows in the current object.
+		*/
+		bool HasMoreRows() const;
+
+		/**
+		* @brief Skip all remaining rows of the current object.
+		* After this call, NextObject() may be called immediately.
+		* @return True on success.
+		*/
+		bool SkipCurrentObject();
+
+		/** @return OTN format version (available after Open()). */
+		uint8_t GetVersion() const;
+
+		bool IsValid() const;
+		const std::string& GetError() const;
+		bool TryGetError(std::string& outError) const;
+
+	private:
+		// ---- token types reused inside the streaming reader ----
+		enum class SRTok {
+			UNKNOWN = 0,
+			IDENTIFIER, NUMBER, STRING,
+			MINUS, COLON, EQUALS, COMMA, SLASH, SEMICOLON,
+			KEYWORD_PREFIX,
+			BLOCK_BEGIN, BLOCK_END,
+			LIST_BEGIN, LIST_END,
+			REF_BEGIN, REF_END,
+			END_OF_FILE
+		};
+
+		struct SRToken {
+			SRTok type = SRTok::UNKNOWN;
+			std::string text;
+			uint32_t line = 0, column = 0;
+
+			SRToken() = default;
+			SRToken(SRTok t, std::string s, uint32_t l, uint32_t c)
+				: type(t), text(std::move(s)), line(l), column(c) {
+			}
+			SRToken(SRTok t, uint32_t l, uint32_t c)
+				: type(t), line(l), column(c) {
+			}
+		};
+
+		// Incremental tokenizer — returns one token at a time from the file stream.
+		class StreamTokenizer {
+		public:
+			explicit StreamTokenizer(std::ifstream& stream) : m_stream(stream) {}
+
+			SRToken Next();
+			const SRToken& Peek();
+			bool NextIf(SRTok type);
+			bool IsValid() const { return m_valid; }
+			std::string GetError() const { return m_error; }
+
+		private:
+			std::ifstream& m_stream;
+			std::optional<SRToken> m_peeked;
+			bool m_valid = true;
+			std::string m_error;
+			uint32_t m_line = 1, m_column = 1;
+
+			SRToken ReadNextRaw();
+			SRToken ReadString();
+			SRToken ReadNumber();
+			SRToken ReadIdentifier();
+			void SkipWhitespace();
+			void Advance(char c);
+			void AddError(const std::string& msg);
+		};
+
+		std::ifstream m_file;
+		std::unique_ptr<StreamTokenizer> m_tok;
+
+		bool m_valid = true;
+		bool m_atEnd = false;
+		uint8_t m_version = 0;
+		std::string m_error;
+
+		std::string              m_currentName;
+		std::vector<std::string> m_columnNames;
+		std::vector<OTNTypeDesc> m_columnTypes;
+		size_t                   m_remainingRows = 0;
+
+		std::unordered_map<uint32_t, std::string> m_defType;
+		std::unordered_map<uint32_t, std::string> m_defName;
+
+		// ---- parsing helpers ----
+		bool ParseFileHeader();
+		bool ParseVersion();
+		bool ParseDefType();
+		bool ParseDefName();
+		bool EnterObjectBlock();
+
+		bool ParseObjectHeader();
+
+		OTNValue ReadValue(const OTNTypeDesc& typeDesc);
+		OTNValue ReadAnyValue();
+		OTNValue ReadList(const OTNTypeDesc& elemTypeDesc);
+		OTNValue ReadPrimitive(OTNBaseType baseType);
+
+		bool SkipUntilSemicolon();
+
+		SRToken NextTok() { return m_tok->Next(); }
+		const SRToken& PeekTok() { return m_tok->Peek(); }
+		bool NextIfTok(SRTok t) { return m_tok->NextIf(t); }
+		bool ExpectTok(SRTok t, SRToken& out);
+		bool ExpectIdentifier(const std::string& text);
+
+		OTNTypeDesc ParseTypeString(const std::string& typeName, uint32_t listDepth) const;
+
+		template<typename T>
+		T ParseNumericSR(const SRToken& tok);
+
+		void AddError(const std::string& msg);
+		void AddTokenError(const SRToken& tok, const std::string& msg);
 	};
 
 #pragma endregion

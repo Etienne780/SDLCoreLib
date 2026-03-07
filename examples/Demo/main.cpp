@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[]) {
 	App* app = new App();
-	SDLCore::SDLResult result = app->Start();
+	SDLCore::ApplicationResult result = app->Start();
 
 	std::string msg = SDLCore::GetError(result);
 	if(result == 0)
