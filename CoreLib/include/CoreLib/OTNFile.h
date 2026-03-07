@@ -8,10 +8,10 @@
 #include <optional>
 #include <filesystem>
 #include <cstdint>
-#include <charconv>
 #include <string_view>
 #include <unordered_map>
 #include <sstream>
+#include <charconv>
 #include <iomanip>
 
 /**
@@ -348,10 +348,12 @@ namespace OTN {
 #pragma region OTNObject
 
 	class OTNObject;
-	using OTNObjectPtr = std::shared_ptr<OTNObject>;
-
 	class OTNArray;
-	using OTNArrayPtr = std::shared_ptr<OTNArray>;
+	
+	namespace {
+		using OTNObjectPtr = std::shared_ptr<OTNObject>;
+		using OTNArrayPtr = std::shared_ptr<OTNArray>;
+	}
 
 	using OTNValueVariant = std::variant<
 		int,
@@ -1764,6 +1766,31 @@ namespace OTN {
 
 				return *this;
 			}
+
+			// Fast overloads: avoid ToString temporary string allocation
+			BufferedIndentedStream& operator<<(char c) {
+				if (newLine) {
+					for (uint32_t i = 0; i < indentLevel; ++i)
+						buffer += indentStr;
+					newLine = false;
+				}
+				buffer += c;
+				if (buffer.size() >= BUFFER_SIZE) Flush();
+				return *this;
+			}
+			BufferedIndentedStream& operator<<(std::string_view sv) {
+				if (newLine) {
+					for (uint32_t i = 0; i < indentLevel; ++i)
+						buffer += indentStr;
+					newLine = false;
+				}
+				buffer.append(sv);
+				if (buffer.size() >= BUFFER_SIZE) Flush();
+				return *this;
+			}
+			BufferedIndentedStream& operator<<(const std::string& s) {
+				return operator<<(std::string_view(s));
+			}
 		};
 
 		struct WriterData {
@@ -1862,14 +1889,15 @@ namespace OTN {
 
 		template<typename T>
 		static std::string ToStringNumber(T value) {
-			std::ostringstream oss;
-
-			// Use maximum precision but avoid trailing zeros
-			oss << std::setprecision(std::numeric_limits<T>::digits10)
-				<< std::defaultfloat
-				<< value;
-
-			return oss.str();
+			char buf[64];
+			std::to_chars_result r;
+			if constexpr (std::is_floating_point_v<T>)
+				r = std::to_chars(buf, buf + sizeof(buf), value,
+					std::chars_format::general,
+					std::numeric_limits<T>::max_digits10);
+			else
+				r = std::to_chars(buf, buf + sizeof(buf), value);
+			return r.ec == std::errc{} ? std::string(buf, r.ptr) : std::string{};
 		}
 	};
 
@@ -2293,8 +2321,8 @@ namespace OTN {
 
 		class OTNTokenizer {
 		public:
-			explicit OTNTokenizer(std::istream& stream)
-				: m_stream(stream) {
+			explicit OTNTokenizer(std::string_view src)
+				: m_cur(src.data()), m_end(src.data() + src.size()) {
 			}
 
 			bool Tokenize();
@@ -2302,13 +2330,24 @@ namespace OTN {
 			std::string GetError() const;
 
 		private:
-			std::istream& m_stream;
+			const char* m_cur;
+			const char* m_end;
 			std::vector<Token> m_tokens;
 			std::string m_error;
 			bool m_valid = false;
 
 			uint32_t m_line = 1;
 			uint32_t m_column = 1;
+
+			// Fast cursor helpers (replace istream::get/unget/peek)
+			bool Get(char& c) {
+				if (m_cur >= m_end) return false;
+				c = *m_cur++;
+				return true;
+			}
+			void Unget() { --m_cur; }
+			int  Peek()  const { return m_cur < m_end ? static_cast<unsigned char>(*m_cur) : -1; }
+			bool Eof()   const { return m_cur >= m_end; }
 
 			bool ProcessChar(char c);
 
@@ -2387,34 +2426,47 @@ namespace OTN {
 					return T{};
 				}
 
-				// Handle leading minus
-				std::string text;
-				if (token.type == TokenType::MINUS) {
-					Token next = Next();
-					if (next.type != TokenType::NUMBER) {
-						reader->AddError(next, "Expected number after minus");
+				std::string text = token.text;
+				T value = T{};
+
+				try {
+					// Handle leading minus
+					if (token.type == TokenType::MINUS) {
+						// Expect next token to be a number
+						Token next = Next();
+						if (next.type != TokenType::NUMBER) {
+							reader->AddError(next, "Expected number after minus");
+							return T{};
+						}
+						text = "-" + next.text;
+					}
+
+					if constexpr (std::is_same_v<T, int>) {
+						value = std::stoi(text);
+					}
+					else if constexpr (std::is_same_v<T, int64_t>) {
+						value = std::stoll(text);
+					}
+					else if constexpr (std::is_same_v<T, uint64_t>) {
+						value = std::stoull(text);
+					}
+					else if constexpr (std::is_same_v<T, float>) {
+						value = std::stof(text);
+					}
+					else if constexpr (std::is_same_v<T, double>) {
+						value = std::stod(text);
+					}
+					else {
+						reader->AddError(token, "Unsupported numeric type");
 						return T{};
 					}
-					text = "-" + next.text;
-				}
-				else {
-					text = token.text;
-				}
 
-				T value{};
-				const char* first = text.data();
-				const char* last = first + text.size();
-				std::from_chars_result r;
-				if constexpr (std::is_floating_point_v<T>)
-					r = std::from_chars(first, last, value, std::chars_format::general);
-				else
-					r = std::from_chars(first, last, value);
-
-				if (r.ec != std::errc{}) {
-					reader->AddError(token, "Invalid numeric literal: " + text);
+					return T(value);
+				}
+				catch (const std::exception& e) {
+					reader->AddError(token, std::string("Invalid numeric literal: ") + e.what());
 					return T{};
 				}
-				return value;
 			}
 
 			TokenKeyword ResolveKeyword(const Token& token);
@@ -2430,7 +2482,7 @@ namespace OTN {
 		ReaderData m_readerData;
 
 		bool OpenFileStream(const OTNFilePath& path);
-		bool ReadData(std::istream& input, ReaderData& data);
+		bool ReadData(std::string_view src, ReaderData& data);
 		bool SetDataVersion(const std::vector<Token>& tokens, ReaderData& data);
 
 		void AddError(const std::string& error);
@@ -2558,7 +2610,9 @@ namespace OTN {
 		// Incremental tokenizer — returns one token at a time from the file stream.
 		class StreamTokenizer {
 		public:
-			explicit StreamTokenizer(std::ifstream& stream) : m_stream(stream) {}
+			explicit StreamTokenizer(std::string_view src)
+				: m_cur(src.data()), m_end(src.data() + src.size()) {
+			}
 
 			SRToken Next();
 			const SRToken& Peek();
@@ -2567,11 +2621,22 @@ namespace OTN {
 			std::string GetError() const { return m_error; }
 
 		private:
-			std::ifstream& m_stream;
+			const char* m_cur;
+			const char* m_end;
 			std::optional<SRToken> m_peeked;
 			bool m_valid = true;
 			std::string m_error;
 			uint32_t m_line = 1, m_column = 1;
+
+			// Fast cursor helpers
+			bool Get(char& c) {
+				if (m_cur >= m_end) return false;
+				c = *m_cur++;
+				return true;
+			}
+			void Unget() { --m_cur; }
+			int  Peek1() const { return m_cur < m_end ? static_cast<unsigned char>(*m_cur) : -1; }
+			bool Eof()   const { return m_cur >= m_end; }
 
 			SRToken ReadNextRaw();
 			SRToken ReadString();
@@ -2582,7 +2647,7 @@ namespace OTN {
 			void AddError(const std::string& msg);
 		};
 
-		std::ifstream m_file;
+		std::string m_fileBuffer;           // file content slurped on Open()
 		std::unique_ptr<StreamTokenizer> m_tok;
 
 		bool m_valid = true;
@@ -2621,9 +2686,6 @@ namespace OTN {
 		bool ExpectIdentifier(const std::string& text);
 
 		OTNTypeDesc ParseTypeString(const std::string& typeName, uint32_t listDepth) const;
-
-		template<typename T>
-		T ParseNumericSR(const SRToken& tok);
 
 		void AddError(const std::string& msg);
 		void AddTokenError(const SRToken& tok, const std::string& msg);

@@ -13,6 +13,11 @@
 
 #include <CoreLib/OTNFile.h>
 
+
+static OTN::OTNFilePath STREAM_TEST_PATH = "J:/tmp/";
+#define STREAM_TEST_FILE (STREAM_TEST_PATH / (std::string(__func__) + ".otn"))
+
+/*
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -168,14 +173,6 @@ inline void OTN::ToOTNDataType<Vec2>(OTN::OTNObjectBuilder& b, Vec2& v) {
     b.AddNames("x", "y");
     b.AddData(v.x, v.y);
 }
-
-// ============================================================
-//  Streaming-Testpfad
-// ============================================================
-
-static OTN::OTNFilePath STREAM_TEST_PATH = "C:/Etienne/VisualStudio/tmp/";
-#define STREAM_TEST_FILE (STREAM_TEST_PATH / (std::string(__func__) + ".otn"))
-
 
 // ============================================================
 // ============================================================
@@ -1431,7 +1428,7 @@ int main() {
     std::cout << "\n========================================\n";
     std::cout << "  Fertig.\n";
     return s_failed > 0 ? 1 : 0;
-}
+}*/
 
 /*#include <CoreLib/Log.h>
 #include <SDLCoreLib/SDLCore.h>
