@@ -34,28 +34,29 @@ end
 -- Helper for common configuration settings
 --------------------------------------------------------
 function ApplyCommonConfigs()
+    filter "system:windows"
+        filter "action:vs*"
+            flags { "MultiProcessorCompile" }
+
     filter "configurations:Debug"
         defines { "DEBUG" }
         runtime "Debug"
         symbols "On"
-        buildoptions { "/MTd" }
-        kind "ConsoleApp"
+        buildoptions { "/MDd" }
 
     filter "configurations:Release"
         defines { "NDEBUG" }
         runtime "Release"
         optimize "Full"
-        buildoptions { "/MT" }
-        kind "ConsoleApp"
+        buildoptions { "/MD" }
 
     filter "configurations:Distribution"
         defines { "NDEBUG" }
         runtime "Release"
         optimize "Full"
-        buildoptions { "/MT" }
-        kind "WindowedApp"
+        buildoptions { "/MD" }
 
-    filter {} -- reset filter
+    filter {}
 end
 
 ------------------------------------
@@ -83,7 +84,7 @@ group ""
 --------------------------------------------------------
 newaction {
     trigger = "clean",
-    description = "Remove all binaries, intermediates, and VS files",
+    description = "Remove all binaries, intermediates, Visual Studio files, and Makefile artifacts",
     execute = function()
         print("Removing binaries...")
         os.rmdir("./build/bin")
@@ -102,6 +103,17 @@ newaction {
         os.remove("**.vcxproj")
         os.remove("**.vcxproj.filters")
         os.remove("**.vcxproj.user")
+        os.remove("**.slnLaunch.user")
+
+        print("Removing Makefile artifacts...")
+        os.remove("Makefile") 
+        os.remove("Makefile.*")
+
+        os.remove("**.o")
+        os.remove("**.d")
+        os.remove("**.a") 
+        os.remove("**.so")
+        os.remove("**.exe")
 
         print("Done.")
     end

@@ -15,7 +15,7 @@ project "SDLCoreLib"
     includedirs {
         "include",
         "include/%{prj.name}",
-        "%{wks.location}/Game/CoreLib/include",
+        "%{wks.location}/CoreLib/include",
         "%{wks.location}/vendor/SDL3/include",
         "%{wks.location}/vendor/SDL3_image/include",
         "%{wks.location}/vendor/SDL3_mixer/include",

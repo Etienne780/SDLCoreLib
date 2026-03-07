@@ -1,7 +1,6 @@
 project "Pong"
     language "C++"
     cppdialect "C++17"
-    staticruntime "On"
 
     SetTargetAndObjDirs("%{prj.name}")
 
@@ -16,8 +15,8 @@ project "Pong"
     includedirs {
         "include",
         "include/%{prj.name}",
-        "../SDLCoreLib/include",
-        "../CoreLib/include"
+        "%{wks.location}/SDLCoreLib/include",
+        "%{wks.location}/CoreLib/include"
     }
 
     links {
@@ -29,5 +28,15 @@ project "Pong"
     -- copys the SDL DLLs in to the build path of this project
     CopySDLDLLs()
 
-
     ApplyCommonConfigs()
+
+    filter "configurations:Debug"
+        kind "ConsoleApp"
+
+    filter "configurations:Release"
+        kind "ConsoleApp"
+
+    filter "configurations:Distribution"
+        kind "WindowedApp"
+
+    filter {}
