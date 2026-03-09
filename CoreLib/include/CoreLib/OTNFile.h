@@ -255,29 +255,33 @@ namespace OTN {
 		}
 	};
 
-	/**
-	* @brief Internal reference to an object instance
-	* Used during deserialization to resolve object references
-	*/
-	struct OTNObjectRef {
-		std::string refObjectName;
-		int index = 0;
-
-		OTNObjectRef() = default;
+	namespace {
 
 		/**
-		* @brief Construct object reference
-		* @param _objName Name of referenced object type
-		* @param _index Instance index
+		* @brief Internal reference to an object instance
+		* Used during deserialization to resolve object references
 		*/
-		OTNObjectRef(const std::string& _objName, int _index)
-			: refObjectName(_objName), index(_index) {
-		}
+		struct OTNObjectRef {
+			std::string refObjectName;
+			int index = 0;
 
-		bool operator==(const OTNObjectRef& other) const {
-			return index == other.index && refObjectName == other.refObjectName;
-		}
-	};
+			OTNObjectRef() = default;
+
+			/**
+			* @brief Construct object reference
+			* @param _objName Name of referenced object type
+			* @param _index Instance index
+			*/
+			OTNObjectRef(const std::string& _objName, int _index)
+				: refObjectName(_objName), index(_index) {
+			}
+
+			bool operator==(const OTNObjectRef& other) const {
+				return index == other.index && refObjectName == other.refObjectName;
+			}
+		};
+
+	}
 
 	/**
 	* @brief Convert string to OTNBaseType
@@ -1959,8 +1963,6 @@ namespace OTN {
 		*/
 		bool Open(const OTNFilePath& path);
 
-		// ---- Schema definition overloads for BeginObject -------------------------
-
 		/**
 		* @brief Begin writing an object — schema given as two string vectors.
 		*
@@ -2003,8 +2005,6 @@ namespace OTN {
 				}(static_cast<OTNColumnDef>(std::forward<Cols>(cols))), ...);
 			return BeginObject(name, names, types);
 		}
-
-		// ---- Row writing ----------------------------------------------------------
 
 		/**
 		* @brief Write one data row using variadic arguments.

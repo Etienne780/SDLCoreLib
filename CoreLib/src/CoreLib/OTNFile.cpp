@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <cassert>
-#include <charconv>
 #include "OTNFile.h"
 
 namespace OTN {
@@ -2984,9 +2983,7 @@ namespace OTN {
 
 #pragma endregion
 
-	// ===========================================================================
 #pragma region OTNStreamWriter
-// ===========================================================================
 
 	OTNStreamWriter::~OTNStreamWriter() {
 		if (m_file.is_open()) {
@@ -3038,8 +3035,13 @@ namespace OTN {
 	}
 
 	bool OTNStreamWriter::EnsureObjectBlock() {
-		if (m_blockOpen) return true;
-		if (!m_fileOpen) { AddError("OTNStreamWriter: file not open"); return false; }
+		if (m_blockOpen) 
+			return true;
+
+		if (!m_fileOpen) { 
+			AddError("OTNStreamWriter: file not open"); 
+			return false; 
+		}
 
 		// @object: {
 		std::string blk;
@@ -3064,15 +3066,25 @@ namespace OTN {
 		const std::vector<std::string>& columnNames,
 		const std::vector<std::string>& columnTypes)
 	{
-		if (!m_valid) return false;
-		if (!m_fileOpen) { AddError("OTNStreamWriter: file not open"); return false; }
-		if (m_objectOpen) { AddError("OTNStreamWriter: previous object not closed"); return false; }
+		if (!m_valid) 
+			return false;
+
+		if (!m_fileOpen) { 
+			AddError("OTNStreamWriter: file not open"); 
+			return false; 
+		}
+
+		if (m_objectOpen) { 
+			AddError("OTNStreamWriter: previous object not closed"); 
+			return false; 
+		}
 
 		if (columnNames.size() != columnTypes.size()) {
 			AddError("OTNStreamWriter: column name / type count mismatch in '" + name + "'");
 			return false;
 		}
-		if (!EnsureObjectBlock()) return false;
+		if (!EnsureObjectBlock()) 
+			return false;
 
 		// Parse type descriptors from strings
 		m_currentTypes.clear();
