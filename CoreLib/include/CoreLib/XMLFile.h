@@ -188,6 +188,11 @@ namespace XML {
 	public:
 		explicit XMLDocument() = default;
 		~XMLDocument() = default;
+		XMLDocument(const XMLDocument&) = delete;
+		XMLDocument(XMLDocument&&) = delete;
+
+		XMLDocument& operator=(const XMLDocument&) = delete;
+		XMLDocument& operator=(XMLDocument&&) = delete;
 
 		bool LoadFile(const XMLFilePath& path);
 		bool LoadString(const std::string& fileContent);
