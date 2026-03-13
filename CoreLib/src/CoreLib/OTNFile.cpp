@@ -3444,14 +3444,16 @@ namespace OTN {
 					}
 					else if (val.type == OTNBaseType::LIST) {
 						const auto& arr = std::get<OTNArrayPtr>(val.value);
-						if (arr) {
-							for (const auto& elem : arr->values) {
-								if (elem.type == OTNBaseType::OBJECT) {
-									const auto& eptr = std::get<OTNObjectPtr>(elem.value);
-									if (eptr)
-										collect(*eptr);
-								}
-							}
+						if (!arr)
+							continue;
+
+						for (const auto& elem : arr->values) {
+							if (elem.type != OTNBaseType::OBJECT)
+								continue;
+
+							const auto& eptr = std::get<OTNObjectPtr>(elem.value);
+							if (eptr)
+								collect(*eptr);
 						}
 					}
 				}
