@@ -226,6 +226,12 @@ namespace XML {
 				if (m_reader.Match('?')) {
 					return XMLToken{ XMLTokenType::PROCESSING_INSTRUCTION_OPEN, start };
 				}
+				if (m_reader.Match('!')) {
+					if (m_reader.Match("--")) {
+						SkipComment();
+						continue;
+					}
+				}
 				return XMLToken{ XMLTokenType::TAG_OPEN, start };
 
 			case '>':
@@ -304,6 +310,18 @@ namespace XML {
 
 		const char* end = m_reader.GetPos();
 		return XMLToken{ XMLTokenType::TEXT, start, static_cast<size_t>(end - start) };
+	}
+
+	void XMLTokenizer::SkipComment() {
+		while (!m_reader.End()) {
+
+			if (m_reader.Match("-->")) {
+				m_insideElement = false;
+				return;
+			}
+
+			m_reader.Get();
+		}
 	}
 
 	XMLParser::XMLParser(XMLTokenizer& tokenizer)

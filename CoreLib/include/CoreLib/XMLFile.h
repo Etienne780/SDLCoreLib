@@ -156,6 +156,7 @@ namespace XML {
 			XMLToken ReadString();
 			XMLToken ReadName();
 			XMLToken ReadText();
+			void SkipComment();
 		};
 
 		class XMLParser {
