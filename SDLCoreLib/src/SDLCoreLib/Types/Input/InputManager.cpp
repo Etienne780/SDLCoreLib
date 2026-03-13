@@ -176,7 +176,65 @@ namespace SDLCore {
 		}
 	}
 
+	void Input::RegisterAction(const std::string& name, const InputAction& action) {
+		if (name.empty()) {
+			Log::Error("SDLCore::Input::RegisterAction: Faild to register action, name was empty!");
+			return;
+		}
+
+#ifndef NDEBUG
+		auto it = m_registeredActions.find(name);
+		if (it != m_registeredActions.end()) {
+			Log::Warn("SDLCore::Input::RegisterAction: An action with the name '{}' already exists", name);
+		}
+#endif 
+
+		m_registeredActions[name] = action;
+	}
+
+	bool Input::RemoveAction(const std::string& name) {
+		auto it = m_registeredActions.find(name);
+		if (it == m_registeredActions.end())
+			return false;
+		m_registeredActions.erase(it);
+		return true;
+	}
+
+	InputAction* Input::GetAction(const std::string& name) {
+		auto it = m_registeredActions.find(name);
+		if (it == m_registeredActions.end())
+			return nullptr;
+		return &it->second;
+	}
+
 #pragma region INPUT_ACTION_[ACTION]
+
+	bool Input::ActionPressed(const std::string& actionName) {
+		auto it = m_registeredActions.find(actionName);
+		if (it == m_registeredActions.end()) {
+			Log::Warn("SDLCore::Input::ActionPressed: Failed to check action, action with name '{}'!", actionName);
+			return false;
+		}
+		return ActionPressed(it->second);
+	}
+
+	bool Input::ActionJustPressed(const std::string& actionName) {
+		auto it = m_registeredActions.find(actionName);
+		if (it == m_registeredActions.end()) {
+			Log::Warn("SDLCore::Input::ActionJustPressed: Failed to check action, action with name '{}'!", actionName);
+			return false;
+		}
+		return ActionJustPressed(it->second);
+	}
+
+	bool Input::ActionJustReleased(const std::string& actionName) {
+		auto it = m_registeredActions.find(actionName);
+		if (it == m_registeredActions.end()) {
+			Log::Warn("SDLCore::Input::ActionJustReleased: Failed to check action, action with name '{}'!", actionName);
+			return false;
+		}
+		return ActionJustReleased(it->second);
+	}
 
 	bool Input::ActionPressed(const InputAction& action) {
 		auto& keyActions = action.GetKeyActions();
@@ -507,14 +565,15 @@ namespace SDLCore {
 
 		if (sdlFocusWinID != 0) {
 			for (auto& state : s_windowStates) {
-				if (state.sdlWinID == sdlFocusWinID) {
-					Vector2& mousePos = state.mousePos;
-					Vector2& lastPos = state.lastMousePos;
-					return Vector2{
-						mousePos.x - lastPos.x,
-						((invertYAchses) ? lastPos.y - mousePos.y : mousePos.y - lastPos.y)
-					};
-				}
+				if (state.sdlWinID != sdlFocusWinID)
+					continue;
+
+				Vector2& mousePos = state.mousePos;
+				Vector2& lastPos = state.lastMousePos;
+				return Vector2{
+					mousePos.x - lastPos.x,
+					((invertYAchses) ? lastPos.y - mousePos.y : mousePos.y - lastPos.y)
+				};
 			}
 		}
 
@@ -647,16 +706,16 @@ namespace SDLCore {
 		if (it == map.end())
 			return false;
 
-		const KeyState& ks = it->second;
+		const KeyState& kys = it->second;
 
-		bool isPrevious = (stateMask & 0b10) != 0;
-		bool isPressed = (stateMask & 0b01) == 0;
+		bool isPrevious = (stateMask & INPUT_STATE_WAS_PRESSED) != 0;
+		bool isPressed = (stateMask & INPUT_STATE_RELEASED) == 0;
 
 		if (isPrevious) {
-			return isPressed ? ks.wasPressed : ks.wasReleased;
+			return isPressed ? kys.wasPressed : kys.wasReleased;
 		}
 		else {
-			return isPressed ? ks.isPressed : !ks.isPressed;
+			return isPressed ? kys.isPressed : !kys.isPressed;
 		}
 	}
 
@@ -672,16 +731,16 @@ namespace SDLCore {
 			
 		auto& map = (typeMask == INPUT_TYPE_KEYBOARD) ? state.keyStates : state.mouseButtonStates;
 
-		for (auto& [inputID, ks] : map) {
-			bool isPrevious = (stateMask & 0b10) != 0;
-			bool isPressed = (stateMask & 0b01) == 0;
+		for (auto& [inputID, kys] : map) {
+			bool isPrevious = (stateMask & INPUT_STATE_WAS_PRESSED) != 0;
+			bool isPressed = (stateMask & INPUT_STATE_RELEASED) == 0;
 
 			bool matched = false;
 			if (isPrevious) {
-				matched = isPressed ? ks.wasPressed : ks.wasReleased;
+				matched = isPressed ? kys.wasPressed : kys.wasReleased;
 			}
 			else {
-				matched = isPressed ? ks.isPressed : !ks.isPressed;
+				matched = isPressed ? kys.isPressed : !kys.isPressed;
 			}
 
 			if (matched) {
@@ -693,6 +752,5 @@ namespace SDLCore {
 
 		return false;
 	}
-
 
 }

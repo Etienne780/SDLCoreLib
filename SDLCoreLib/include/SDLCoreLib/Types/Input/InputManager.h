@@ -65,6 +65,72 @@ namespace SDLCore {
 		// =========================================================
 
 		/**
+		* @brief Registers a new named InputAction in the global action registry.
+		*
+		* The action can later be queried using its name through the ActionPressed,
+		* ActionJustPressed, or ActionJustReleased functions. If an action with the
+		* same name already exists, it will be overwritten.
+		*
+		* @param name Unique identifier of the action.
+		* @param action InputAction definition containing the mapped inputs.
+		*/
+		static void RegisterAction(const std::string& name, const InputAction& action);
+
+		/**
+		* @brief Removes a previously registered InputAction from the registry.
+		*
+		* If the action does not exist, the function returns false and no change
+		* is made to the registry.
+		*
+		* @param name Name of the action to remove.
+		* @return True if the action was found and removed, false otherwise.
+		*/
+		static bool RemoveAction(const std::string& name);
+
+		/**
+		* @brief Retrieves a registered InputAction by name.
+		*
+		* Returns a pointer to the stored action so it can be inspected or modified.
+		*
+		* @param name Name of the registered action.
+		* @return Pointer to the InputAction if found, otherwise nullptr.
+		*/
+		static InputAction* GetAction(const std::string& name);
+
+		/**
+		* @brief Checks whether a named InputAction is currently pressed.
+		*
+		* Internally resolves the action from the registry and evaluates the
+		* assigned inputs.
+		*
+		* @param actionName Name of the registered action.
+		* @return True if any input mapped to the action is currently pressed.
+		*/
+		static bool ActionPressed(const std::string& actionName);
+
+		/**
+		* @brief Checks whether a named InputAction was just pressed this frame.
+		*
+		* Internally resolves the action from the registry and evaluates the
+		* assigned inputs.
+		*
+		* @param actionName Name of the registered action.
+		* @return True if any mapped input transitioned from released to pressed this frame.
+		*/
+		static bool ActionJustPressed(const std::string& actionName);
+
+		/**
+		* @brief Checks whether a named InputAction was just released this frame.
+		*
+		* Internally resolves the action from the registry and evaluates the
+		* assigned inputs.
+		*
+		* @param actionName Name of the registered action.
+		* @return True if any mapped input transitioned from pressed to released this frame.
+		*/
+		static bool ActionJustReleased(const std::string& actionName);
+
+		/**
 		* @brief Checks if any key, mouse button, or gamepad button assigned to the action is currently pressed.
 		* @param action InputAction to check.
 		* @return True if the action is currently pressed.
@@ -371,6 +437,9 @@ namespace SDLCore {
 		static inline WindowInputState* s_activeWindowState = nullptr;
 		static inline SDL_WindowID s_activeSDLWindowID = 0;
 		static inline WindowID s_activeWinID;
+
+		// Input Registry
+		static inline std::unordered_map<std::string, InputAction> m_registeredActions;
 
 		/**
 		* @brief Stores button and axis states for a single gamepad.
